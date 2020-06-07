@@ -26,6 +26,7 @@ var mColors;
 var mColorsNeedUpdate = true;
 var mLastTime = 0;
 var mClearMode = 2; /* First click will make it 3, which is the better simplex noise */
+var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 
 var mTexture1, mTexture2;
 var mGSMaterial, mScreenMaterial;
@@ -39,7 +40,7 @@ var mMinusOnes = new THREE.Vector2(-1, -1);
 var presets = [
     { feed: 0.098,    kill: 0.0555   }, // Negative bubbles (sigma)
     { feed: 0.098,    kill: 0.057    }, // Positive bubbles (rho)
-    { feed: 0.082,    kill: 0.059    }, // Precritical bubbles (rho/kappa)
+    { feed: 0.085,    kill: 0.059    }, // Precritical bubbles (rho/kappa)
     { feed: 0.082,    kill: 0.060    }, // Worms and loops (kappa)
     { feed: 0.074,    kill: 0.064    }, // Stable solitons (nu)
     { feed: 0.062,    kill: 0.0609   }, // The U-Skate World (pi)
@@ -243,9 +244,12 @@ var onMouseMove = function(e)
   }
 }
 
+
+
 var onMouseDown = function(e)
 {
   var ev = e ? e : window.event;
+  e
   mMouseDown = true;
   mPaintMode = (mPaintMode + 1) % 2;
   mUniforms.brmode.value = mPaintMode ? 1.0 : 0.0;

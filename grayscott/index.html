@@ -32,7 +32,8 @@
 			
 			
             uniform vec2 brush;
-            
+            uniform float brmode;
+
             vec2 texel = vec2(1.0/screenWidth, 1.0/screenHeight);
             float step_x = 1.0/screenWidth;
             float step_y = 1.0/screenHeight;
@@ -148,8 +149,16 @@
                 {
                     vec2 diff = (vUv - brush)/texel;
                     float dist = dot(diff, diff);
-                    if(dist < 5.0)
+                    if(dist < 5.0) {
                         dst.g = 0.9;
+                        if (brmode > 0.0) {
+                            /* paint blue */
+                            dst.r = 0.0; dst.g = 0.9; /* set u=0, v=0.9 */
+                          } else {
+                            /* paint red */
+                            dst.r = 1.0; dst.g = 0.0; /* set u=1, v=0 */
+                          }
+                    }
                 }
                 
                 gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);
