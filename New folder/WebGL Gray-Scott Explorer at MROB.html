@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)http://mrob.com/pub/comp/xmorphia/ogl/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>WebGL Gray-Scott Explorer at MROB</title>
+    <link rel="stylesheet" type="text/css" href="./WebGL Gray-Scott Explorer at MROB_files/style.css">
+    <link rel="stylesheet" type="text/css" href="./WebGL Gray-Scott Explorer at MROB_files/experiments.css">
+    <link rel="stylesheet" type="text/css" href="./WebGL Gray-Scott Explorer at MROB_files/gradientui.css">
+    <link type="text/css" href="./WebGL Gray-Scott Explorer at MROB_files/jquery-ui-1.8.16.custom.css" rel="stylesheet">
+    <script type="text/javascript" src="./WebGL Gray-Scott Explorer at MROB_files/jquery-1.6.2.min.js.download"></script>
+    <script type="text/javascript" src="./WebGL Gray-Scott Explorer at MROB_files/jquery-ui-1.8.16.custom.min.js.download"></script>
+    <script type="text/javascript" src="./WebGL Gray-Scott Explorer at MROB_files/colorPicker.js.download"></script>
+    <!--original src URL mrdoob.github.com/three.js/build/three.min.js -->
+    <script type="text/javascript" src="./WebGL Gray-Scott Explorer at MROB_files/three.min.js.download"></script>
+    <!--script type="text/javascript" src="three-r59.js"></script -->
+    <script type="text/javascript" src="./WebGL Gray-Scott Explorer at MROB_files/gradientui.js.download"></script>
+    <script type="x-shader/x-vertex" id="standardVertexShader">
+      varying vec2 vUv;
+      
+      void main()
+      {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    </script>
+
+    <!-- Following is the code that does the actual Gray-Scott calculations,
+         including the random initialisation and brush painting. -->
+    <script type="x-shader/x-fragment" id="gsFragmentShader">
+      varying vec2 vUv;
+      uniform float screenWidth;
+      uniform float screenHeight;
+      uniform sampler2D tSource;
+      uniform float delta;
+      uniform float feed;
+      uniform float kill;
+      uniform vec2 brush;
+      uniform float brmode;
+
+      float step_x = 1.0/screenWidth;
+      float step_y = 1.0/screenHeight;
+      /* Compute the size of a texture element as a fraction of the whole
+         texture, e.g. if the whole texture is a 200x100 bitmap, texel
+         will be (0.005, 0.01) */
+      vec2 texel = vec2(step_x, step_y);
+
+      /* Simplex noise function */
+      vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+      float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                           -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy) );
+        vec2 x0 = v -   i + dot(i, C.xx);
+        vec2 i1;
+        i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod(i, 289.0);
+        vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+                         + i.x + vec3(0.0, i1.x, 1.0 ));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+                                                 dot(x12.zw,x12.zw)), 0.0);
+        m = m*m ;
+        m = m*m ;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+        vec3 g;
+        g.x  = a0.x  * x0.x  + h.x  * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+      }
+
+      vec2 homogen_uv()
+      {
+        float sqrt_F = sqrt(feed);
+        float U = 1.0;
+        float V = 0.0;
+        if (kill < (sqrt_F - 2.0 * feed) / 2.0) {
+          float A = sqrt_F / (feed + kill);
+          U = (A - sqrt(A*A - 4.0)) / (2.0 * A);
+          U = clamp(U, 0.0, 1.0);
+          V = sqrt_F * (A + sqrt(A*A - 4.0)) / 2.0;
+          V = clamp(V, 0.0, 1.0);
+        } // else, (U,V) already set to (1,0)
+        return vec2(U, V);
+      }
+
+      void main()
+      {
+        if (brush.x < -5.0) {
+          /* This means the "clear" command was just given */
+          vec2 huv = homogen_uv();
+          if (brush.y < -5.0) {
+            // Set to red state
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); /* u=1, v=0, -, opaque */
+          } else if (brush.y < 0.0) {
+            // set to blue state
+            gl_FragColor = vec4(huv.r, huv.g, 0.0, 1.0);
+          } else if (brush.y == 2.0) {
+            // let's do some noise
+            // float t = 0.5*(snoise(0.21*vUv/texel) + snoise(0.34*vUv/texel));
+            float t = 0.5*(snoise(0.1*vUv/texel) + snoise(0.16*vUv/texel));
+            gl_FragColor = vec4(clamp(huv.r-t, 0.0, 1.0),
+                                clamp(huv.g+t, 0.0, 1.0), 0.0, 1.0);
+          } else {
+            // works for most of the presets, but is worse for a couple of them
+            float t1 = 0.5*(snoise(0.1*vUv/texel) + snoise(0.16*vUv/texel));
+            float t2 = 0.5*(snoise(0.3-0.13*vUv/texel)
+                                                 + snoise(0.7-0.21*vUv/texel));
+            gl_FragColor = vec4(clamp(huv.r-0.25+t1, 0.0, 1.0),
+                                clamp(huv.g-0.25+t2, 0.0, 1.0), 0.0, 1.0);
+          }
+          return;
+        }
+
+        /* If enabled, the following gives a "parameter map" view
+           float feed = vUv.y * 0.083; float kill = vUv.x * 0.073;
+        */
+
+        /* Generate coordinates used for sampling with wraparound. */
+        float xm1 = vUv.x - step_x;
+        float xp1 = vUv.x + step_x;
+        float ym1 = vUv.y - step_y;
+        float yp1 = vUv.y + step_y;
+        xm1 = (xm1 < 0.0) ? xm1 + 1.0 : xm1;
+        xp1 = (xp1 > 1.0) ? xp1 - 1.0 : xp1;
+        ym1 = (ym1 < 0.0) ? ym1 + 1.0 : ym1;
+        yp1 = (yp1 > 1.0) ? yp1 - 1.0 : yp1;
+
+        /* Get our own U,V values, and those of 4 neighbours. */
+        vec2 uv = texture2D(tSource, vUv).rg;
+        vec2 uv0 = texture2D(tSource, vec2(xm1, vUv.y)).rg;
+        vec2 uv1 = texture2D(tSource, vec2(xp1, vUv.y)).rg;
+        vec2 uv2 = texture2D(tSource, vec2(vUv.x, ym1)).rg;
+        vec2 uv3 = texture2D(tSource, vec2(vUv.x, yp1)).rg;
+        
+        vec2 lapl = (uv0 + uv1 + uv2 + uv3 - 4.0*uv);//10485.76;
+        float du = /*0.00002*/
+                           0.2097*lapl.r - uv.r*uv.g*uv.g + feed*(1.0 - uv.r);
+        float dv = /*0.00001*/
+                           0.105 *lapl.g + uv.r*uv.g*uv.g - (feed+kill)*uv.g;
+        vec2 dst = uv + delta*vec2(du, dv);
+        
+        if (brush.x > 0.0) {
+          /* positive brush means it's drawing */
+          /* How far is brush from us, in units of pixels? */
+          vec2 diff = (vUv - brush)/texel;
+          float dist = dot(diff, diff);
+          if (dist < 5.0) {
+            /* Within 5 pixels: draw with the brush here */
+            if (brmode > 0.0) {
+              /* paint blue */
+              dst.r = 0.0; dst.g = 0.9; /* set u=0, v=0.9 */
+            } else {
+              /* paint red */
+              dst.r = 1.0; dst.g = 0.0; /* set u=1, v=0 */
+            }
+          }
+        }
+        
+        gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);
+      }
+    </script>
+
+    <!-- This shader converts a (u,v) value into a colour according to the
+         gradient. (Actually it ignores u and just looks at v). -->
+    <script type="x-shader/x-fragment" id="screenFragShader">
+      varying vec2 vUv;
+      uniform float screenWidth;
+      uniform float screenHeight;
+      uniform sampler2D tSource;
+      uniform float delta;
+      uniform float feed;
+      uniform float kill;
+      uniform vec4 color1;
+      uniform vec4 color2;
+      uniform vec4 color3;
+      uniform vec4 color4;
+      uniform vec4 color5;
+      uniform vec4 color6;
+
+      void main()
+      {
+        // Extract the v value from the source texture
+        float value = texture2D(tSource, vUv).g;
+        float a;
+        vec3 col;
+        
+        if (value <= color1.a) {
+          col = color1.rgb;
+        } else if (value <= color2.a) {
+          a = (value - color1.a)/(color2.a - color1.a);
+          col = mix(color1.rgb, color2.rgb, a);
+        } else if (value <= color3.a) {
+          a = (value - color2.a)/(color3.a - color2.a);
+          col = mix(color2.rgb, color3.rgb, a);
+        } else if (value <= color4.a) {
+          a = (value - color3.a)/(color4.a - color3.a);
+          col = mix(color3.rgb, color4.rgb, a);
+        } else if (value <= color5.a) {
+          a = (value - color4.a)/(color5.a - color4.a);
+          col = mix(color4.rgb, color5.rgb, a);
+        } else if (value <= color6.a) {
+          a = (value - color5.a)/(color6.a - color5.a);
+          col = mix(color5.rgb, color6.rgb, a);
+        } else {
+          col = color6.rgb;
+        }
+        gl_FragColor = vec4(col.r, col.g, col.b, 1.0);
+      }
+    </script>
+    <script type="text/javascript" src="./WebGL Gray-Scott Explorer at MROB_files/grayscott.js.download"></script>
+    
+    <style>
+      #gradient
+      {
+        height: 40px;
+        width: 85%;
+        margin-top: 5px;
+        margin-left:auto;
+        margin-right:auto;
+      }
+    </style>
+    <script>
+/*
+        $("#gradient").gradient({values:
+                    [[0, '#F00'],       // #000
+                     [0.2, '#FF0'],     // #0f0
+                     [0.21, '#FF1'],    // #ff0
+                     [0.4, '#0F0'],     // #f00
+                     [0.6, '#00F']]});  // #fff
+*/
+      $(function()
+      {
+        $("#gradient").gradient({values:
+                    [[0, '#FF5555'],       // red
+                     [0.1, '#DDDD00'],     // yellow
+                     [0.2, '#00DD00'],     // green
+                     [0.3, '#00CCCC'],     // cyan
+                     [0.4, '#0000CC'],     // blue
+                     [1.0, '#000044']]});  // dark-blue
+        
+        // KLUDGE!
+        colorPicker.offsetX = -512;
+        colorPicker.offsetY = -256;
+        
+        document.getElementById("gradient").onselectstart = function () {return false;};
+        
+        init();
+      });
+    </script>
+  </head>
+  <body>
+    <center>
+      <header><h1>WebGL Gray-Scott Explorer</h1></header>
+      <p>
+        The Gray-Scott equations can produce most of the types of patterns
+        that are possible in reaction-diffusion systems. For a complete
+        description of Gray-Scott patterns, with many examples and videos,
+        go to my <a href="http://mrob.com/pub/comp/xmorphia">Xmorphia Gray-Scott page</a>.
+      </p>
+    </center>
+    <div id="simulation">
+    <canvas id="myCanvas" class="viewer" style="width:2200px;height:1200px" width="2200" height="1200">
+    </canvas>
+    <aside class="panel">
+      <section id="insttag">
+        <header><center><h4>Full Instructions Below</h4></center></header>
+      </section>
+      <section id="controls">
+        <!--header><h4>Controls</h4></header-->
+        <form name="ex">
+          Presets (and <a href="http://mrob.com/pub/comp/xmorphia/pearson-classes.html">classification</a>):
+          <select name="scene" style="width:100%" onchange="loadPreset(document.ex.scene.selectedIndex)">
+            <option value="0">Negative bubbles (sigma)</option>
+            <option value="1">Bubbles (rho)</option>
+            <option value="2">Precritical bubbles (rho/kappa)</option>
+            <option value="3" selected="selected">Worms and loops (kappa)</option>
+            <option value="4">Stable solitons (nu)</option>
+            <option value="5">The U-Skate world (pi)</option>
+            <option value="6">Worms (mu)</option>
+            <option value="7">Worms join into maze (kappa)</option>
+            <option value="8">Negatons (iota)</option>
+            <option value="9">Turing patterns (delta)</option>
+            <option value="10">Chaos to Turing negatons (beta)</option>
+            <option value="11">Fingerprints (theta/kappa)</option>
+            <option value="12">Chaos with negatons (beta/delta)</option>
+            <option value="13">Spots and worms (eta)</option>
+            <option value="14">Self-replicating spots (lambda)</option>
+            <option value="15">Super-resonant mazes (theta)</option>
+            <option value="16">Mazes (kappa)</option>
+            <option value="17">Mazes with some chaos (gamma)</option>
+            <option value="18">Chaos (beta)</option>
+            <option value="19">Pulsating solitons (zeta)</option>
+            <option value="20">Warring microbes (epsilon)</option>
+            <option value="21">Spots and loops (alpha)</option>
+            <option value="22">Moving spots (alpha)</option>
+            <option value="23">Waves (xi)</option>
+          </select>
+        </form>
+        <br>
+        <p style="text-align:center; font-size: 10">
+          <input type="button" value="init" onclick="clean()">
+          <input type="button" value="snapshot" onclick="snapshot()">
+          <input type="button" value="fullscreen" onclick="fullscreen()">
+
+<!-- English-labeled buttons are easier to understand, and the page already
+     depends on English anyway so there's no reason for the cryptic icons
+  <button id="btn_clear" onclick="clean()">Clear</button>
+  <button id="btn_snapshot" onclick="snapshot()">Take snapshot</button>
+  <button id="btn_fullscreen" onclick="fullscreen()">Fullscreen mode</button>
+-->
+        </p><p>
+        <br>
+        Feed rate <i>F</i>:
+        <span class="remark" id="replenishment">0.098</span><br>
+        </p><div id="sld_replenishment" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all"><a class="ui-slider-handle ui-state-default ui-corner-all" href="http://mrob.com/pub/comp/xmorphia/ogl/index.html#" style="left: 89.0909%;"></a></div>
+        
+        Decay rate <i>k</i>:
+        <span class="remark" id="diminishment">0.057</span><br>
+        <div id="sld_diminishment" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all"><a class="ui-slider-handle ui-state-default ui-corner-all" href="http://mrob.com/pub/comp/xmorphia/ogl/index.html#" style="left: 74%;"></a></div>
+        Colours:
+        <div id="gradient" style="position: relative;"><canvas class="gradient-view" width="170" height="19" style="width: 170px; height: 19px; position: absolute; left: 0px;"></canvas><div class="gradient-dragger" style="left: 0px; background-color: rgb(255, 85, 85);"></div><div class="gradient-dragger" style="left: 16.3px; background-color: rgb(221, 221, 0);"></div><div class="gradient-dragger" style="left: 32.6px; background-color: rgb(0, 221, 0);"></div><div class="gradient-dragger" style="left: 48.9px; background-color: rgb(0, 204, 204);"></div><div class="gradient-dragger" style="left: 65.2px; background-color: rgb(0, 0, 204);"></div><div class="gradient-dragger" style="left: 163px; background-color: rgb(0, 0, 68);"></div></div>
+        <div style="font-size:x-small">
+          Import/Export:</div>
+        <div style="text-align:center">
+<!--          <input id="share" style="width:95%; height: 30px"/> -->
+          <textarea id="share" cols="40" rows="3" style="width: 1578px; margin: 0px; height: 394px;">          </textarea>
+        </div>
+      </section>
+    </aside>
+    </div>
+
+    <div id="instructions"><h3>Instructions:</h3>
+      <br>
+      <p>Use the mouse to draw in the large image area. Alternate
+      clicks paint "high-U" (red in the default colours) or
+      "low-U" (blue).</p>
+      <br>
+      <p>The init button makes the pattern blank, or random. Click it
+      multiple times until you get what you want.</p>
+      <br>
+      <p>Use the list of presets to see examples of patterns from the
+      wide diversity of types available. Each preset has a
+      classification (usually a Greek letter); these are explained on
+      the separate page <a href="http://mrob.com/pub/comp/xmorphia/pearson-classes.html">
+      Pearson's Classification (Extended) of Gray-Scott System
+      Parameter Values</a>.</p>
+      <br>
+      <b>Things to try with each preset : </b>
+      <i>(assuming that you're using the default colour scheme --
+      reloading the page will restore the default colours.)</i>
+      <ul>
+        <li><b>Negative bubbles (sigma) :</b> Hit Init until you get blue
+        spots on a red background. They will grow, but not join; you'll
+        end up with blue bubbles separated by red lines.</li>
+
+        <li><b>Positive bubbles (rho) :</b> Hit Init until you get a red and
+        blue "Swiss cheese" type pattern. Small bubbles will coalesce
+        into larger ones.</li>
+
+        <li><b>Precritical bubbles (rho/kappa) :</b> Start with either of the
+        preceding examples (sigma or rho), then switch to this
+        one.</li>
+
+        <li><b>Worms and loops (kappa) :</b> Hit Init until you get blue
+        spots on a red background.</li>
+
+        <li><b>Stable solitons (nu) :</b> Hit Init until you get a blank red
+        background. Then draw a few individual blue dots close to each
+        other. They will either merge into one or repel each other.</li>
+
+        <li><b>The U-Skate World (pi) :</b> Start with a blank
+        all-blue background, then slowly paint a small letter "u" in
+        red. If you get it just right, it will become a
+        <a href="http://mrob.com/pub/comp/xmorphia/uskate-world.html">U-Skate</a> and travel across
+        the screen. Try making U-Skates crash into each other.</li>
+
+        <li><b>Worms (mu) :</b> Start with a random pattern or by scribbling
+        in blue on a blank red background.</li>
+
+        <li><b>Worms join into maze (kappa) :</b> Start the same way
+        you did with "Worms (mu)" and notice the differences.</li>
+
+        <li><b>Negatons (iota) :</b> On a plain red background, scribble
+        randomly with blue. Watch how it becomes an aqua-green screen with
+        some yellow dots that arrange into hexagonal-grid rows.</li>
+
+        <li><b>Turing patterns (delta) :</b> Hit Init until you get a
+        plain green background, then click in it 3 or 4 times with the
+        mouse. It seems that nothing happened -- but stop clicking and
+        wait. A pattern will emerge seemingly from nowhere.</li>
+
+        <li><b>Chaos to Turing negatons (beta) :</b> Do the same thing as
+        with "Negatons (iota)" or "Turing patterns (delta)". Note
+        similarities and differences.</li>
+
+        <li><b>Fingerprints (theta/kappa) :</b> Start with a random pattern
+        or by scribbling in blue on a blank red background.</li>
+
+        <li><b>Chaos with negatons (beta/delta) :</b> Start as suggested for
+        "Turing patterns (delta)", or with either or the random patterns.</li>
+
+        <li><b>Spots and worms (eta)  :</b> Start the same way you did with
+        "Worms (mu)" and notice the differences.</li>
+
+        <li><b>Self-replicating spots (lambda) :</b> Hit Init until
+        you get a single blue-green spot on a red background, then
+        watch it multiply.</li>
+
+        <li><b>Super-resonant mazes (theta) :</b> Hit Init until you
+        get the blank green background, then click just once with the
+        mouse.</li>
+
+        <li><b>Mazes (kappa) :</b> Start with a random pattern
+        or by scribbling in blue on a blank red background.</li>
+
+        <li><b>Mazes with some chaos (gamma) :</b> Same suggestions as for
+        "Mazes (kappa)"; after you get a full maze try switching the
+        preset back and forth between these two.</li>
+
+        <li><b>Chaos (beta) :</b> Hit Init until you get the blank green
+        background, then click just once with the mouse.</li>
+
+        <li><b>Pulsating solitons (zeta) :</b> Start as with
+        "Self-replicating spots (lambda)" and note the different
+        behaviour that starts after the screen is full.</li>
+
+        <li><b>Warring microbes (epsilon) :</b> Start with a blank red
+        background, then add two or three blue dots.</li>
+
+        <li><b>Spots and loops (alpha) :</b> Start with a blank red
+        background, then add a single blue dot.</li>
+
+        <li><b>Moving spots (alpha) :</b> Start with a blank red background,
+        then add a single blue dot.</li>
+
+        <li><b>Waves(xi) :</b> Use Init until you get a plain greenish-yellow
+        background, then use the mouse to draw a circle. This should
+        produce long-lasting spiral waves.</li>
+      </ul>
+
+      <p>You may also change <i>F</i>, <i>k</i> directly with the
+      sliders. Make small, gradual changes (if you change these quickly,
+      the pattern will probably vanish)</p>
+      <br>
+      <p>Edit the colour scheme by clicking on the little squares below the
+      colour bar to access a colour-picker dialogue.</p>
+      <br>
+      <p>When you find values of <i>F</i>, <i>k</i>, and colour scheme
+      you like, you can save them by copying the text out of the box
+      labeled "Import/export". To restore previously-saved settings,
+      paste the text into the box and hit Enter.</p>
+      
+    </div>
+
+    <footer>
+        <div id="copyright">
+            ©2012
+            <a href="https://twitter.com/pmneila">@pmneila</a>
+            (BSD three-clause license) part of 
+            <a href="https://github.com/pmneila/jsexp">pmneila's jsexp</a>
+            <br>
+            with modifications by
+            <a href="http://mrob.com/xmorphia">Robert Munafo</a>
+            - - - <a id="notworking" href="http://mrob.com/pub/comp/xmorphia/ogl/index.html#">Not working?</a>
+        </div>
+    </footer>
+
+    
+  
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-labelledby="ui-dialog-title-requirement_dialog" style="display: none; z-index: 1000; outline: 0px; position: absolute;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix"><span class="ui-dialog-title" id="ui-dialog-title-requirement_dialog">Requirements</span><a href="http://mrob.com/pub/comp/xmorphia/ogl/index.html#" class="ui-dialog-titlebar-close ui-corner-all" role="button"><span class="ui-icon ui-icon-closethick">close</span></a></div><div id="requirement_dialog" class="ui-dialog-content ui-widget-content">
+      <p>This simulation requires the GL extensions <b>framebuffer_object</b>
+      and <b>texture_float</b>. If you cannot see the simulation your system
+      probably lacks at least one of these extensions.</p>
+      
+      <p>In Google Chrome, you can see the available GL extensions by putting
+      <b>chrome://gpu</b> in the address bar.</p>
+    </div><div class="ui-resizable-handle ui-resizable-n"></div><div class="ui-resizable-handle ui-resizable-e"></div><div class="ui-resizable-handle ui-resizable-s"></div><div class="ui-resizable-handle ui-resizable-w"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se ui-icon-grip-diagonal-se" style="z-index: 1001;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 1002;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 1003;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 1004;"></div></div></body></html>
