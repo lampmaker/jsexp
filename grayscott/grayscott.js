@@ -25,6 +25,7 @@ var mUniforms;
 var mColors;
 var mColorsNeedUpdate = true;
 var mLastTime = 0;
+var mClearMode = 2; /* First click will make it 3, which is the better simplex noise */
 
 var mTexture1, mTexture2;
 var mGSMaterial, mScreenMaterial;
@@ -36,56 +37,32 @@ var mMinusOnes = new THREE.Vector2(-1, -1);
 
 // Some presets.
 var presets = [
-    { // Default
-        //feed: 0.018,
-        //kill: 0.051
-        feed: 0.037,
-        kill: 0.06
-    },
-    { // Solitons
-        feed: 0.03,
-        kill: 0.062
-    },
-    { // Pulsating solitons
-        feed: 0.025,
-        kill: 0.06
-    },
-    { // Worms.
-        feed: 0.078,
-        kill: 0.061
-    },
-    { // Mazes
-        feed: 0.029,
-        kill: 0.057
-    },
-    { // Holes
-        feed: 0.039,
-        kill: 0.058
-    },
-    { // Chaos
-        feed: 0.026,
-        kill: 0.051
-    },
-    { // Chaos and holes (by clem)
-        feed: 0.034,
-        kill: 0.056
-    },
-    { // Moving spots.
-        feed: 0.014,
-        kill: 0.054
-    },
-    { // Spots and loops.
-        feed: 0.018,
-        kill: 0.051
-    },
-    { // Waves
-        feed: 0.014,
-        kill: 0.045
-    },
-    { // The U-Skate World
-        feed: 0.062,
-        kill: 0.06093
-    }
+    { feed: 0.098,    kill: 0.0555   }, // Negative bubbles (sigma)
+    { feed: 0.098,    kill: 0.057    }, // Positive bubbles (rho)
+    { feed: 0.082,    kill: 0.059    }, // Precritical bubbles (rho/kappa)
+    { feed: 0.082,    kill: 0.060    }, // Worms and loops (kappa)
+    { feed: 0.074,    kill: 0.064    }, // Stable solitons (nu)
+    { feed: 0.062,    kill: 0.0609   }, // The U-Skate World (pi)
+    { feed: 0.058,    kill: 0.065    }, // Worms (mu)
+    { feed: 0.046,    kill: 0.063    }, // Worms join into maze (kappa)
+    { feed: 0.046,    kill: 0.0594   }, // Negatons (iota)
+    { feed: 0.042,    kill: 0.059    }, // Turing patterns (delta)
+    { feed: 0.039,    kill: 0.058    }, // Chaos to Turing negatons (beta)
+    { feed: 0.037,    kill: 0.06     }, // Fingerprints (theta/kappa)
+    { feed: 0.0353,   kill: 0.0566   }, // Chaos with negatons (beta/delta)
+    { feed: 0.034,    kill: 0.0618   }, // Spots and worms (eta)
+    { feed: 0.03,     kill: 0.063    }, // Self-replicating spots (lambda)
+    { feed: 0.03,     kill: 0.0565   }, // Super-resonant mazes (theta)
+    { feed: 0.029,    kill: 0.057    }, // Mazes (kappa)
+    { feed: 0.026,    kill: 0.055    }, // Mazes with some chaos (gamma)
+    { feed: 0.026,    kill: 0.051    }, // Chaos (beta)
+    { feed: 0.025,    kill: 0.06     }, // Pulsating solitons (zeta)
+    { feed: 0.022,    kill: 0.059    }, // Warring microbes (epsilon)
+    { feed: 0.018,    kill: 0.051    }, // Spots and loops (alpha)
+    { feed: 0.014,    kill: 0.054    }, // Moving spots (alpha)
+    { feed: 0.014,    kill: 0.045    }, // Waves (xi)
+
+    { feed: 0.001,    kill: 0.03     } // leave this line at the end
 ];
 
 // Configuration.
@@ -117,6 +94,7 @@ init = function()
         delta: {type: "f", value: 1.0},
         feed: {type: "f", value: feed},
         kill: {type: "f", value: kill},
+		brmode: {type: "f", value: 0.0},
         brush: {type: "v2", value: new THREE.Vector2(-10, -10)},
         color1: {type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0)},
         color2: {type: "v4", value: new THREE.Vector4(0, 1, 0, 0.2)},
@@ -249,34 +227,63 @@ var onUpdatedColor = function()
     updateShareString();
 }
 
+
+
 var onMouseMove = function(e)
 {
-    var ev = e ? e : window.event;
-    
-    mMouseX = ev.pageX - canvasQ.offset().left; // these offsets work with
-    mMouseY = ev.pageY - canvasQ.offset().top; //  scrolled documents too
-    
-    if(mMouseDown)
-        mUniforms.brush.value = new THREE.Vector2(mMouseX/canvasWidth, 1-mMouseY/canvasHeight);
+  var ev = e ? e : window.event;
+
+  mMouseX = ev.pageX - canvasQ.offset().left; // these offsets work with
+  mMouseY = ev.pageY - canvasQ.offset().top; //  scrolled documents too
+  
+  if (mMouseDown) {
+    // Send brush command to paint pixels near mouse position
+    mUniforms.brush.value = new THREE.Vector2(mMouseX/canvasWidth,
+                                                       1-mMouseY/canvasHeight);
+  }
 }
 
 var onMouseDown = function(e)
 {
-    var ev = e ? e : window.event;
-    mMouseDown = true;
-    
-    mUniforms.brush.value = new THREE.Vector2(mMouseX/canvasWidth, 1-mMouseY/canvasHeight);
+  var ev = e ? e : window.event;
+  mMouseDown = true;
+  mPaintMode = (mPaintMode + 1) % 2;
+  mUniforms.brmode.value = mPaintMode ? 1.0 : 0.0;
+
+  // Send brush command to paint pixels near mouse position
+  mUniforms.brush.value = new THREE.Vector2(mMouseX/canvasWidth,
+                                                       1-mMouseY/canvasHeight);
 }
 
 var onMouseUp = function(e)
 {
-    mMouseDown = false;
+  mMouseDown = false;
 }
 
 clean = function()
 {
+  mClearMode = (mClearMode + 1) % 5;
+  // Send brush command to erase screen
+  if (mClearMode == 0) {
+    // Clear to red state
     mUniforms.brush.value = new THREE.Vector2(-10, -10);
+  } else if (mClearMode == 1) {
+    // Draw a single blue spot
+    mUniforms.brush.value = new THREE.Vector2(0.5, 0.5);
+    mUniforms.brmode.value = 1.0;
+  } else if (mClearMode == 2) {
+    // Clear to blue state
+    mUniforms.brush.value = new THREE.Vector2(-10, -1);
+  } else if (mClearMode == 3) {
+    // Use earlier simpler noise function
+    mUniforms.brush.value = new THREE.Vector2(-10, 2);
+  } else {
+    // Use noise with 2 degrees of freedom
+    mUniforms.brush.value = new THREE.Vector2(-10, 1);
+  }
 }
+
+
 
 snapshot = function()
 {
