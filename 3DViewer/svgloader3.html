@@ -27,7 +27,7 @@
 			import { OrbitControls } from './js/OrbitControls.js';
 			import { SVGLoader } from './js/SVGLoader.js';
 
-			var renderer, stats, scene, camera, gui, guiData;
+			var renderer, stats, scene, camera, gui, guiData, material,texture;
 
 			init();
 			animate();
@@ -58,11 +58,14 @@
 
 				guiData = {
 					currentURL: 'models/svg/sample.svg',
-					drawFillShapes: false,
-					drawStrokes: false,
-					fillShapesWireframe: false,
-                    strokesWireframe: false,
-                    extrudeGeometry:true
+					extrudeGeometry:true,
+					offsetX: 0,
+					offsetY: 0,
+					repeatX: 0.005,
+					repeatY: 0.005,
+					rotation: Math.PI / 4, // positive is counter-clockwise
+					centerX: 0.5,
+					centerY: 0.5
 				};
 
 				loadSVG( guiData.currentURL );
@@ -70,6 +73,35 @@
 				createGUI();
 
 			}
+
+			function updateUvTransform() {
+
+					if ( texture.matrixAutoUpdate === true ) {
+
+						texture.offset.set( guiData.offsetX, guiData.offsetY );
+						texture.repeat.set( guiData.repeatX, guiData.repeatY );
+						texture.rotation = guiData.rotation; // rotation is around [ 0.5, 0.5 ]
+
+					} else {
+
+						// one way...
+						//texture.matrix.setUvTransform( API.offsetX, API.offsetY, API.repeatX, API.repeatY, API.rotation, API.centerX, API.centerY );
+
+						// another way...
+						texture.matrix
+							.identity()
+							.translate( - guiData.centerX, - guiData.centerY )
+							.rotate( guiData.rotation )					// I don't understand how rotation can preceed scale, but it seems to be required...
+							.scale( guiData.repeatX, guiData.repeatY )
+							.translate( guiData.centerX, guiData.centerY )
+							.translate( guiData.offsetX, guiData.offsetY );
+
+					}
+
+					render();
+
+					}
+
 
 			function createGUI() {
 				if ( gui ) gui.destroy();
@@ -92,11 +124,14 @@
 					"kaboom": 'models/svg/sample.svg',
 					"Units": 'models/svg/tests/units.svg'
 				} ).name( 'SVG File' ).onChange( update );
-				gui.add( guiData, 'drawStrokes' ).name( 'Draw strokes' ).onChange( update );
-				gui.add( guiData, 'drawFillShapes' ).name( 'Draw fill shapes' ).onChange( update );
-				gui.add( guiData, 'strokesWireframe' ).name( 'Wireframe strokes' ).onChange( update );
-				gui.add( guiData, 'fillShapesWireframe' ).name( 'Wireframe fill shapes' ).onChange( update );
-				gui.add( guiData, 'extrudeGeometry' ).name( 'Extrude' ).onChange( update );
+				gui.add( guiData, 'offsetX', 0.0, 1.0 ).name( 'offset.x' ).onChange( updateUvTransform );
+				gui.add( guiData, 'offsetY', 0.0, 1.0 ).name( 'offset.y' ).onChange( updateUvTransform );
+				gui.add( guiData, 'repeatX', 0.001, 0.01 ).name( 'repeat.x' ).onChange( updateUvTransform );
+				gui.add( guiData, 'repeatY', 0.001, 0.01 ).name( 'repeat.y' ).onChange( updateUvTransform );
+				gui.add( guiData, 'rotation', - 2.0, 2.0 ).name( 'rotation' ).onChange( updateUvTransform );
+				gui.add( guiData, 'centerX', 0.0, 500 ).name( 'center.x' ).onChange( updateUvTransform );
+				gui.add( guiData, 'centerY', 0.0, 500 ).name( 'center.y' ).onChange( updateUvTransform );
+
 				function update() {
 					loadSVG( guiData.currentURL );
 				}
@@ -162,7 +197,7 @@
                             } );
                             */
 
-							var texture = new THREE.TextureLoader().load( "img/plywood1.jpg" );
+							texture = new THREE.TextureLoader().load( "img/plywood1.jpg" );
 							texture.wrapS=THREE.RepeatWrapping;
 							texture.wrapT=THREE.RepeatWrapping;
 							texture.repeat.set(0.005,0.005);
@@ -170,7 +205,7 @@
 							texture.center.y=0;
 							//texture.offset=(0,0);
 							 //var material= new THREE.MeshNormalMaterial();
-						   var material=[
+						    material=[
 							   new THREE.MeshBasicMaterial({ map:texture, color:0xffffff} ),
 							   new THREE.MeshBasicMaterial({ map:texture, color:0x202020} ),
 							   new THREE.MeshBasicMaterial({ map:texture, color:0x202020} ),
@@ -208,7 +243,7 @@
 					console.log("moved:");	
 					console.log(box.geometry.boundingBox);
 					scene.add( group );
-					scene.add(box);
+					//scene.add(box);
 
 
 
