@@ -28,10 +28,14 @@ var SVGLoader = function ( manager ) {
 
 };
 
+var svgwidth;
+var svgheight;
+
 SVGLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
-	constructor: SVGLoader,
 
+	constructor: SVGLoader,
+	
 	load: function ( url, onLoad, onProgress, onError ) {
 
 		var scope = this;
@@ -64,6 +68,7 @@ SVGLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 	},
 
+
 	parse: function ( text ) {
 
 		var scope = this;
@@ -80,7 +85,16 @@ SVGLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 				case 'svg':
 					console.log(node.getAttribute("width"));
-					console.log(node.getAttribute("height"));
+
+					svgwidth= parseFloatWithUnits(node.getAttribute("width"));
+					svgheight= parseFloatWithUnits(node.getAttribute("height"));
+					
+					var vb=node.getAttribute("viewBox")
+					var boxcoord=vb.split(" ");
+					console.log(boxcoord);
+
+
+
 
 					break;
 
