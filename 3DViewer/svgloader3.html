@@ -39,9 +39,9 @@
 			renderer.shadowMapType = THREE.PCFSoftShadowMap;
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			//	renderer.toneMapping = THREE.Uncharted2ToneMapping;
-			//renderer.toneMapingExposure = 2;
-			//	renderer.toneMappingWhitePoint = .8;
+			renderer.toneMapping = THREE.Uncharted2ToneMapping;
+			renderer.toneMapingExposure = 1;
+			renderer.toneMappingWhitePoint = .9;
 			container.appendChild(renderer.domElement);
 			//
 
@@ -70,6 +70,9 @@
 			camera.position.set(guiData.camX, guiData.camY, guiData.camZ);
 			var controls = new OrbitControls(camera, renderer.domElement);
 			controls.screenSpacePanning = true;
+
+
+
 
 			loadSVG(guiData.currentURL);
 			createGUI();
@@ -128,29 +131,36 @@
 			scene = new THREE.Scene();
 			scene.background = new THREE.Color(0xDDDDDD);
 			//
-
+			var ttexture = new THREE.TextureLoader().load("img/sbklx0p_4K_AO.jpg");
+			var tbump = new THREE.TextureLoader().load("img/sbklx0p_4K_Displacement.jpg");
+			ttexture.repeat.set(1, 1);
+			tbump.repeat.set(1, 1);
 			var tablematerial = new THREE.MeshPhongMaterial({
-				color: 0xFFFFFF,
+
+				color: 0xAFAFAF,
 				side: THREE.DoubleSide,
+				map: ttexture,
+				bump: tbump
 				//depthWrite: false,
 			});
 			var table = new THREE.PlaneGeometry(1000, 1000);
 			var tablemesh = new THREE.Mesh(table, tablematerial);
-			tablemesh.position.z = 0;
+			tablemesh.position.z = -0.5;
 			tablemesh.receiveShadow = true;
+			//tablemesh.castShadow = true;
 			scene.add(tablemesh);
 
 			const light0 = new THREE.AmbientLight(0x101010);
 			scene.add(light0);
-			const light1 = new THREE.SpotLight(0xffffff);
-			light1.position.set(-100, 10, 300);
+			const light1 = new THREE.SpotLight(0xFFFFFF);
+			light1.position.set(-150, 100, 300);
 			light1.castShadow = true;
 			light1.shadowCameraVisible = true;
 			light1.shadow.mapSize.width = 16384;  // default
 			light1.shadow.mapSize.height = 16384; // default
-			light1.shadow.camera.near = 0.5;       // default
-			light1.shadow.camera.far = 500      // default
-			light1.shadowDarkness = 0.9;
+			light1.shadow.camera.near = 0.5       // default
+			light1.shadow.camera.far = 1500      // default
+			light1.shadowDarkness = 0.5;
 			scene.add(light1);
 			var spotLightHelper = new THREE.SpotLightHelper(light1);
 			//	scene.add(spotLightHelper);
