@@ -119,7 +119,10 @@
 					var path=new THREE.ShapePath();
 
 					for ( var i = 0; i < tpaths.length; i ++ ) {
-                        	path.subPaths.push( tpaths[ i ]);
+							for (var j=0;j<tpaths[i].subPaths.length;j++){
+								path.subPaths.push( tpaths[ i ].subPaths[j]);
+							}
+                       	
 					}
 
                         
@@ -144,24 +147,7 @@
 						}	
 
 						//var strokeColor = path.userData.style.stroke;
-						if ( guiData.drawStrokes){//} && strokeColor !== undefined && strokeColor !== 'none' ) {
-							var material = new THREE.MeshBasicMaterial( {
-								//color: new THREE.Color().setStyle( strokeColor ),
-								//opacity: path.userData.style.strokeOpacity,
-								//transparent: path.userData.style.strokeOpacity < 1,
-								side: THREE.DoubleSide,
-								depthWrite: false,
-								wireframe: guiData.strokesWireframe
-							} );
-							for ( var j = 0, jl = path.subPaths.length; j < jl; j ++ ) {
-								var subPath = path.subPaths[ j ];
-								var geometry = SVGLoader.pointsToStroke( subPath.getPoints(), path.userData.style );
-								if ( geometry ) {
-									var mesh = new THREE.Mesh( geometry, material );
-									group.add( mesh );
-								}
-							}
-                        }
+						
                         
                         if ( guiData.extrudeGeometry) {
                             /*
@@ -175,7 +161,7 @@
                             } );
                             */
                            var material= new THREE.MeshNormalMaterial();
-							var shapes = path.toShapes( true,true );
+							var shapes = path.toShapes( true,false );
 							for ( var j = 0; j < shapes.length; j ++ ) {
 								var shape = shapes[ j ];                              
                                 var geometry = new THREE.ExtrudeGeometry( shape ,{depth:5, bevelEnabled:false});
@@ -183,8 +169,6 @@
 								group.add( mesh );
 							}
 						}	
-
-
 					
 					group.scale.y *= - 1;
 					var box=new THREE.BoxHelper(group,0xffff00);
