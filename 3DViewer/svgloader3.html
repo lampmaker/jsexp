@@ -58,11 +58,11 @@
 
 				guiData = {
 					currentURL: 'models/svg/sample.svg',
-					drawFillShapes: true,
-					drawStrokes: true,
+					drawFillShapes: false,
+					drawStrokes: false,
 					fillShapesWireframe: false,
                     strokesWireframe: false,
-                    extrudeGeometry:false
+                    extrudeGeometry:true
 				};
 
 				loadSVG( guiData.currentURL );
@@ -148,6 +148,7 @@
 
 						//var strokeColor = path.userData.style.stroke;
 						
+
                         
                         if ( guiData.extrudeGeometry) {
                             /*
@@ -160,8 +161,21 @@
 								wireframe: guiData.fillShapesWireframe
                             } );
                             */
-                           var material= new THREE.MeshNormalMaterial();
-							var shapes = path.toShapes( true,false );
+
+							var texture = new THREE.TextureLoader().load( "img/plywood1.jpg" );
+							texture.wrapS=THREE.RepeatWrapping;
+							texture.wrapT=THREE.RepeatWrapping;
+							texture.repeat.set(0.005,0.005);
+							texture.center.x=40;
+							texture.center.y=0;
+							//texture.offset=(0,0);
+							 //var material= new THREE.MeshNormalMaterial();
+						   var material=[
+							   new THREE.MeshBasicMaterial({ map:texture, color:0xffffff} ),
+							   new THREE.MeshBasicMaterial({ map:texture, color:0x202020} ),
+							   new THREE.MeshBasicMaterial({ map:texture, color:0x202020} ),
+							];
+								var shapes = path.toShapes( true,false );
 							for ( var j = 0; j < shapes.length; j ++ ) {
 								var shape = shapes[ j ];                              
                                 var geometry = new THREE.ExtrudeGeometry( shape ,{depth:5, bevelEnabled:false});
