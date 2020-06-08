@@ -114,18 +114,21 @@
 
 				var loader = new SVGLoader();
 				loader.load( url, function ( data ) {
-                    var paths = data.paths;
+                    var tpaths = data.paths;
                     var group = new THREE.Group();
-				
-					for ( var i = 0; i < paths.length; i ++ ) {
-                        var path = paths[ i ];
+					var path=new THREE.ShapePath();
+
+					for ( var i = 0; i < tpaths.length; i ++ ) {
+                        	path.subPaths.push( tpaths[ i ]);
+					}
+
                         
-						var fillColor = path.userData.style.fill;
-						if ( guiData.drawFillShapes && fillColor !== undefined && fillColor !== 'none' ) {
+						//var fillColor = path.userData.style.fill;
+						if ( guiData.drawFillShapes){//} && fillColor !== undefined && fillColor !== 'none' ) {
 							var material = new THREE.MeshBasicMaterial( {
-								color: new THREE.Color().setStyle( fillColor ),
-								opacity: path.userData.style.fillOpacity,
-								transparent: path.userData.style.fillOpacity < 1,
+								//color: new THREE.Color().setStyle(  ),
+								//opacity: path.userData.style.fillOpacity,
+								//transparent: path.userData.style.fillOpacity < 1,
 								side: THREE.DoubleSide,
 								depthWrite: false,
 								wireframe: guiData.fillShapesWireframe
@@ -140,12 +143,12 @@
 							}
 						}	
 
-						var strokeColor = path.userData.style.stroke;
-						if ( guiData.drawStrokes && strokeColor !== undefined && strokeColor !== 'none' ) {
+						//var strokeColor = path.userData.style.stroke;
+						if ( guiData.drawStrokes){//} && strokeColor !== undefined && strokeColor !== 'none' ) {
 							var material = new THREE.MeshBasicMaterial( {
-								color: new THREE.Color().setStyle( strokeColor ),
-								opacity: path.userData.style.strokeOpacity,
-								transparent: path.userData.style.strokeOpacity < 1,
+								//color: new THREE.Color().setStyle( strokeColor ),
+								//opacity: path.userData.style.strokeOpacity,
+								//transparent: path.userData.style.strokeOpacity < 1,
 								side: THREE.DoubleSide,
 								depthWrite: false,
 								wireframe: guiData.strokesWireframe
@@ -182,7 +185,7 @@
 						}	
 
 
-					}
+					
 					group.scale.y *= - 1;
 					var box=new THREE.BoxHelper(group,0xffff00);
 

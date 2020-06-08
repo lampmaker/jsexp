@@ -28,8 +28,7 @@ var SVGLoader = function ( manager ) {
 
 };
 
-var svgwidth;
-var svgheight;
+
 
 SVGLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
@@ -86,8 +85,8 @@ SVGLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 				case 'svg':
 					console.log(node.getAttribute("width"));
 
-					svgwidth= parseFloatWithUnits(node.getAttribute("width"));
-					svgheight= parseFloatWithUnits(node.getAttribute("height"));
+				var	svgwidth= parseFloatWithUnits(node.getAttribute("width"));
+				var	svgheight= parseFloatWithUnits(node.getAttribute("height"));
 					
 					var vb=node.getAttribute("viewBox")
 					var boxcoord=vb.split(" ");
