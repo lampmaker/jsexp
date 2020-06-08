@@ -38,6 +38,9 @@
 			//renderer.shadowMapType = THREE.PCFSoftShadowMap;
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.toneMapping = THREE.Uncharted2ToneMapping;
+			renderer.toneMapingExposure = 2;
+			renderer.toneMappingWhitePoint = .8;
 			container.appendChild(renderer.domElement);
 			//
 
@@ -124,9 +127,9 @@
 			scene = new THREE.Scene();
 			scene.background = new THREE.Color(0xDDDDDD);
 			//
-			/*
+
 			var tablematerial = new THREE.MeshLambertMaterial({
-				color: 0xF000FF,
+				color: 0xFFFFFF,
 				side: THREE.DoubleSide,
 				depthWrite: false,
 			});
@@ -135,16 +138,17 @@
 			tablemesh.position.z = 0;
 			//	tablemesh.receiveShadow = true;
 			scene.add(tablemesh);
-*/
+
 			const light1 = new THREE.SpotLight(0xffffff);
 			light1.position.set(-100, 10, 100);
 			light1.castShadow = true;
-			//light1.shadow.mapSize.width = 5120;  // default
-			//ight1.shadow.mapSize.height = 5120; // default
-			//light1.shadow.camera.near = 0.005;       // default
-			//light1.shadow.camera.far = 500      // default
+			light1.shadowCameraVisible = true;
+			light1.shadow.mapSize.width = 5120;  // default
+			light1.shadow.mapSize.height = 5120; // default
+			light1.shadow.camera.near = 0.005;       // default
+			light1.shadow.camera.far = 500      // default
 			//light1.shadowDarkness = 1;
-			//	scene.add(light1);
+			scene.add(light1);
 			var spotLightHelper = new THREE.SpotLightHelper(light1);
 			//	scene.add(spotLightHelper);
 
@@ -185,9 +189,9 @@
 				//texture.offset=(0,0);
 				//var material= new THREE.MeshNormalMaterial();
 				material = [
-					new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff }),
-					new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff }),
-					new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff }),
+					new THREE.MeshLambertMaterial({ map: texture, color: 0xffffff }),
+					new THREE.MeshLambertMaterial({ map: texture, color: 0x101010 }),
+					new THREE.MeshLambertMaterial({ map: texture, color: 0x101010 }),
 				];
 				var shapes = path.toShapes(true, false);
 				for (var j = 0; j < shapes.length; j++) {
