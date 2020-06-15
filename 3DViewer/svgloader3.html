@@ -40,8 +40,8 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			renderer.toneMapping = THREE.Uncharted2ToneMapping;
-			renderer.toneMapingExposure = 1;
-			renderer.toneMappingWhitePoint = .9;
+			renderer.toneMapingExposure = .2;
+			renderer.toneMappingWhitePoint = 1.8;
 			container.appendChild(renderer.domElement);
 			//
 
@@ -105,6 +105,7 @@
 				"onderzetter": 'models/svg/sample.svg',
 				"coco": 'models/svg/Coco2.svg',
 				"hart": 'models/svg/hart.svg',
+				"gevaar": 'models/svg/gevaar.svg',
 				"Tiger": 'models/svg/tiger.svg',
 				"Three.js": 'models/svg/threejs.svg',
 				"Joins and caps": 'models/svg/lineJoinsAndCaps.svg',
@@ -150,7 +151,7 @@
 			//tablemesh.castShadow = true;
 			scene.add(tablemesh);
 
-			const light0 = new THREE.AmbientLight(0x101010);
+			const light0 = new THREE.AmbientLight(0xFFFFFF);
 			scene.add(light0);
 			const light1 = new THREE.SpotLight(0xFFFFFF);
 			light1.position.set(-150, 100, 300);
@@ -160,7 +161,7 @@
 			light1.shadow.mapSize.height = 16384; // default
 			light1.shadow.camera.near = 0.5       // default
 			light1.shadow.camera.far = 1500      // default
-			light1.shadowDarkness = 0.5;
+			light1.shadowDarkness = 0;
 			scene.add(light1);
 			var spotLightHelper = new THREE.SpotLightHelper(light1);
 			//	scene.add(spotLightHelper);

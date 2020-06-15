@@ -175,7 +175,7 @@ var render = function(time)
     mUniforms.feed.value = feed;
     mUniforms.kill.value = kill;
     
-    for(var i=0; i<8; ++i)
+    for(var i=0; i<64; ++i)
     {
         if(!mToggled)
         {
@@ -294,6 +294,60 @@ snapshot = function()
     var dataURL = canvas.toDataURL("image/png");
     window.open(dataURL, "name-"+Math.random());
 }
+
+
+
+record=function() 
+{
+//	function record(canvas, time) {
+	time=40000;
+    var recordedChunks = [];
+    return new Promise(function (res, rej) {
+        var stream = canvas.captureStream(30 /*fps*/);
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm; codecs=vp9"
+            //mimeType: "video/webm; codecs=h264"
+        });
+
+        //ondataavailable will fire in interval of `time || 4000 ms`
+        mediaRecorder.start(time || 4000);
+
+        mediaRecorder.ondataavailable = function (e) {
+            recordedChunks.push(event.data);
+            if (mediaRecorder.state === 'recording') {
+                // after stop data avilable event run one more time
+                mediaRecorder.stop();
+            }
+
+        }
+
+        mediaRecorder.onstop = function (event) {
+            var blob = new Blob(recordedChunks, {
+                type: "video/webm"
+            });
+            var url = URL.createObjectURL(blob);
+            res(url);
+            window.open(url);
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'test.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            }, 100);
+
+
+        }
+    })
+}
+
+
+
+
 
 // resize canvas to fullscreen, scroll to upper left 
 // corner and try to enable fullscreen mode and vice-versa

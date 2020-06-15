@@ -87,15 +87,6 @@
 			
 			
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
             void main()
             {
 						  if (brush.x < -5.0) {
@@ -186,6 +177,7 @@
             uniform vec4 color5;
             
             vec2 texel = vec2(1.0/screenWidth, 1.0/screenHeight);
+
             
             void main()
             {
@@ -306,6 +298,7 @@
                 <p style="text-align:center">
                     <button id="btn_clear" onclick="clean()">Clear</button>
                     <button id="btn_snapshot" onclick="snapshot()">Take snapshot</button>
+					<button id="btn_record" onclick="record()">record</button>
                     <button id="btn_fullscreen" onclick="fullscreen()">Fullscreen mode</button>
                 <p/>
                 <h4 class="unsafe">Advanced settings</h4>
