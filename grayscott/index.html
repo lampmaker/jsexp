@@ -155,7 +155,7 @@
 
                 vec2 dst = uv + delta*vec2(du, dv);
                 
-                if (R>0.4) {
+                if ((R>0.48 )|| (R<0.125)) {
                     dst.r=1.0;
                     dst.g=1.0;
                     //dv=0.00;
