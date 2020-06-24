@@ -72,23 +72,24 @@
     var kill2 = kill;
 
     var shader_scrf, shader_stdf, shader_stdv;
-    /*
-        var shaderloadingmanager = new THREE.LoadingManager();
-        var loader = new THREE.FileLoader(shaderloadingmanager);
-    
-        shaderloadingmanager.onLoad = function ( ) {
-           shader_scrf=document.getElementById('screenFragmentShader').textContent
-           shader_stdf=document.getElementById('gsFragmentShader').textContent
-           shader_stdv=document.getElementById('standardVertexShader').textContent
-         init();  
-        };
-    */
+/*
+    var shaderloadingmanager = new THREE.LoadingManager();
+    var loader = new THREE.FileLoader(shaderloadingmanager);
+
+    shaderloadingmanager.onLoad = function () {
+        shader_scrf = document.getElementById('screenFragmentShader').textContent
+        shader_stdf = document.getElementById('gsFragmentShader').textContent
+        shader_stdv = document.getElementById('standardVertexShader').textContent
+        init();
+    };
+
     loadshaders = function () {
         loader.load("js/shaders/screenfragment.js", function (data) { shader_scrf = data; });
         loader.load("js/shaders/standardfragment.js", function (data) { shader_stdf = data; });
         loader.load("js/shaders/standardvertex.js", function (data) { shader_stdv = data; });
-    };
 
+    };
+*/
     //==================================================================================================================================
     init = function () {
         shader_scrf = document.getElementById('screenFragmentShader').textContent
@@ -130,20 +131,12 @@
         };
         mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3, mUniforms.color4, mUniforms.color5];
         $("#gradient").gradient("setUpdateCallback", onUpdatedColor);
-        /*
-                mGSMaterial = new THREE.ShaderMaterial({
-                    uniforms: mUniforms,
-                    vertexShader: document.getElementById('standardVertexShader').textContent,
-                    fragmentShader: document.getElementById('gsFragmentShader').textContent,
-                });
-        */
+
         mGSMaterial = new THREE.ShaderMaterial({
             uniforms: mUniforms,
             vertexShader: shader_stdv,
             fragmentShader: shader_stdf,
         });
-
-
 
         mScreenMaterial = new THREE.ShaderMaterial({
             uniforms: mUniforms,
@@ -191,10 +184,11 @@
                 format: THREE.RGBAFormat,
                 type: THREE.FloatType
             });
-        mTexture1.texture.wrapS = THREE.RepeatWrapping;
-        mTexture1.texture.wrapT = THREE.RepeatWrapping;
-        mTexture2.texture.wrapS = THREE.RepeatWrapping;
-        mTexture2.texture.wrapT = THREE.RepeatWrapping;
+
+        mTexture1.wrapS = THREE.RepeatWrapping;
+        mTexture1.wrapT = THREE.RepeatWrapping;
+        mTexture2.wrapS = THREE.RepeatWrapping;
+        mTexture2.wrapT = THREE.RepeatWrapping;
 
         mUniforms.screenWidth.value = canvasWidth / 2;
         mUniforms.screenHeight.value = canvasHeight / 2;
@@ -215,23 +209,18 @@
         for (var i = 0; i < 8; ++i) {
             if (!mToggled) {
                 mUniforms.tSource.value = mTexture1;
-                //mRenderer.render(mScene, mCamera, mTexture2, true);
-             
-                mRenderer.setRenderTarget(mTexture2.texture);
-                mRenderer.clear();
-                mRenderer.render(mScene, mCamera);
-
-
+                mRenderer.render(mScene, mCamera, mTexture2, true);
+                //        mRenderer.setRenderTarget(mTexture2);
                 mUniforms.tSource.value = mTexture2;
             }
             else {
                 mUniforms.tSource.value = mTexture2;
-                //mRenderer.render(mScene, mCamera, mTexture1, true);
-                mRenderer.setRenderTarget(mTexture1.texture);
-                mRenderer.clear();
-                mRenderer.render(mScene, mCamera);
+                mRenderer.render(mScene, mCamera, mTexture1, true);
+                //mRenderer.setRenderTarget(mTexture1);
                 mUniforms.tSource.value = mTexture1;
             }
+            //   mRenderer.clear();
+            //   mRenderer.render(mScene, mCamera);
 
             mToggled = !mToggled;
             mUniforms.brush.value = mMinusOnes;

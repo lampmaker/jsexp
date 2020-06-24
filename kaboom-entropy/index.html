@@ -10,8 +10,9 @@
     <!--  LIBRARIES -->
     <script type="text/javascript" src="js/jquery/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
-    <!--<script type="text/javascript" src="js/three/three.min.js"></script>-->
-    <script type="text/javascript" src="js/three/three.js"></script>
+    <!--<script type="text/javascript" src="js/three/three.js"></script>-->
+    <script type="text/javascript" src="js/three/three.min.js"></script>
+    
    <!-- <script type="text/javascript" src="js/three/OBJLoader.js"></script>-->
 
     <!-- CODE -->
@@ -29,6 +30,7 @@
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     </script>
+
 <script type="x-shader/x-fragment" id="gsFragmentShader">
         varying vec2 vUv;
         uniform float screenWidth;
@@ -281,7 +283,7 @@
             colorPicker.offsetY = -256;
             document.getElementById("gradient").onselectstart = function () { return false; };
             //loadshaders();
-            init();
+           init();
         });
     </script>
 </head>
