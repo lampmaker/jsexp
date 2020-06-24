@@ -72,7 +72,7 @@
     var kill2 = kill;
 
     var shader_scrf, shader_stdf, shader_stdv;
-/*
+
     var shaderloadingmanager = new THREE.LoadingManager();
     var loader = new THREE.FileLoader(shaderloadingmanager);
 
@@ -89,12 +89,12 @@
         loader.load("js/shaders/standardvertex.js", function (data) { shader_stdv = data; });
 
     };
-*/
+
     //==================================================================================================================================
     init = function () {
-        shader_scrf = document.getElementById('screenFragmentShader').textContent
-        shader_stdf = document.getElementById('gsFragmentShader').textContent
-        shader_stdv = document.getElementById('standardVertexShader').textContent
+       // shader_scrf = document.getElementById('screenFragmentShader').textContent
+       // shader_stdf = document.getElementById('gsFragmentShader').textContent
+       // shader_stdv = document.getElementById('standardVertexShader').textContent
 
         init_controls();
 
@@ -207,20 +207,36 @@
         mUniforms.feed2.value = feed2;
         mUniforms.kill2.value = kill2;
         for (var i = 0; i < 8; ++i) {
+            // for use with old code
+            /*
             if (!mToggled) {
                 mUniforms.tSource.value = mTexture1;
-                mRenderer.render(mScene, mCamera, mTexture2, true);
-                //        mRenderer.setRenderTarget(mTexture2);
+                mRenderer.render(mScene, mCamera, mTexture2, true);               
                 mUniforms.tSource.value = mTexture2;
             }
             else {
                 mUniforms.tSource.value = mTexture2;
-                mRenderer.render(mScene, mCamera, mTexture1, true);
-                //mRenderer.setRenderTarget(mTexture1);
+                mRenderer.render(mScene, mCamera, mTexture1, true);                
                 mUniforms.tSource.value = mTexture1;
             }
-            //   mRenderer.clear();
-            //   mRenderer.render(mScene, mCamera);
+*/
+            // for use with new three.js code
+            
+            mRenderer.clear();
+            if (!mToggled) {
+                 mUniforms.tSource.value = mTexture1.texture;
+                 mRenderer.setRenderTarget(mTexture2);
+                 mRenderer.render(mScene, mCamera);
+                 mRenderer.setRenderTarget(null);
+                mUniforms.tSource.value = mTexture2.texture;
+            }
+            else {
+                mUniforms.tSource.value = mTexture2.texture;
+                mRenderer.setRenderTarget(mTexture1);
+                mRenderer.render(mScene, mCamera);
+                mRenderer.setRenderTarget(null);
+                mUniforms.tSource.value = mTexture1.texture;
+            }
 
             mToggled = !mToggled;
             mUniforms.brush.value = mMinusOnes;
