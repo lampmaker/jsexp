@@ -1,11 +1,3 @@
-/* 
- * Gray-Scott
- *
- * A solver of the Gray-Scott model of reaction diffusion.
- *
- * ©2012 pmneila.
- * p.mneila at upm.es
- */
 
 (function () {
 
@@ -35,6 +27,20 @@
     var mToggled = false;
 
     var mMinusOnes = new THREE.Vector2(-1, -1);
+
+
+    var presets2=[{text: "Negative bubbles (sigma)", feed: 0.098, kill: 0.0555, gradient:[[0, '#000000'],[0.2, '#00FF00'],[0.21, '#FFFF00'], [0.4, '#FF0000'], [0.6, '#FFFFFF']]}]
+
+/* to be done: load and save presets from external file
+*/
+
+
+
+
+
+
+
+
 
     // Some presets.
     var presets = [
@@ -77,9 +83,9 @@
     var loader = new THREE.FileLoader(shaderloadingmanager);
 
     shaderloadingmanager.onLoad = function () {
-        shader_scrf = document.getElementById('screenFragmentShader').textContent
-        shader_stdf = document.getElementById('gsFragmentShader').textContent
-        shader_stdv = document.getElementById('standardVertexShader').textContent
+    //    shader_scrf = document.getElementById('screenFragmentShader').textContent
+     //   shader_stdf = document.getElementById('gsFragmentShader').textContent
+     //   shader_stdv = document.getElementById('standardVertexShader').textContent
         init();
     };
 
@@ -92,10 +98,6 @@
 
     //==================================================================================================================================
     init = function () {
-       // shader_scrf = document.getElementById('screenFragmentShader').textContent
-       // shader_stdf = document.getElementById('gsFragmentShader').textContent
-       // shader_stdv = document.getElementById('standardVertexShader').textContent
-
         init_controls();
 
         canvasQ = $('#myCanvas');
