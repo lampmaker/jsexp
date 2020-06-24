@@ -62,7 +62,6 @@
         { feed: 0.018, kill: 0.051 }, // Spots and loops (alpha)
         { feed: 0.014, kill: 0.054 }, // Moving spots (alpha)
         { feed: 0.014, kill: 0.045 }, // Waves (xi)
-
         { feed: 0.001, kill: 0.03 } // leave this line at the end
     ];
 
@@ -71,19 +70,31 @@
     var kill = presets[0].kill;
     var feed2 = feed;
     var kill2 = kill;
-    var loader = new THREE.FileLoader();
-    var lmanager = new THREE.LoadingManager();
-    var shader_scrf, shader_stdf, shader_stdv;
 
+    var shader_scrf, shader_stdf, shader_stdv;
+    /*
+        var shaderloadingmanager = new THREE.LoadingManager();
+        var loader = new THREE.FileLoader(shaderloadingmanager);
+    
+        shaderloadingmanager.onLoad = function ( ) {
+           shader_scrf=document.getElementById('screenFragmentShader').textContent
+           shader_stdf=document.getElementById('gsFragmentShader').textContent
+           shader_stdv=document.getElementById('standardVertexShader').textContent
+         init();  
+        };
+    */
     loadshaders = function () {
         loader.load("js/shaders/screenfragment.js", function (data) { shader_scrf = data; });
         loader.load("js/shaders/standardfragment.js", function (data) { shader_stdf = data; });
-        loader.load("js/shaders/standardvertex.js", function (data) { shader_stv = data; });
-       // lmanager.onLoad = init();
+        loader.load("js/shaders/standardvertex.js", function (data) { shader_stdv = data; });
     };
 
-
+    //==================================================================================================================================
     init = function () {
+        shader_scrf = document.getElementById('screenFragmentShader').textContent
+        shader_stdf = document.getElementById('gsFragmentShader').textContent
+        shader_stdv = document.getElementById('standardVertexShader').textContent
+
         init_controls();
 
         canvasQ = $('#myCanvas');
@@ -137,7 +148,7 @@
         mScreenMaterial = new THREE.ShaderMaterial({
             uniforms: mUniforms,
             vertexShader: shader_stdv,
-            fragmentShader: shader_scrf,            
+            fragmentShader: shader_scrf,
         });
 
         var plane = new THREE.PlaneGeometry(1.0, 1.0);
@@ -153,7 +164,7 @@
         mLastTime = new Date().getTime();
         requestAnimationFrame(render);
     }
-
+    //==================================================================================================================================
     var resize = function (width, height) {
         // Set the new shape of canvas.
         canvasQ.width(width);
@@ -180,15 +191,15 @@
                 format: THREE.RGBAFormat,
                 type: THREE.FloatType
             });
-        mTexture1.wrapS = THREE.RepeatWrapping;
-        mTexture1.wrapT = THREE.RepeatWrapping;
-        mTexture2.wrapS = THREE.RepeatWrapping;
-        mTexture2.wrapT = THREE.RepeatWrapping;
+        mTexture1.texture.wrapS = THREE.RepeatWrapping;
+        mTexture1.texture.wrapT = THREE.RepeatWrapping;
+        mTexture2.texture.wrapS = THREE.RepeatWrapping;
+        mTexture2.texture.wrapT = THREE.RepeatWrapping;
 
         mUniforms.screenWidth.value = canvasWidth / 2;
         mUniforms.screenHeight.value = canvasHeight / 2;
     }
-
+    //==================================================================================================================================
     var render = function (time) {
         var dt = (time - mLastTime) / 20.0;
         if (dt > 0.8 || dt <= 0)
@@ -204,12 +215,21 @@
         for (var i = 0; i < 8; ++i) {
             if (!mToggled) {
                 mUniforms.tSource.value = mTexture1;
-                mRenderer.render(mScene, mCamera, mTexture2, true);
+                //mRenderer.render(mScene, mCamera, mTexture2, true);
+             
+                mRenderer.setRenderTarget(mTexture2.texture);
+                mRenderer.clear();
+                mRenderer.render(mScene, mCamera);
+
+
                 mUniforms.tSource.value = mTexture2;
             }
             else {
                 mUniforms.tSource.value = mTexture2;
-                mRenderer.render(mScene, mCamera, mTexture1, true);
+                //mRenderer.render(mScene, mCamera, mTexture1, true);
+                mRenderer.setRenderTarget(mTexture1.texture);
+                mRenderer.clear();
+                mRenderer.render(mScene, mCamera);
                 mUniforms.tSource.value = mTexture1;
             }
 
@@ -225,19 +245,19 @@
 
         requestAnimationFrame(render);
     }
-
+    //==================================================================================================================================
     loadPreset = function (idx) {
         feed = presets[idx].feed;
         kill = presets[idx].kill;
         worldToForm();
     }
-
+    //==================================================================================================================================
     loadPreset2 = function (idx) {
         feed2 = presets[idx].feed;
         kill2 = presets[idx].kill;
         worldToForm();
     }
-
+    //==================================================================================================================================
     var updateUniformsColors = function () {
         var values = $("#gradient").gradient("getValuesRGBS");
         for (var i = 0; i < values.length; i++) {
@@ -247,14 +267,14 @@
 
         mColorsNeedUpdate = false;
     }
-
+    //==================================================================================================================================
     var onUpdatedColor = function () {
         mColorsNeedUpdate = true;
         updateShareString();
     }
 
 
-
+    //==================================================================================================================================
     var onMouseMove = function (e) {
         var ev = e ? e : window.event;
 
@@ -268,7 +288,7 @@
         }
     }
 
-
+    //==================================================================================================================================
 
     var onMouseDown = function (e) {
         var ev = e ? e : window.event;
@@ -285,7 +305,7 @@
     var onMouseUp = function (e) {
         mMouseDown = false;
     }
-
+    //==================================================================================================================================
     clean = function () {
         mClearMode = (mClearMode + 1) % 5;
         // Send brush command to erase screen
@@ -307,14 +327,14 @@
             mUniforms.brush.value = new THREE.Vector2(-10, 1);
         }
     }
-
+    //==================================================================================================================================
 
 
     snapshot = function () {
         var dataURL = canvas.toDataURL("image/png");
         window.open(dataURL, "name-" + Math.random());
     }
-
+    //==================================================================================================================================
     // resize canvas to fullscreen, scroll to upper left 
     // corner and try to enable fullscreen mode and vice-versa
     fullscreen = function () {
@@ -357,25 +377,25 @@
             }
         }
     }
-
+    //==================================================================================================================================
     var isFullscreen = function () {
         return document.mozFullScreenElement ||
             document.webkitCurrentFullScreenElement ||
             document.fullscreenElement;
     }
-
+    //==================================================================================================================================
     $(document).bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (ev) {
         // restore old canvas size
         if (!isFullscreen())
             resize(window.oldCanvSize.width, window.oldCanvSize.height);
     });
-
+    //==================================================================================================================================
     var worldToForm = function () {
         //document.ex.sldReplenishment.value = feed * 1000;
         $("#sld_replenishment").slider("value", feed);
         $("#sld_diminishment").slider("value", kill);
     }
-
+    //==================================================================================================================================
     var init_controls = function () {
         $("#sld_replenishment").slider({
             value: feed, min: 0, max: 0.1, step: 0.001,
