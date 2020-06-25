@@ -1,30 +1,32 @@
 
-(function () {
+import {GUI} from '/js/three/dat.gui.module.js'
 
     // Canvas.
     var canvas;
     var canvasQ;
     var canvasWidth;
     var canvasHeight;
-
     var mMouseX, mMouseY;
     var mMouseDown = false;
 
+    // scene stuff
     var mRenderer;
     var mScene;
     var mCamera;
-    var mUniforms;
-    var mColors;
+
+    // webgl 
+    var mUniforms; 
+    var mColors; //for gradient
+    var mTexture1, mTexture2;
+    var mGSMaterial, mScreenMaterial;
+    var mScreenQuad;
+    var mToggled = false;
+
+    //
     var mColorsNeedUpdate = true;
     var mLastTime = 0;
     var mClearMode = 2; /* First click will make it 3, which is the better simplex noise */
     var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
-
-    var mTexture1, mTexture2;
-    var mGSMaterial, mScreenMaterial;
-    var mScreenQuad;
-
-    var mToggled = false;
 
     var mMinusOnes = new THREE.Vector2(-1, -1);
 
@@ -35,13 +37,15 @@
 */
 
 
+var gui, guiData,x,y;
+gui = new GUI({ width: 350 });
+guiData={t:'test',x:1,y:100};
+gui.add(guiData,'t').name('text');
+gui.add(guiData,'x',0,100).name('xv');
+gui.add(guiData,'y',0,100).name('yv');
 
 
-
-
-
-
-
+  
     // Some presets.
     var presets = [
         { feed: 0.098, kill: 0.0555 }, // Negative bubbles (sigma)
@@ -89,7 +93,7 @@
         init();
     };
 
-    loadshaders = function () {
+    export function loadshaders() {
         loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
         loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; });
         loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
@@ -97,7 +101,7 @@
     };
 
     //==================================================================================================================================
-    init = function () {
+    function init() {
         init_controls();
 
         canvasQ = $('#myCanvas');
@@ -190,7 +194,6 @@
         mTexture1.wrapT = THREE.RepeatWrapping;
         mTexture2.wrapS = THREE.RepeatWrapping;
         mTexture2.wrapT = THREE.RepeatWrapping;
-
         mUniforms.screenWidth.value = canvasWidth / 2;
         mUniforms.screenHeight.value = canvasHeight / 2;
     }
@@ -234,13 +237,13 @@
         requestAnimationFrame(render);
     }
     //==================================================================================================================================
-    loadPreset = function (idx) {
+    function loadPreset(idx) {
         feed = presets[idx].feed;
         kill = presets[idx].kill;
         worldToForm();
     }
     //==================================================================================================================================
-    loadPreset2 = function (idx) {
+    function loadPreset2(idx) {
         feed2 = presets[idx].feed;
         kill2 = presets[idx].kill;
         worldToForm();
@@ -294,7 +297,7 @@
         mMouseDown = false;
     }
     //==================================================================================================================================
-    clean = function () {
+    export function clean() {
         mClearMode = (mClearMode + 1) % 5;
         // Send brush command to erase screen
         if (mClearMode == 0) {
@@ -318,14 +321,14 @@
     //==================================================================================================================================
 
 
-    snapshot = function () {
+    export function snapshot() {
         var dataURL = canvas.toDataURL("image/png");
         window.open(dataURL, "name-" + Math.random());
     }
     //==================================================================================================================================
     // resize canvas to fullscreen, scroll to upper left 
     // corner and try to enable fullscreen mode and vice-versa
-    fullscreen = function () {
+    export function fullscreen() {
 
         var canv = $('#myCanvas');
         var elem = canv.get(0);
@@ -442,12 +445,12 @@
         });
     }
 
-    alertInvalidShareString = function () {
+    function alertInvalidShareString() {
         $("#share").val("Invalid string!");
         setTimeout(updateShareString, 1000);
     }
 
-    parseShareString = function () {
+    function parseShareString() {
         var str = $("#share").val();
         var fields = str.split(",");
 
@@ -488,7 +491,7 @@
         worldToForm();
     }
 
-    updateShareString = function () {
+    function updateShareString() {
         var str = "".concat(feed, ",", kill);
 
         var values = $("#gradient").gradient("getValues");
@@ -498,5 +501,6 @@
         }
         $("#share").val(str);
     }
-
+/*
 })();
+*/

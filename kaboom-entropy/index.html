@@ -14,13 +14,10 @@
     <script type="text/javascript" src="js/jquery/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
     <script type="text/javascript" src="js/three/three.min_new.js"></script>
-    
-
     <!-- CODE -->
     <script type="text/javascript" src="js/entropy/gradientui.js"></script>
     <script type="text/javascript" src="js/entropy/colorPicker.js"></script>
-    <script type="text/javascript" src="js/entropy/grayscott.js"></script>
-
+    <script type=module" src="js/entropy/grayscott.js"></script>
 
     <style>
         #gradient {
@@ -32,7 +29,10 @@
         }
     </style>
 
-    <script>
+    <script type="module">
+        import {loadshaders} from '/js/entropy/grayscott.js'
+        import {GUI} from '/js/three/dat.gui.module.js'
+
         $(function () {
             $("#gradient").gradient({
                 values:
@@ -58,6 +58,7 @@
     <header>
         <h1>Kaboomlaser Entropy </h1>
     </header>
+
     <div id="simulation">
         <canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
         <aside class="panel">
