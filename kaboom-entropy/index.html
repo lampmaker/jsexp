@@ -32,6 +32,25 @@
     <script type="module">
         import { loadshaders, clean, snapshot, loadPreset } from '/js/entropy/grayscott.js'
         import { GUI } from '/js/three/dat.gui.module.js'
+
+        var gui, guiData, x, y;
+        gui = new GUI({ width: 350 });
+        guiData = {
+            t: 'test',
+            gfeed: 1,
+            gkill: 100,
+            choice: "a",
+        };
+
+        // var gui = mgui.addFolder("Settings");
+        gui.remember(guiData);
+        gui.add(guiData, 't').name('text');
+        gui.add(guiData, 'gfeed', 0, 0.100).name('feed');
+        gui.add(guiData, 'gkill', 0, .100).name('kill');
+        gui.add(guiData, 'choice', ['a', 'b', 'c']).name('choice');
+        var f1 = gui.addFolder('File');
+
+
         window.clean = clean;
         window.snapshot = snapshot;         // expose functions from module
         window.loadPreset = loadPreset;

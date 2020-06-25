@@ -1,5 +1,4 @@
 
-import { GUI } from '/js/three/dat.gui.module.js'
 
 // Canvas.
 var canvas;
@@ -35,15 +34,6 @@ var presets2 = [{ text: "Negative bubbles (sigma)", feed: 0.098, kill: 0.0555, g
 
 /* to be done: load and save presets from external file
 */
-
-
-var gui, guiData, x, y;
-gui = new GUI({ width: 350 });
-guiData = { t: 'test', x: 1, y: 100 };
-gui.add(guiData, 't').name('text');
-gui.add(guiData, 'x', 0, 100).name('xv');
-gui.add(guiData, 'y', 0, 100).name('yv');
-
 
 
 // Some presets.
