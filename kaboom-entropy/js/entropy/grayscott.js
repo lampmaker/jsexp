@@ -90,9 +90,9 @@
     };
 
     loadshaders = function () {
-        loader.load("js/shaders/screenfragment.js", function (data) { shader_scrf = data; });
-        loader.load("js/shaders/standardfragment.js", function (data) { shader_stdf = data; });
-        loader.load("js/shaders/standardvertex.js", function (data) { shader_stdv = data; });
+        loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
+        loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; });
+        loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
 
     };
 
@@ -151,7 +151,6 @@
         mScene.add(mScreenQuad);
 
         mColorsNeedUpdate = true;
-
         resize(canvas.clientWidth, canvas.clientHeight);
 
         render(0);
@@ -201,7 +200,6 @@
         if (dt > 0.8 || dt <= 0)
             dt = 0.8;
         mLastTime = time;
-
         mScreenQuad.material = mGSMaterial;
         mUniforms.delta.value = dt;
         mUniforms.feed.value = feed;
@@ -209,47 +207,30 @@
         mUniforms.feed2.value = feed2;
         mUniforms.kill2.value = kill2;
         for (var i = 0; i < 8; ++i) {
-            // for use with old code
-            /*
-            if (!mToggled) {
-                mUniforms.tSource.value = mTexture1;
-                mRenderer.render(mScene, mCamera, mTexture2, true);               
-                mUniforms.tSource.value = mTexture2;
-            }
-            else {
-                mUniforms.tSource.value = mTexture2;
-                mRenderer.render(mScene, mCamera, mTexture1, true);                
-                mUniforms.tSource.value = mTexture1;
-            }
-*/
-            // for use with new three.js code
-            
             mRenderer.clear();
             if (!mToggled) {
                  mUniforms.tSource.value = mTexture1.texture;
                  mRenderer.setRenderTarget(mTexture2);
                  mRenderer.render(mScene, mCamera);
-                 mRenderer.setRenderTarget(null);
-                mUniforms.tSource.value = mTexture2.texture;
+                 mUniforms.tSource.value = mTexture2.texture;
             }
             else {
                 mUniforms.tSource.value = mTexture2.texture;
                 mRenderer.setRenderTarget(mTexture1);
-                mRenderer.render(mScene, mCamera);
-                mRenderer.setRenderTarget(null);
+                mRenderer.render(mScene, mCamera);            
                 mUniforms.tSource.value = mTexture1.texture;
             }
-
+            mRenderer.setRenderTarget(null);
             mToggled = !mToggled;
             mUniforms.brush.value = mMinusOnes;
         }
 
-        if (mColorsNeedUpdate)
+        if (mColorsNeedUpdate){
             updateUniformsColors();
-
+        }
+         // next, render the resulting colors on the scren
         mScreenQuad.material = mScreenMaterial;
         mRenderer.render(mScene, mCamera);
-
         requestAnimationFrame(render);
     }
     //==================================================================================================================================
