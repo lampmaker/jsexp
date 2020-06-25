@@ -30,9 +30,11 @@
     </style>
 
     <script type="module">
-        import {loadshaders} from '/js/entropy/grayscott.js'
-        import {GUI} from '/js/three/dat.gui.module.js'
-
+        import { loadshaders, clean, snapshot, loadPreset } from '/js/entropy/grayscott.js'
+        import { GUI } from '/js/three/dat.gui.module.js'
+        window.clean = clean;
+        window.snapshot = snapshot;         // expose functions from module
+        window.loadPreset = loadPreset;
         $(function () {
             $("#gradient").gradient({
                 values:
@@ -47,7 +49,7 @@
             colorPicker.offsetX = -512;
             colorPicker.offsetY = -256;
             document.getElementById("gradient").onselectstart = function () { return false; };
-            loadshaders();           
+            loadshaders();
         });
     </script>
 </head>
@@ -119,7 +121,7 @@
         </aside>
     </div>
     <footer>
-    
+
     </footer>
 
 </body>
