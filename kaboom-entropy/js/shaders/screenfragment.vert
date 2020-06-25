@@ -13,14 +13,16 @@ uniform vec4 color5;
 
 vec2 texel = vec2(1.0/screenWidth, 1.0/screenHeight);
 
+/*
+Uniform zijn de parameters dio roorgegeven worden aan deze shader. 
+onderstaande lijst kijkt naar de waarde van de pixel en geeft dan een RGB waarde op basis van de color1..color5 waardes in de colorpicker
+*/
+
 void main()
 {
     float value = texture2D(tSource, vUv).g;
-    //int step = int(floor(value));
-    //float a = fract(value);
     float a;
     vec3 col;
-    
     if(value <= color1.a)
         col = color1.rgb;
     if(value > color1.a && value <= color2.a)
@@ -45,6 +47,5 @@ void main()
     }
     if(value > color5.a)
         col = color5.rgb;
-    
     gl_FragColor = vec4(col.r, col.g, col.b, 1.0);
 }
