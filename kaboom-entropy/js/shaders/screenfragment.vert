@@ -8,8 +8,8 @@ uniform float kill;
 uniform vec4 color1;
 uniform vec4 color2;
 uniform vec4 color3;
-uniform vec4 color4;
-uniform vec4 color5;
+//uniform vec4 color4;
+//uniform vec4 color5;
 
 vec2 texel = vec2(1.0/screenWidth, 1.0/screenHeight);
 
@@ -35,6 +35,9 @@ void main()
         a = (value - color2.a)/(color3.a - color2.a);
         col = mix(color2.rgb, color3.rgb, a);
     }
+     if(value > color3.a)
+        col = color3.rgb;
+    /*
     if(value > color3.a && value <= color4.a)
     {
         a = (value - color3.a)/(color4.a - color3.a);
@@ -47,5 +50,6 @@ void main()
     }
     if(value > color5.a)
         col = color5.rgb;
+    */
     gl_FragColor = vec4(col.r, col.g, col.b, 1.0);
 }

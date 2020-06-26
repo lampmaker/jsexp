@@ -38,7 +38,7 @@ var presets2 = [{ text: "Negative bubbles (sigma)", feed: 0.098, kill: 0.0555, g
 
 // Some presets.
 var presets = [
-    { feed: 0.098, kill: 0.0555 }, // Negative bubbles (sigma)
+    { feed: 0.1, kill: 0.0555 }, // Negative bubbles (sigma)
     { feed: 0.098, kill: 0.057 }, // Positive bubbles (rho)
     { feed: 0.085, kill: 0.059 }, // Precritical bubbles (rho/kappa)
     { feed: 0.082, kill: 0.060 }, // Worms and loops (kappa)
@@ -92,7 +92,7 @@ export function loadshaders() {
 
 //==================================================================================================================================
 function init() {
-    init_controls();
+
 
     canvasQ = $('#myCanvas');
     canvas = canvasQ.get(0);
@@ -119,14 +119,11 @@ function init() {
         kill2: { type: "f", value: kill2 },
         brmode: { type: "f", value: 0.0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
-        color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0) },
-        color2: { type: "v4", value: new THREE.Vector4(0, 1, 0, 0.2) },
-        color3: { type: "v4", value: new THREE.Vector4(1, 1, 0, 0.21) },
-        color4: { type: "v4", value: new THREE.Vector4(1, 0, 0, 0.4) },
-        color5: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.6) }
+        color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
+        color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
+        color3: { type: "v4", value: new THREE.Vector4(1, 0, 0, 0.24) }
     };
-    mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3, mUniforms.color4, mUniforms.color5];
-    $("#gradient").gradient("setUpdateCallback", onUpdatedColor);
+    mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3];
 
     mGSMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
@@ -218,9 +215,6 @@ var render = function (time) {
         mUniforms.brush.value = mMinusOnes;
     }
 
-    if (mColorsNeedUpdate) {
-        updateUniformsColors();
-    }
     // next, render the resulting colors on the scren
     mScreenQuad.material = mScreenMaterial;
     mRenderer.render(mScene, mCamera);
@@ -238,21 +232,19 @@ function loadPreset2(idx) {
     kill2 = presets[idx].kill;
     worldToForm();
 }
-//==================================================================================================================================
-var updateUniformsColors = function () {
-    var values = $("#gradient").gradient("getValuesRGBS");
-    for (var i = 0; i < values.length; i++) {
-        var v = values[i];
-        mColors[i].value = new THREE.Vector4(v[0], v[1], v[2], v[3]);
-    }
 
-    mColorsNeedUpdate = false;
+export function updateparameters(f,k){
+    feed=f;
+    kill=k;
 }
-//==================================================================================================================================
-var onUpdatedColor = function () {
-    mColorsNeedUpdate = true;
-    updateShareString();
+
+
+export function  updateUniformsColors2 (c0, c1,c2) {
+    mColors[0].value = new THREE.Vector4(c0[0], c0[1], c0[2], c0[3]);
+    mColors[1].value = new THREE.Vector4(c1[0], c1[1], c1[2], c1[3]);
+    mColors[2].value = new THREE.Vector4(c2[0], c2[1], c2[2], c2[3]);
 }
+
 
 
 //==================================================================================================================================
@@ -377,121 +369,5 @@ var worldToForm = function () {
     $("#sld_diminishment").slider("value", kill);
 }
 //==================================================================================================================================
-var init_controls = function () {
-    $("#sld_replenishment").slider({
-        value: feed, min: 0, max: 0.1, step: 0.001,
-        change: function (event, ui) { $("#replenishment").html(ui.value); feed = ui.value; updateShareString(); },
-        slide: function (event, ui) { $("#replenishment").html(ui.value); feed = ui.value; updateShareString(); }
-    });
-    $("#sld_replenishment").slider("value", feed);
-    $("#sld_diminishment").slider({
-        value: kill, min: 0, max: 0.073, step: 0.001,
-        change: function (event, ui) { $("#diminishment").html(ui.value); kill = ui.value; updateShareString(); },
-        slide: function (event, ui) { $("#diminishment").html(ui.value); kill = ui.value; updateShareString(); }
-    });
-    $("#sld_diminishment").slider("value", kill);
-
-    $("#sld_replenishment2").slider({
-        value: feed, min: 0, max: 0.1, step: 0.001,
-        change: function (event, ui) { $("#replenishment2").html(ui.value); feed2 = ui.value; updateShareString(); },
-        slide: function (event, ui) { $("#replenishment2").html(ui.value); feed2 = ui.value; updateShareString(); }
-    });
-    $("#sld_replenishment2").slider("value", feed);
-    $("#sld_diminishment2").slider({
-        value: kill, min: 0, max: 0.073, step: 0.001,
-        change: function (event, ui) { $("#diminishment2").html(ui.value); kill2 = ui.value; updateShareString(); },
-        slide: function (event, ui) { $("#diminishment2").html(ui.value); kill2 = ui.value; updateShareString(); }
-    });
-    $("#sld_diminishment2").slider("value", kill);
 
 
-
-
-    $('#share').keypress(function (e) {
-        if (e.which == 13) {
-            parseShareString();
-            return false;
-        }
-    });
-
-    $("#btn_clear").button({
-        icons: { primary: "ui-icon-document" },
-        text: false
-    });
-    $("#btn_snapshot").button({
-        icons: { primary: "ui-icon-image" },
-        text: false
-    });
-    $("#btn_fullscreen").button({
-        icons: { primary: "ui-icon-arrow-4-diag" },
-        text: false
-    });
-
-    $("#notworking").click(function () {
-        $("#requirement_dialog").dialog("open");
-    });
-    $("#requirement_dialog").dialog({
-        autoOpen: false
-    });
-}
-//===================================================================
-function alertInvalidShareString() {
-    $("#share").val("Invalid string!");
-    setTimeout(updateShareString, 1000);
-}
-//===================================================================
-function parseShareString() {
-    var str = $("#share").val();
-    var fields = str.split(",");
-
-    if (fields.length != 12) {
-        alertInvalidShareString();
-        return;
-    }
-
-    var newFeed = parseFloat(fields[0]);
-    var newKill = parseFloat(fields[1]);
-
-    if (isNaN(newFeed) || isNaN(newKill)) {
-        alertInvalidShareString();
-        return;
-    }
-
-    var newValues = [];
-    for (var i = 0; i < 5; i++) {
-        var v = [parseFloat(fields[2 + 2 * i]), fields[2 + 2 * i + 1]];
-
-        if (isNaN(v[0])) {
-            alertInvalidShareString();
-            return;
-        }
-
-        // Check if the string is a valid color.
-        if (! /^#[0-9A-F]{6}$/i.test(v[1])) {
-            alertInvalidShareString();
-            return;
-        }
-
-        newValues.push(v);
-    }
-
-    $("#gradient").gradient("setValues", newValues);
-    feed = newFeed;
-    kill = newKill;
-    worldToForm();
-}
-//===================================================================
-function updateShareString() {
-    var str = "".concat(feed, ",", kill);
-
-    var values = $("#gradient").gradient("getValues");
-    for (var i = 0; i < values.length; i++) {
-        var v = values[i];
-        str += "".concat(",", v[0], ",", v[1]);
-    }
-    $("#share").val(str);
-}
-//===================================================================
-/*
-})();
-*/

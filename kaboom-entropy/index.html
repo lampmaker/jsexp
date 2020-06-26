@@ -15,8 +15,6 @@
     <script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
     <script type="text/javascript" src="js/three/three.min_new.js"></script>
     <!-- CODE -->
-    <script type="text/javascript" src="js/entropy/gradientui.js"></script>
-    <script type="text/javascript" src="js/entropy/colorPicker.js"></script>
     <script type=module" src="js/entropy/grayscott.js"></script>
 
     <style>
@@ -30,44 +28,66 @@
     </style>
 
     <script type="module">
-        import { loadshaders, clean, snapshot, loadPreset } from '/js/entropy/grayscott.js'
+        import { loadshaders, clean, snapshot, loadPreset ,updateUniformsColors2, updateparameters} from '/js/entropy/grayscott.js'
+
         import { GUI } from '/js/three/dat.gui.module.js'
+        window.clean = clean;
+        window.snapshot = snapshot;         // expose functions from module
 
         var gui, guiData, x, y;
         gui = new GUI({ width: 350 });
         guiData = {
-            t: 'test',
-            gfeed: 1,
-            gkill: 100,
+            t: 'Default',
+            gfeed: 0.01,
+            gkill: 0.05,
             choice: "a",
+            gclean:clean,
+            c1:"#0000AA",
+            c2:"#000000",
+            c3:"#000000",
+            c1pos:0.1,
+            c2pos:0.2,
+            c3pos:0.4
         };
+    function mupdateparameters(){
+        updateparameters(guiData.gfeed,guiData.gkill);
+          }
 
-        // var gui = mgui.addFolder("Settings");
+    var hexToRgb = function(hex,a) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? 
+        [ parseInt(result[1], 16)/255.0,
+          parseInt(result[2], 16)/255.0,
+          parseInt(result[3], 16)/255.0,
+          a
+     ] : null;
+    }
+
+    function updatecolors(){
+        var c1=hexToRgb(guiData.c1,guiData.c1pos);
+        var c2=hexToRgb(guiData.c2,guiData.c2pos);
+        var c3=hexToRgb(guiData.c3,guiData.c3pos);
+        updateUniformsColors2(c1,c2,c3);
+    }
+
         gui.remember(guiData);
-        gui.add(guiData, 't').name('text');
-        gui.add(guiData, 'gfeed', 0, 0.100).name('feed');
-        gui.add(guiData, 'gkill', 0, .100).name('kill');
-        gui.add(guiData, 'choice', ['a', 'b', 'c']).name('choice');
-        var f1 = gui.addFolder('File');
+        gui.add(guiData, 't').name('Description');
+        gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
+        gui.add(guiData, 'gkill', 0.00, .100).name('kill').onChange(mupdateparameters);
+        gui.add(guiData, 'choice', ['a', 'b', 'c']).name('choice');    
+        gui.add(guiData,'gclean').name('Start')    ;
+        var f1 = gui.addFolder('Colors');
+        f1.addColor(guiData,'c1').name("Color 1").onChange(updatecolors);
+        f1.add(guiData,'c1pos',0.00,1.0).name('position').onChange(updatecolors);
+        f1.addColor(guiData,'c2').name("Color 2").onChange(updatecolors);
+        f1.add(guiData,'c2pos',0.00,1.0).name('position').onChange(updatecolors);
+        f1.addColor(guiData,'c3').name("Color 2").onChange(updatecolors);
+        f1.add(guiData,'c3pos',0.00,1.0).name('position').onChange(updatecolors);
 
 
-        window.clean = clean;
-        window.snapshot = snapshot;         // expose functions from module
+      
         window.loadPreset = loadPreset;
         $(function () {
-            $("#gradient").gradient({
-                values:
-                    [[0, '#000000'],
-                    [0.2, '#00FF00'],
-                    [0.21, '#FFFF00'],
-                    [0.4, '#FF0000'],
-                    [0.6, '#FFFFFF']]
-            });
-
-            // KLUDGE!
-            colorPicker.offsetX = -512;
-            colorPicker.offsetY = -256;
-            document.getElementById("gradient").onselectstart = function () { return false; };
             loadshaders();
         });
     </script>
@@ -132,10 +152,6 @@
                 Death rate:
                 <span class="remark" id="diminishment"></span><br />
                 <div id="sld_diminishment" class="slider"></div>
-                Colors:
-                <div id="gradient" style=""></div>
-                <div style="font-size:x-small">Share (paste and press enter):</div>
-                <div style="text-align:center"><input id="share" style="width:85%" /></div>
             </section>
         </aside>
     </div>
