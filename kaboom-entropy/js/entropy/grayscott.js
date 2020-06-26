@@ -29,47 +29,10 @@ var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
-
-var presets2 = [{ text: "Negative bubbles (sigma)", feed: 0.098, kill: 0.0555, gradient: [[0, '#000000'], [0.2, '#00FF00'], [0.21, '#FFFF00'], [0.4, '#FF0000'], [0.6, '#FFFFFF']] }]
-
-/* to be done: load and save presets from external file
-*/
-
-
-// Some presets.
-var presets = [
-    { feed: 0.1, kill: 0.0555 }, // Negative bubbles (sigma)
-    { feed: 0.098, kill: 0.057 }, // Positive bubbles (rho)
-    { feed: 0.085, kill: 0.059 }, // Precritical bubbles (rho/kappa)
-    { feed: 0.082, kill: 0.060 }, // Worms and loops (kappa)
-    { feed: 0.074, kill: 0.064 }, // Stable solitons (nu)
-    { feed: 0.062, kill: 0.0609 }, // The U-Skate World (pi)
-    { feed: 0.058, kill: 0.065 }, // Worms (mu)
-    { feed: 0.046, kill: 0.063 }, // Worms join into maze (kappa)
-    { feed: 0.046, kill: 0.0594 }, // Negatons (iota)
-    { feed: 0.042, kill: 0.059 }, // Turing patterns (delta)
-    { feed: 0.039, kill: 0.058 }, // Chaos to Turing negatons (beta)
-    { feed: 0.037, kill: 0.06 }, // Fingerprints (theta/kappa)
-    { feed: 0.0353, kill: 0.0566 }, // Chaos with negatons (beta/delta)
-    { feed: 0.034, kill: 0.0618 }, // Spots and worms (eta)
-    { feed: 0.03, kill: 0.063 }, // Self-replicating spots (lambda)
-    { feed: 0.03, kill: 0.0565 }, // Super-resonant mazes (theta)
-    { feed: 0.029, kill: 0.057 }, // Mazes (kappa)
-    { feed: 0.026, kill: 0.055 }, // Mazes with some chaos (gamma)
-    { feed: 0.026, kill: 0.051 }, // Chaos (beta)
-    { feed: 0.025, kill: 0.06 }, // Pulsating solitons (zeta)
-    { feed: 0.022, kill: 0.059 }, // Warring microbes (epsilon)
-    { feed: 0.018, kill: 0.051 }, // Spots and loops (alpha)
-    { feed: 0.014, kill: 0.054 }, // Moving spots (alpha)
-    { feed: 0.014, kill: 0.045 }, // Waves (xi)
-    { feed: 0.001, kill: 0.03 } // leave this line at the end
-];
-
+// 
 // Configuration.
-var feed = presets[0].feed;
-var kill = presets[0].kill;
-var feed2 = feed;
-var kill2 = kill;
+var feed = 0.1;
+var kill = 0.055;
 
 var shader_scrf, shader_stdf, shader_stdv;
 
@@ -87,7 +50,6 @@ export function loadshaders() {
     loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
     loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; });
     loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
-
 };
 
 //==================================================================================================================================
@@ -114,14 +76,12 @@ function init() {
         tSource: { type: "t", value: undefined },
         delta: { type: "f", value: 1.0 },
         feed: { type: "f", value: feed },
-        kill: { type: "f", value: kill },
-        feed2: { type: "f", value: feed2 },
-        kill2: { type: "f", value: kill2 },
+        kill: { type: "f", value: kill },        
         brmode: { type: "f", value: 0.0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
-        color3: { type: "v4", value: new THREE.Vector4(1, 0, 0, 0.24) }
+        color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) }
     };
     mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3];
 
@@ -150,8 +110,9 @@ function init() {
     requestAnimationFrame(render);
 }
 //==================================================================================================================================
-var resize = function (width, height) {
+export function resize (width, height) {
     // Set the new shape of canvas.
+    
     canvasQ.width(width);
     canvasQ.height(height);
 
@@ -194,8 +155,7 @@ var render = function (time) {
     mUniforms.delta.value = dt;
     mUniforms.feed.value = feed;
     mUniforms.kill.value = kill;
-    mUniforms.feed2.value = feed2;
-    mUniforms.kill2.value = kill2;
+
     for (var i = 0; i < 8; ++i) {
         mRenderer.clear();
         if (!mToggled) {

@@ -1,0 +1,26 @@
+﻿,feed,kill,c1,c2,c3,cp1,cp2,cp3
+Negative bubbles (sigma), 0.1, 0.0555 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Bubbles (rho), 0.098, 0.057 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Precritical bubbles (rho/kappa), 0.085, 0.059 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Worms and loops (kappa), 0.082, 0.060 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Stable solitons (nu), 0.074, 0.064 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+The U-Skate world (pi), 0.062, 0.0609 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Worms (mu), 0.058, 0.065 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Worms join into maze (kappa), 0.046, 0.063 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Negatons (iota), 0.046, 0.0594 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Turing patterns (delta), 0.042, 0.059 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Chaos to Turing negatons (beta), 0.039, 0.058 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Fingerprints (theta/kappa), 0.037, 0.06 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Chaos with negatons (beta/delta), 0.0353, 0.0566 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Spots and worms (eta), 0.034, 0.0618 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Self-replicating spots (lambda), 0.03, 0.063 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Super-resonant mazes (theta), 0.03, 0.0565 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Mazes (kappa), 0.029, 0.057 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Mazes with some chaos (gamma), 0.026, 0.055 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Chaos (beta), 0.026, 0.051 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Pulsating solitons (zeta), 0.025, 0.06 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Warring microbes (epsilon), 0.022, 0.059 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Spots and loops (alpha), 0.018, 0.051 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Moving spots (alpha), 0.014, 0.054 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+Waves (xi), 0.014, 0.045 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4
+, 0.001, 0.03 ,#000000,#FFFFFF,#AAAAAA,0.2,0.3,0.4

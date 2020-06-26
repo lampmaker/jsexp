@@ -27,136 +27,90 @@
         }
     </style>
 
-    <script type="module">
-        import { loadshaders, clean, snapshot, loadPreset ,updateUniformsColors2, updateparameters} from '/js/entropy/grayscott.js'
-
-        import { GUI } from '/js/three/dat.gui.module.js'
-        window.clean = clean;
-        window.snapshot = snapshot;         // expose functions from module
-
-        var gui, guiData, x, y;
-        gui = new GUI({ width: 350 });
-        guiData = {
-            t: 'Default',
-            gfeed: 0.01,
-            gkill: 0.05,
-            choice: "a",
-            gclean:clean,
-            c1:"#0000AA",
-            c2:"#000000",
-            c3:"#000000",
-            c1pos:0.1,
-            c2pos:0.2,
-            c3pos:0.4
-        };
-    function mupdateparameters(){
-        updateparameters(guiData.gfeed,guiData.gkill);
-          }
-
-    var hexToRgb = function(hex,a) {
-        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? 
-        [ parseInt(result[1], 16)/255.0,
-          parseInt(result[2], 16)/255.0,
-          parseInt(result[3], 16)/255.0,
-          a
-     ] : null;
-    }
-
-    function updatecolors(){
-        var c1=hexToRgb(guiData.c1,guiData.c1pos);
-        var c2=hexToRgb(guiData.c2,guiData.c2pos);
-        var c3=hexToRgb(guiData.c3,guiData.c3pos);
-        updateUniformsColors2(c1,c2,c3);
-    }
-
-        gui.remember(guiData);
-        gui.add(guiData, 't').name('Description');
-        gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        gui.add(guiData, 'gkill', 0.00, .100).name('kill').onChange(mupdateparameters);
-        gui.add(guiData, 'choice', ['a', 'b', 'c']).name('choice');    
-        gui.add(guiData,'gclean').name('Start')    ;
-        var f1 = gui.addFolder('Colors');
-        f1.addColor(guiData,'c1').name("Color 1").onChange(updatecolors);
-        f1.add(guiData,'c1pos',0.00,1.0).name('position').onChange(updatecolors);
-        f1.addColor(guiData,'c2').name("Color 2").onChange(updatecolors);
-        f1.add(guiData,'c2pos',0.00,1.0).name('position').onChange(updatecolors);
-        f1.addColor(guiData,'c3').name("Color 2").onChange(updatecolors);
-        f1.add(guiData,'c3pos',0.00,1.0).name('position').onChange(updatecolors);
-
-
-      
-        window.loadPreset = loadPreset;
-        $(function () {
-            loadshaders();
-        });
-    </script>
 </head>
 
+<script type="module">
+    import { loadshaders, clean, snapshot, loadPreset, updateUniformsColors2, updateparameters, resize } from '/js/entropy/grayscott.js'
+    import { GUI } from '/js/three/dat.gui.module.js'
+    window.clean = clean;
+    window.snapshot = snapshot;         // expose functions from module
+    window.loadPreset = loadPreset;
+
+    var gui, guiData, x, y;
+    var loaded=false;
+
+    guiData = {
+        cwidth: 1024,
+        cheight: 1024,
+        t: 'Default',
+        gfeed: 0.01,
+        gkill: 0.05,
+        choice: "a",
+        gclean: clean,
+        c1: "#0000AA",
+        c2: "#000000",
+        c3: "#000000",
+        c1pos: 0.1,
+        c2pos: 0.2,
+        c3pos: 0.4
+    };
+
+    gui = new GUI({ width: 350, load: guiData });
+    function mupdateparameters() {
+        updateparameters(guiData.gfeed, guiData.gkill);
+    }
+    var hexToRgb = function (hex, a) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ?
+            [parseInt(result[1], 16) / 255.0,
+            parseInt(result[2], 16) / 255.0,
+            parseInt(result[3], 16) / 255.0,
+                a
+            ] : null;
+    }
+    function updatecolors() {
+        var c1 = hexToRgb(guiData.c1, guiData.c1pos);
+        var c2 = hexToRgb(guiData.c2, guiData.c2pos);
+        var c3 = hexToRgb(guiData.c3, guiData.c3pos);
+        updateUniformsColors2(c1, c2, c3);
+    }
+
+    function updatescreen(){
+        if(!loaded) return;
+        resize(guiData.cwidth, guiData.cheight);
+    }
+
+    $(function () {      
+        gui.remember(guiData);
+        gui.add(guiData, 't').name('Description');
+        gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
+        gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
+        gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
+        gui.add(guiData, 'gkill', 0.00, .100).name('kill').onChange(mupdateparameters);
+        gui.add(guiData, 'choice', ['a', 'b', 'c']).name('choice');
+        gui.add(guiData, 'gclean').name('Start');
+        var f1 = gui.addFolder('Colors');
+        f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
+        f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
+        f1.addColor(guiData, 'c2').name("Color 2").onChange(updatecolors);
+        f1.add(guiData, 'c2pos', 0.00, 1.0).name('position').onChange(updatecolors);
+        f1.addColor(guiData, 'c3').name("Color 2").onChange(updatecolors);
+        f1.add(guiData, 'c3pos', 0.00, 1.0).name('position').onChange(updatecolors);
+        loadshaders();
+        loaded=true;
+    });
+</script>
 
 <body>
-
     <header>
         <h1>Kaboomlaser Entropy </h1>
     </header>
-
     <div id="simulation">
         <canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
-        <aside class="panel">
-            <section id="instrucites">
-                <header>
-                    <h4>Instructies</h4>
-                </header>
-            </section>
-            <section id="controls">
-                <!--header><h4>Controls</h4></header-->
-                <form name="ex">
-                    Presets:
-                    <select name="scene" style="width:100%" onchange="loadPreset(document.ex.scene.selectedIndex)">
-                        <option value="0">Negative bubbles (sigma)</option>
-                        <option value="1">Bubbles (rho)</option>
-                        <option value="2">Precritical bubbles (rho/kappa)</option>
-                        <option value="3" selected="selected">Worms and loops (kappa)</option>
-                        <option value="4">Stable solitons (nu)</option>
-                        <option value="5">The U-Skate world (pi)</option>
-                        <option value="6">Worms (mu)</option>
-                        <option value="7">Worms join into maze (kappa)</option>
-                        <option value="8">Negatons (iota)</option>
-                        <option value="9">Turing patterns (delta)</option>
-                        <option value="10">Chaos to Turing negatons (beta)</option>
-                        <option value="11">Fingerprints (theta/kappa)</option>
-                        <option value="12">Chaos with negatons (beta/delta)</option>
-                        <option value="13">Spots and worms (eta)</option>
-                        <option value="14">Self-replicating spots (lambda)</option>
-                        <option value="15">Super-resonant mazes (theta)</option>
-                        <option value="16">Mazes (kappa)</option>
-                        <option value="17">Mazes with some chaos (gamma)</option>
-                        <option value="18">Chaos (beta)</option>
-                        <option value="19">Pulsating solitons (zeta)</option>
-                        <option value="20">Warring microbes (epsilon)</option>
-                        <option value="21">Spots and loops (alpha)</option>
-                        <option value="22">Moving spots (alpha)</option>
-                        <option value="23">Waves (xi)</option>
-                    </select>
-                </form>
-                <p style="text-align:center">
-                    <button id="btn_clear" onclick="clean()">Clear</button>
-                    <button id="btn_snapshot" onclick="snapshot()">Take snapshot</button>
-                    <button id="btn_fullscreen" onclick="fullscreen()">Fullscreen mode</button>
-                    <p />
-                <h4 class="unsafe">Advanced settings</h4>
-                Feed rate:
-                <span class="remark" id="replenishment"></span><br />
-                <div id="sld_replenishment" class="slider"></div>
-
-                Death rate:
-                <span class="remark" id="diminishment"></span><br />
-                <div id="sld_diminishment" class="slider"></div>
-            </section>
-        </aside>
     </div>
-    <footer>
+  
 
+    <footer>
     </footer>
 
 </body>

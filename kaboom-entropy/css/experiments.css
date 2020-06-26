@@ -1,14 +1,14 @@
 
 body {
     font-family:sans-serif;
-    background:#333333;
-    color:#777777;
-    width: 1200px;
-    margin: 0 auto;
+    background:#09438f;
+    color:#ffffff;
+    
 }
 
 header, footer, aside, nav {
     display: block;
+    text-align:center;
 }
 
 a:link {color:#777777;}
@@ -16,25 +16,15 @@ a:visited {color:#777777;}
 a:hover {color:#999999;}
 a:active {color:#ffffff;}
 
-#copyright {
-    font-size:8pt;
-    text-align:center;
-    margin-top:10px;
-}
 
 .remark {
     color: #ffffff;
 }
 
-.unsafe {
-    color : #c86464;
-}
 
 #simulation {
     display:table;
     margin: 0 auto;
-    border:1px solid;
-    box-shadow: 10px 10px 7px #222;
 }
 
     #simulation .viewer {
@@ -70,5 +60,4 @@ a:active {color:#ffffff;}
     display:block;
     vertical-align:bottom;
     background-color:#000000;
-    border-right:1px solid;
 }
