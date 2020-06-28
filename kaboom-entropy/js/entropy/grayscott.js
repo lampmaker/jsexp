@@ -29,10 +29,6 @@ var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
-// 
-// Configuration.
-var feed = 0.1;
-var kill = 0.055;
 
 var shader_scrf, shader_stdf, shader_stdv;
 
@@ -75,9 +71,10 @@ function init() {
         screenHeight: { type: "f", value: undefined },
         tSource: { type: "t", value: undefined },
         delta: { type: "f", value: 1.0 },
-        feed: { type: "f", value: feed },
-        kill: { type: "f", value: kill },        
+        feed: { type: "f", value: .1 },
+        kill: { type: "f", value: .055 },
         brmode: { type: "f", value: 0.0 },
+        mode: { type: "i", value: 0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
@@ -110,9 +107,17 @@ function init() {
     requestAnimationFrame(render);
 }
 //==================================================================================================================================
-export function resize (width, height) {
+export function resize(width, height) {
     // Set the new shape of canvas.
-    
+
+    canvasWidth = canvasQ.width();
+    canvasHeight = canvasQ.height();
+    if ((canvasWidth == width) && (canvasHeight != height)) {
+        console.log('nothign to do')
+        return;
+    }
+
+
     canvasQ.width(width);
     canvasQ.height(height);
 
@@ -138,10 +143,10 @@ export function resize (width, height) {
             type: THREE.FloatType
         });
 
-    mTexture1.wrapS = THREE.RepeatWrapping;
-    mTexture1.wrapT = THREE.RepeatWrapping;
-    mTexture2.wrapS = THREE.RepeatWrapping;
-    mTexture2.wrapT = THREE.RepeatWrapping;
+    mTexture1.texture.wrapS = THREE.RepeatWrapping;
+    mTexture1.texture.wrapT = THREE.RepeatWrapping;
+    mTexture2.texture.wrapS = THREE.RepeatWrapping;
+    mTexture2.texture.wrapT = THREE.RepeatWrapping;
     mUniforms.screenWidth.value = canvasWidth / 2;
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
@@ -153,8 +158,8 @@ var render = function (time) {
     mLastTime = time;
     mScreenQuad.material = mGSMaterial;
     mUniforms.delta.value = dt;
-    mUniforms.feed.value = feed;
-    mUniforms.kill.value = kill;
+    //  mUniforms.feed.value = feed;
+    //  mUniforms.kill.value = kill;
 
     for (var i = 0; i < 8; ++i) {
         mRenderer.clear();
@@ -181,31 +186,18 @@ var render = function (time) {
     requestAnimationFrame(render);
 }
 //==================================================================================================================================
-export function loadPreset(idx) {
-    feed = presets[idx].feed;
-    kill = presets[idx].kill;
-    worldToForm();
+export function updateparameters(f, k, m) {
+    mUniforms.feed.value = f;
+    mUniforms.kill.value = k;
+    mUniforms.mode.value = m;
 }
+
 //==================================================================================================================================
-function loadPreset2(idx) {
-    feed2 = presets[idx].feed;
-    kill2 = presets[idx].kill;
-    worldToForm();
-}
-
-export function updateparameters(f,k){
-    feed=f;
-    kill=k;
-}
-
-
-export function  updateUniformsColors2 (c0, c1,c2) {
+export function updateUniformsColors2(c0, c1, c2) {
     mColors[0].value = new THREE.Vector4(c0[0], c0[1], c0[2], c0[3]);
     mColors[1].value = new THREE.Vector4(c1[0], c1[1], c1[2], c1[3]);
     mColors[2].value = new THREE.Vector4(c2[0], c2[1], c2[2], c2[3]);
 }
-
-
 
 //==================================================================================================================================
 var onMouseMove = function (e) {
@@ -222,7 +214,6 @@ var onMouseMove = function (e) {
 }
 
 //==================================================================================================================================
-
 var onMouseDown = function (e) {
     var ev = e ? e : window.event;
     e
@@ -234,7 +225,7 @@ var onMouseDown = function (e) {
     mUniforms.brush.value = new THREE.Vector2(mMouseX / canvasWidth,
         1 - mMouseY / canvasHeight);
 }
-
+//==================================================================================================================================
 var onMouseUp = function (e) {
     mMouseDown = false;
 }
@@ -261,73 +252,9 @@ export function clean() {
     }
 }
 //==================================================================================================================================
-
-
 export function snapshot() {
     var dataURL = canvas.toDataURL("image/png");
     window.open(dataURL, "name-" + Math.random());
 }
-//==================================================================================================================================
-// resize canvas to fullscreen, scroll to upper left 
-// corner and try to enable fullscreen mode and vice-versa
-export function fullscreen() {
-
-    var canv = $('#myCanvas');
-    var elem = canv.get(0);
-
-    if (isFullscreen()) {
-        // end fullscreen
-        if (elem.cancelFullscreen) {
-            elem.cancelFullscreen();
-        } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-        } else if (document.webkitCancelFullScreen) {
-            document.webkitCancelFullScreen();
-        }
-    }
-
-    if (!isFullscreen()) {
-        // save current dimensions as old
-        window.oldCanvSize = {
-            width: canv.width(),
-            height: canv.height()
-        };
-
-        // adjust canvas to screen size
-        resize(screen.width, screen.height);
-
-        // scroll to upper left corner
-        $('html, body').scrollTop(canv.offset().top);
-        $('html, body').scrollLeft(canv.offset().left);
-
-        // request fullscreen in different flavours
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        }
-    }
-}
-//==================================================================================================================================
-var isFullscreen = function () {
-    return document.mozFullScreenElement ||
-        document.webkitCurrentFullScreenElement ||
-        document.fullscreenElement;
-}
-//==================================================================================================================================
-$(document).bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (ev) {
-    // restore old canvas size
-    if (!isFullscreen())
-        resize(window.oldCanvSize.width, window.oldCanvSize.height);
-});
-//==================================================================================================================================
-var worldToForm = function () {
-    //document.ex.sldReplenishment.value = feed * 1000;
-    $("#sld_replenishment").slider("value", feed);
-    $("#sld_diminishment").slider("value", kill);
-}
-//==================================================================================================================================
 
 

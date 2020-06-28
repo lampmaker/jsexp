@@ -6,7 +6,7 @@ uniform sampler2D tSource;
 uniform float delta;
 uniform float feed;
 uniform float kill;
-
+uniform int mode;
 uniform vec2 brush;
 uniform float brmode;
 
@@ -140,7 +140,8 @@ void main()
   float du = /*0.00002*/ Da * lapl.r - uv.r * uv.g * uv.g + feed * (1.0 - uv.r);
   float dv = /*0.00001*/ Db * lapl.g + uv.r * uv.g * uv.g - (feed + kill) * uv.g;
 
-  int circular=1;  // set to 0 for non-circular mode
+
+  
   float R = sqrt((vUv.x - 0.5) * (vUv.x - 0.5) + (vUv.y - 0.5) * (vUv.y - 0.5));
   //     if (R>0.4) {
   //         //du=0.0;
@@ -148,7 +149,7 @@ void main()
   //   }
 
   vec2 dst = uv + delta * vec2(du, dv);
-  if (circular>0){
+  if (mode==1){
     if ((R > 0.48) || (R < 0.125))
     {
       dst.r = 1.0;
