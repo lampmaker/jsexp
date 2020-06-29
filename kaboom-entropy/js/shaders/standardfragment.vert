@@ -167,15 +167,15 @@ void main()
       dst.g = 0.9;
       if (brmode > 0.0)
       {
-        /* paint blue */
+        //paint blue 
         dst.r = 0.0;
-        dst.g = 0.9; /* set u=0, v=0.9 */
+        dst.g = 0.9; // set u=0, v=0.9
       }
       else
       {
-        /* paint red */
+        // paint red 
         dst.r = 1.0;
-        dst.g = 0.0; /* set u=1, v=0 */
+        dst.g = 0.0; // set u=1, v=0 
       }
     }
   }

@@ -16,8 +16,8 @@ var mCamera;
 // webgl 
 var mUniforms;
 var mColors; //for gradient
-var mTexture1, mTexture2;
-var mGSMaterial, mScreenMaterial;
+var mTexture1, mTexture2, mBrushtexture;
+var mGSMaterial, mScreenMaterial,mBrushMaterial;
 var mScreenQuad;
 var mToggled = false;
 
@@ -30,15 +30,12 @@ var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
 
-var shader_scrf, shader_stdf, shader_stdv;
+var shader_scrf, shader_stdf, shader_stdv,shader_brush;
 
 var shaderloadingmanager = new THREE.LoadingManager();
 var loader = new THREE.FileLoader(shaderloadingmanager);
 
-shaderloadingmanager.onLoad = function () {
-    //    shader_scrf = document.getElementById('screenFragmentShader').textContent
-    //   shader_stdf = document.getElementById('gsFragmentShader').textContent
-    //   shader_stdv = document.getElementById('standardVertexShader').textContent
+shaderloadingmanager.onLoad = function () {   
     init();
 };
 
@@ -46,6 +43,7 @@ export function loadshaders() {
     loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
     loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; });
     loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
+    loader.load("js/shaders/brushfragment.vert", function (data) { shader_brush = data; });
 };
 
 //==================================================================================================================================
@@ -94,10 +92,18 @@ function init() {
         fragmentShader: shader_scrf,
     });
 
+    
+    mBrushMaterial = new THREE.ShaderMaterial({
+        uniforms: mUniforms,
+        vertexShader: shader_stdv,
+        fragmentShader: shader_brush,
+    });
+
     var plane = new THREE.PlaneGeometry(1.0, 1.0);
     mScreenQuad = new THREE.Mesh(plane, mScreenMaterial);
     mScene.add(mScreenQuad);
 
+    
     mColorsNeedUpdate = true;
     resize(canvas.clientWidth, canvas.clientHeight);
 
@@ -135,6 +141,7 @@ export function resize(width, height) {
             format: THREE.RGBAFormat,
             type: THREE.FloatType
         });
+
     mTexture2 = new THREE.WebGLRenderTarget(canvasWidth / 2, canvasHeight / 2,
         {
             minFilter: THREE.LinearFilter,
@@ -143,6 +150,16 @@ export function resize(width, height) {
             type: THREE.FloatType
         });
 
+    mBrushtexture = new THREE.WebGLRenderTarget(canvasWidth / 2, canvasHeight / 2,
+            {
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                format: THREE.RGBAFormat,
+                type: THREE.FloatType
+            });
+
+    mBrushtexture.texture.wrapS=THREE.RepeatWrapping;            
+    mBrushtexture.texture.wrapT=THREE.RepeatWrapping;
     mTexture1.texture.wrapS = THREE.RepeatWrapping;
     mTexture1.texture.wrapT = THREE.RepeatWrapping;
     mTexture2.texture.wrapS = THREE.RepeatWrapping;
@@ -158,9 +175,6 @@ var render = function (time) {
     mLastTime = time;
     mScreenQuad.material = mGSMaterial;
     mUniforms.delta.value = dt;
-    //  mUniforms.feed.value = feed;
-    //  mUniforms.kill.value = kill;
-
     for (var i = 0; i < 8; ++i) {
         mRenderer.clear();
         if (!mToggled) {
@@ -183,6 +197,9 @@ var render = function (time) {
     // next, render the resulting colors on the scren
     mScreenQuad.material = mScreenMaterial;
     mRenderer.render(mScene, mCamera);
+
+   
+
     requestAnimationFrame(render);
 }
 //==================================================================================================================================
