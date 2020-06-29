@@ -16,7 +16,7 @@ var mCamera;
 // webgl 
 var mUniforms;
 var mColors; //for gradient
-var mTexture1, mTexture2, mBrushtexture;
+var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2;
 var mGSMaterial, mScreenMaterial,mBrushMaterial;
 var mScreenQuad;
 var mToggled = false;
@@ -112,6 +112,20 @@ function init() {
     mLastTime = new Date().getTime();
     requestAnimationFrame(render);
 }
+
+function newtarget(w,h){
+    var X=new THREE.WebGLRenderTarget(w / 2, h / 2,
+        {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType
+        })
+        X.texture.wrapS=THREE.RepeatWrapping;            
+        X.texture.wrapT=THREE.RepeatWrapping;
+        return X;
+}
+
 //==================================================================================================================================
 export function resize(width, height) {
     // Set the new shape of canvas.
@@ -134,72 +148,60 @@ export function resize(width, height) {
     mRenderer.setSize(canvasWidth, canvasHeight);
 
     // TODO: Possible memory leak?
-    mTexture1 = new THREE.WebGLRenderTarget(canvasWidth / 2, canvasHeight / 2,
-        {
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter,
-            format: THREE.RGBAFormat,
-            type: THREE.FloatType
-        });
+    mTexture1= new newtarget(canvasWidth,canvasHeight);
+    mTexture2= new newtarget(canvasWidth,canvasHeight);
+    mBrushtexture1= new newtarget(canvasWidth,canvasHeight);
+    mBrushtexture2= new newtarget(canvasWidth,canvasHeight);
 
-    mTexture2 = new THREE.WebGLRenderTarget(canvasWidth / 2, canvasHeight / 2,
-        {
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter,
-            format: THREE.RGBAFormat,
-            type: THREE.FloatType
-        });
-
-    mBrushtexture = new THREE.WebGLRenderTarget(canvasWidth / 2, canvasHeight / 2,
-            {
-                minFilter: THREE.LinearFilter,
-                magFilter: THREE.LinearFilter,
-                format: THREE.RGBAFormat,
-                type: THREE.FloatType
-            });
-
-    mBrushtexture.texture.wrapS=THREE.RepeatWrapping;            
-    mBrushtexture.texture.wrapT=THREE.RepeatWrapping;
-    mTexture1.texture.wrapS = THREE.RepeatWrapping;
-    mTexture1.texture.wrapT = THREE.RepeatWrapping;
-    mTexture2.texture.wrapS = THREE.RepeatWrapping;
-    mTexture2.texture.wrapT = THREE.RepeatWrapping;
     mUniforms.screenWidth.value = canvasWidth / 2;
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
+
+function renderbrush(){
+    mScreenQuad.material = mBrushMaterial;
+    mUniforms.tSource.value = mBrushtexture1.texture;
+    mRenderer.setRenderTarget(mBrushtexture2);
+    mRenderer.render(mScene, mCamera);
+    mUniforms.tSource.value = mBrushtexture2.texture;
+    mRenderer.setRenderTarget(mBrushtexture1);
+    mRenderer.render(mScene, mCamera);
+}
+
+function rendersystem(){    
+    mUniforms.tSource.value = mTexture1.texture;
+    mRenderer.setRenderTarget(mTexture2);
+    mRenderer.render(mScene, mCamera);
+    mUniforms.tSource.value = mTexture2.texture;
+    mRenderer.setRenderTarget(mTexture1);
+    mRenderer.render(mScene, mCamera);        
+}
+
+function renderscreen(){
+    mUniforms.tSource.value = mTexture1.texture;    
+    mScreenQuad.material = mScreenMaterial;
+    mRenderer.render(mScene, mCamera);
+}
+
 //==================================================================================================================================
 var render = function (time) {
     var dt = (time - mLastTime) / 20.0;
     if (dt > 0.8 || dt <= 0)
         dt = 0.8;
     mLastTime = time;
+    renderbrush();
     mScreenQuad.material = mGSMaterial;
     mUniforms.delta.value = dt;
-    for (var i = 0; i < 8; ++i) {
+   
+    for (var i = 0; i < 4; ++i) {
         mRenderer.clear();
-        if (!mToggled) {
-            mUniforms.tSource.value = mTexture1.texture;
-            mRenderer.setRenderTarget(mTexture2);
-            mRenderer.render(mScene, mCamera);
-            mUniforms.tSource.value = mTexture2.texture;
-        }
-        else {
-            mUniforms.tSource.value = mTexture2.texture;
-            mRenderer.setRenderTarget(mTexture1);
-            mRenderer.render(mScene, mCamera);
-            mUniforms.tSource.value = mTexture1.texture;
-        }
+        rendersystem();      
         mRenderer.setRenderTarget(null);
         mToggled = !mToggled;
         mUniforms.brush.value = mMinusOnes;
     }
-
-    // next, render the resulting colors on the scren
-    mScreenQuad.material = mScreenMaterial;
-    mRenderer.render(mScene, mCamera);
-
    
-
+    
+    renderscreen();
     requestAnimationFrame(render);
 }
 //==================================================================================================================================
