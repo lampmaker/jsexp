@@ -105,7 +105,7 @@ function init() {
 
     
     mColorsNeedUpdate = true;
-    resize(canvas.clientWidth, canvas.clientHeight);
+    resize(canvas.clientWidth, canvas.clientHeight, true);
 
     render(0);
     mUniforms.brush.value = new THREE.Vector2(0.5, 0.5);
@@ -127,12 +127,12 @@ function newtarget(w,h){
 }
 
 //==================================================================================================================================
-export function resize(width, height) {
+export function resize(width, height, force) {
     // Set the new shape of canvas.
 
     canvasWidth = canvasQ.width();
     canvasHeight = canvasQ.height();
-    if ((canvasWidth == width) && (canvasHeight != height)) {
+    if (!force && (canvasWidth == width) && (canvasHeight == height)) {
         console.log('nothign to do')
         return;
     }

@@ -25,11 +25,11 @@ guiData = {
 
 
 function mupdateparameters() {
-    console.log(guiData.choice);
     var mode = 0;
     if (guiData.choice == "round") mode = 1
     updateparameters(guiData.gfeed, guiData.gkill, mode);
 }
+
 var hexToRgb = function (hex, a) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ?
@@ -40,7 +40,7 @@ var hexToRgb = function (hex, a) {
         ] : null;
 }
 function updatecolors() {
-    console.log('mupdatecolors')
+    //console.log('mupdatecolors')
     var c1 = hexToRgb(guiData.c1, guiData.c1pos);
     var c2 = hexToRgb(guiData.c2, guiData.c2pos);
     var c3 = hexToRgb(guiData.c3, guiData.c3pos);
@@ -48,8 +48,8 @@ function updatecolors() {
 }
 
 function updatescreen() {
-    console.log('mupdate screen')
-    resize(guiData.cwidth, guiData.cheight)
+    //  console.log('mupdate screen')
+    resize(guiData.cwidth, guiData.cheight, false)
     if (!loaded) return;
 }
 
