@@ -130,25 +130,25 @@ void main()
   vec2 uv3 = texture2D(tSource, vUv + vec2(0.0, step_y)).rg;
   vec2 lapl = (uv0 + uv1 + uv2 + uv3 - 4.0 * uv); //10485.76;
 
-  float Da;
-  float Db;
-  Da = 0.2097; // original
-  Db = 0.105;  // original
-  //float feed = vUv.y * 0.083;
-  //float kill = vUv.x * 0.073;
 
-  float du = /*0.00002*/ Da * lapl.r - uv.r * uv.g * uv.g + feed * (1.0 - uv.r);
-  float dv = /*0.00001*/ Db * lapl.g + uv.r * uv.g * uv.g - (feed + kill) * uv.g;
-
-
-  
+  float x=vUv.x;
+  float y=vUv.y;
   float R = sqrt((vUv.x - 0.5) * (vUv.x - 0.5) + (vUv.y - 0.5) * (vUv.y - 0.5));
-  //     if (R>0.4) {
-  //         //du=0.0;
-  //         dv=0.00;
-  //   }
+  float xd = abs(vUv.x - 0.5)*2.0;
+  float yd = abs(vUv.y - 0.5)*2.0;
 
-  vec2 dst = uv + delta * vec2(du, dv);
+  float Da = 0.2097;  // diffusion rate A
+  float Db= 0.105;  // diffusion rate B 
+  float f=feed;
+  float k=kill;
+  float d=delta;
+  /*MOD1*/  // mod inserted here
+
+  float du =  Da * lapl.r - uv.r * uv.g * uv.g + f * (1.0 - uv.r);
+  float dv =  Db * lapl.g + uv.r * uv.g * uv.g - (f + k) * uv.g;
+
+
+  vec2 dst = uv + d * vec2(du, dv);
   if (mode==1){
     if ((R > 0.48) || (R < 0.125))
     {
@@ -157,6 +157,8 @@ void main()
       //dv=0.00;
     }
   }
+
+/*MOD2*/ 
 
   if (brush.x > 0.0)
   {

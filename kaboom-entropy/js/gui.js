@@ -1,4 +1,4 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize } from '/js/entropy/grayscott.js'
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
 window.clean = clean;
 window.snapshot = snapshot;         // expose functions from module
@@ -14,6 +14,8 @@ guiData = {
     gfeed: 0.01,
     gkill: 0.05,
     choice: "round",
+    mod1: "",
+    mod2: "",
     gclean: clean,
     c1: "#0000AA",
     c2: "#000000",
@@ -28,6 +30,10 @@ function mupdateparameters() {
     var mode = 0;
     if (guiData.choice == "round") mode = 1
     updateparameters(guiData.gfeed, guiData.gkill, mode);
+}
+
+function mupdatemodifications() {
+    updateModifications(guiData.mod1, guiData.mod2);
 }
 
 var hexToRgb = function (hex, a) {
@@ -59,13 +65,15 @@ $(function () {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
-        gui.add(guiData, 't').name('Description');
+        //gui.add(guiData, 't').name('Description');
+        gui.add(guiData, 'gclean').name('Start');
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gui.add(guiData, 'gkill', 0.00, .100).name('kill').onChange(mupdateparameters);
         gui.add(guiData, 'choice', ['rect', 'round']).name('choice').onChange(mupdateparameters);;
-        gui.add(guiData, 'gclean').name('Start');
+        gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
+        gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var f1 = gui.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);

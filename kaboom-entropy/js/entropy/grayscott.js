@@ -17,7 +17,7 @@ var mCamera;
 var mUniforms;
 var mColors; //for gradient
 var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2;
-var mGSMaterial, mScreenMaterial,mBrushMaterial;
+var mGSMaterial, mScreenMaterial, mBrushMaterial;
 var mScreenQuad;
 var mToggled = false;
 
@@ -30,18 +30,18 @@ var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
 
-var shader_scrf, shader_stdf, shader_stdv,shader_brush;
+var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original;
 
 var shaderloadingmanager = new THREE.LoadingManager();
 var loader = new THREE.FileLoader(shaderloadingmanager);
 
-shaderloadingmanager.onLoad = function () {   
+shaderloadingmanager.onLoad = function () {
     init();
 };
 
 export function loadshaders() {
     loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
-    loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; });
+    loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; shader_stdf_original = data; });
     loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
     loader.load("js/shaders/brushfragment.vert", function (data) { shader_brush = data; });
 };
@@ -92,7 +92,7 @@ function init() {
         fragmentShader: shader_scrf,
     });
 
-    
+
     mBrushMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
         vertexShader: shader_stdv,
@@ -103,7 +103,7 @@ function init() {
     mScreenQuad = new THREE.Mesh(plane, mScreenMaterial);
     mScene.add(mScreenQuad);
 
-    
+
     mColorsNeedUpdate = true;
     resize(canvas.clientWidth, canvas.clientHeight, true);
 
@@ -113,17 +113,17 @@ function init() {
     requestAnimationFrame(render);
 }
 
-function newtarget(w,h){
-    var X=new THREE.WebGLRenderTarget(w / 2, h / 2,
+function newtarget(w, h) {
+    var X = new THREE.WebGLRenderTarget(w / 2, h / 2,
         {
             minFilter: THREE.LinearFilter,
             magFilter: THREE.LinearFilter,
             format: THREE.RGBAFormat,
             type: THREE.FloatType
         })
-        X.texture.wrapS=THREE.RepeatWrapping;            
-        X.texture.wrapT=THREE.RepeatWrapping;
-        return X;
+    X.texture.wrapS = THREE.RepeatWrapping;
+    X.texture.wrapT = THREE.RepeatWrapping;
+    return X;
 }
 
 //==================================================================================================================================
@@ -131,12 +131,14 @@ export function resize(width, height, force) {
     // Set the new shape of canvas.
 
     canvasWidth = canvasQ.width();
+
     canvasHeight = canvasQ.height();
     if (!force && (canvasWidth == width) && (canvasHeight == height)) {
         console.log('nothign to do')
         return;
     }
-
+    if (width == 0) width = canvasWidth;
+    if (height == 0) width = canvasHeight;
 
     canvasQ.width(width);
     canvasQ.height(height);
@@ -148,16 +150,16 @@ export function resize(width, height, force) {
     mRenderer.setSize(canvasWidth, canvasHeight);
 
     // TODO: Possible memory leak?
-    mTexture1= new newtarget(canvasWidth,canvasHeight);
-    mTexture2= new newtarget(canvasWidth,canvasHeight);
-    mBrushtexture1= new newtarget(canvasWidth,canvasHeight);
-    mBrushtexture2= new newtarget(canvasWidth,canvasHeight);
+    mTexture1 = new newtarget(canvasWidth, canvasHeight);
+    mTexture2 = new newtarget(canvasWidth, canvasHeight);
+    mBrushtexture1 = new newtarget(canvasWidth, canvasHeight);
+    mBrushtexture2 = new newtarget(canvasWidth, canvasHeight);
 
     mUniforms.screenWidth.value = canvasWidth / 2;
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
 
-function renderbrush(){
+function renderbrush() {
     mScreenQuad.material = mBrushMaterial;
     mUniforms.tSource.value = mBrushtexture1.texture;
     mRenderer.setRenderTarget(mBrushtexture2);
@@ -167,17 +169,17 @@ function renderbrush(){
     mRenderer.render(mScene, mCamera);
 }
 
-function rendersystem(){    
+function rendersystem() {
     mUniforms.tSource.value = mTexture1.texture;
     mRenderer.setRenderTarget(mTexture2);
     mRenderer.render(mScene, mCamera);
     mUniforms.tSource.value = mTexture2.texture;
     mRenderer.setRenderTarget(mTexture1);
-    mRenderer.render(mScene, mCamera);        
+    mRenderer.render(mScene, mCamera);
 }
 
-function renderscreen(){
-    mUniforms.tSource.value = mTexture1.texture;    
+function renderscreen() {
+    mUniforms.tSource.value = mTexture1.texture;
     mScreenQuad.material = mScreenMaterial;
     mRenderer.render(mScene, mCamera);
 }
@@ -191,16 +193,16 @@ var render = function (time) {
     renderbrush();
     mScreenQuad.material = mGSMaterial;
     mUniforms.delta.value = dt;
-   
+
     for (var i = 0; i < 4; ++i) {
         mRenderer.clear();
-        rendersystem();      
+        rendersystem();
         mRenderer.setRenderTarget(null);
         mToggled = !mToggled;
         mUniforms.brush.value = mMinusOnes;
     }
-   
-    
+
+
     renderscreen();
     requestAnimationFrame(render);
 }
@@ -217,6 +219,24 @@ export function updateUniformsColors2(c0, c1, c2) {
     mColors[1].value = new THREE.Vector4(c1[0], c1[1], c1[2], c1[3]);
     mColors[2].value = new THREE.Vector4(c2[0], c2[1], c2[2], c2[3]);
 }
+
+export function updateModifications(mod1, mod2) {
+    shader_stdf = shader_stdf_original.replace("/*MOD1*/", mod1);
+    shader_stdf = shader_stdf.replace("/*MOD2*/", mod2);
+    //init();
+    //mGSMaterial.fragmentShader = shader_stdf;
+    //mGSMaterial.dispose();
+    mGSMaterial = new THREE.ShaderMaterial({
+        uniforms: mUniforms,
+        vertexShader: shader_stdv,
+        fragmentShader: shader_stdf,
+    });
+
+}
+
+
+
+
 
 //==================================================================================================================================
 var onMouseMove = function (e) {

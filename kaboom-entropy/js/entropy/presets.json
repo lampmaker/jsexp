@@ -30,12 +30,12 @@
     },
     "Negative bubbles (sigma)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
+        "cwidth": 2000,
         "cheight": 1024,
         "gfeed": 0.1,
         "gkill": 0.055,
         "choice": "a",
+        "mod1": "d=(x*x)/10.0+0.001;",
         "c1": "#c56510",
         "c1pos": 0.078,
         "c2": "#000000",
@@ -62,12 +62,12 @@
     },
     "Precritical bubbles (rho/kappa)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
+        "cwidth": 2000,
         "cheight": 1024,
         "gfeed": 0.085,
         "gkill": 0.059,
         "choice": "a",
+        "mod1": "d=(x*x)/10.0+0.001;",
         "c1": "#c56510",
         "c1pos": 0.078,
         "c2": "#000000",
@@ -411,14 +411,31 @@
         "c3": "#edeaea",
         "c3pos": 0.37
       }
+    },
+    "gradient": {
+      "0": {
+        "cwidth": 2000,
+        "cheight": 1024,
+        "gfeed": 0.085,
+        "gkill": 0.059,
+        "choice": "a",
+        "mod1": "f=0.1-0.015*(1.0-xd);k=0.055+0.004*(1.0-xd);d=(1.0-xd);",
+        "mod2": "if( yd>0.9) {dst.r=0.0;dst.g=1.0;}",
+        "c1": "#c56510",
+        "c1pos": 0.078,
+        "c2": "#000000",
+        "c2pos": 0.18,
+        "c3": "#edeaea",
+        "c3pos": 0.37
+      }
     }
   },
-  "preset": "Waves (xi)",
+  "preset": "gradient",
   "closed": false,
   "folders": {
     "Colors": {
       "preset": "Default",
-      "closed": false,
+      "closed": true,
       "folders": {}
     }
   }
