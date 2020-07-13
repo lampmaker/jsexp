@@ -428,14 +428,31 @@
         "c3": "#edeaea",
         "c3pos": 0.37
       }
+    },
+    "Transformation": {
+      "0": {
+        "cwidth": 1500,
+        "cheight": 500,
+        "gfeed": 0.025262666355358395,
+        "gkill": 0.0615,
+        "choice": "a",
+        "mod1": "f=f+(1.0-xd)*0.03;",
+        "mod2": "if((yd>0.995)||(xd>0.995)) {dst.r=0.0;dst.g=0.0;}",
+        "c1": "#ffffff",
+        "c1pos": 0.0635633270321361,
+        "c2": "#000000",
+        "c2pos": 0.18,
+        "c3": "#edeaea",
+        "c3pos": 1
+      }
     }
   },
-  "preset": "gradient",
+  "preset": "Transformation",
   "closed": false,
   "folders": {
     "Colors": {
       "preset": "Default",
-      "closed": true,
+      "closed": false,
       "folders": {}
     }
   }
