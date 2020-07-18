@@ -1,14 +1,17 @@
+
 varying vec2 vUv;
 
 uniform float screenWidth;
 uniform float screenHeight;
 uniform sampler2D tSource;
+uniform sampler2D tBrush;
 uniform float delta;
 uniform float feed;
 uniform float kill;
 uniform int mode;
 uniform vec2 brush;
 uniform float brmode;
+uniform int brushmode;
 
 vec2 texel = vec2(1.0 / screenWidth, 1.0 / screenHeight);
 float step_x = 1.0 / screenWidth;
@@ -158,9 +161,8 @@ void main()
     }
   }
 
-/*MOD2*/ 
-
-  if (brush.x > 0.0)
+/*MOD2*/  
+  if ((brushmode==0)&&(brush.x > 0.0))
   {
     vec2 diff = (vUv - brush) / texel;
     float dist = dot(diff, diff);
@@ -180,6 +182,15 @@ void main()
         dst.g = 0.0; // set u=1, v=0 
       }
     }
+  }
+
+  if (brushmode==1){
+    vec2 buv = texture2D(tBrush, vUv).rg;
+    dst.r=buv.r;
+    dst.g=buv.g;
+  }
+  if (brushmode==2){
+
   }
 
   gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);

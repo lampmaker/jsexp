@@ -19,13 +19,13 @@ var mColors; //for gradient
 var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2;
 var mGSMaterial, mScreenMaterial, mBrushMaterial;
 var mScreenQuad;
-var mToggled = false;
 
 //
 var mColorsNeedUpdate = true;
 var mLastTime = 0;
 var mClearMode = 2; /* First click will make it 3, which is the better simplex noise */
 var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
+var speedscale = 1;
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
@@ -68,12 +68,14 @@ function init() {
         screenWidth: { type: "f", value: undefined },
         screenHeight: { type: "f", value: undefined },
         tSource: { type: "t", value: undefined },
+        tBrush: { type: "t", value: undefined },
         delta: { type: "f", value: 1.0 },
         feed: { type: "f", value: .1 },
         kill: { type: "f", value: .055 },
         brmode: { type: "f", value: 0.0 },
         mode: { type: "i", value: 0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
+        brushmode: { type: "i", value: 0 },
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
         color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) }
@@ -158,8 +160,10 @@ export function resize(width, height, force) {
     mUniforms.screenWidth.value = canvasWidth / 2;
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
-
-function renderbrush() {
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+function renderBrush() {
     mScreenQuad.material = mBrushMaterial;
     mUniforms.tSource.value = mBrushtexture1.texture;
     mRenderer.setRenderTarget(mBrushtexture2);
@@ -167,50 +171,55 @@ function renderbrush() {
     mUniforms.tSource.value = mBrushtexture2.texture;
     mRenderer.setRenderTarget(mBrushtexture1);
     mRenderer.render(mScene, mCamera);
+    mUniforms.tBrush.value = mBrushtexture1.texture;
 }
-
-function rendersystem() {
+//==================================================================================================================================
+function renderSystem() {
+    // use texture 1 as source, render to texture 2
     mUniforms.tSource.value = mTexture1.texture;
     mRenderer.setRenderTarget(mTexture2);
     mRenderer.render(mScene, mCamera);
+    // use texture 2 as source, render to texture 1
     mUniforms.tSource.value = mTexture2.texture;
     mRenderer.setRenderTarget(mTexture1);
     mRenderer.render(mScene, mCamera);
 }
-
-function renderscreen() {
+//==================================================================================================================================
+function renderScreen() {
     mUniforms.tSource.value = mTexture1.texture;
+    //  mUniforms.tSource.value = mBrushtexture1.texture;
+
     mScreenQuad.material = mScreenMaterial;
     mRenderer.render(mScene, mCamera);
 }
-
+//==================================================================================================================================
+//==================================================================================================================================
 //==================================================================================================================================
 var render = function (time) {
     var dt = (time - mLastTime) / 20.0;
     if (dt > 0.8 || dt <= 0)
         dt = 0.8;
     mLastTime = time;
-    renderbrush();
+    mUniforms.delta.value = dt * speedscale;
+    mRenderer.clear();
+    renderBrush();
     mScreenQuad.material = mGSMaterial;
-    mUniforms.delta.value = dt;
-
     for (var i = 0; i < 4; ++i) {
-        mRenderer.clear();
-        rendersystem();
-        mRenderer.setRenderTarget(null);
-        mToggled = !mToggled;
-        mUniforms.brush.value = mMinusOnes;
+        renderSystem();
     }
-
-
-    renderscreen();
+    mRenderer.setRenderTarget(null);
+    mUniforms.brush.value = mMinusOnes;
+    renderScreen();
     requestAnimationFrame(render);
 }
+
 //==================================================================================================================================
-export function updateparameters(f, k, m) {
+export function updateparameters(f, k, m, s, b) {
     mUniforms.feed.value = f;
     mUniforms.kill.value = k;
     mUniforms.mode.value = m;
+    mUniforms.brushmode.value = b;
+    speedscale = s;
 }
 
 //==================================================================================================================================

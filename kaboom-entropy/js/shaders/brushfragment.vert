@@ -23,13 +23,13 @@ void main()
   {
     vec2 diff = (vUv - brush) / texel;
     float dist = dot(diff, diff);
-   // dst.g=1.0;
+   // dst.g=0.0;
+    dst.r=0.0; 
     if (dist < 15.0)
     {
-      dst.g=1.0;      
+     dst.g=1.0;      
     }
   }
-
   gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);
 }
 //=====================================================================================================================
