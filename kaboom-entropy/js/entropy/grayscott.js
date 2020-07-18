@@ -76,6 +76,7 @@ function init() {
         mode: { type: "i", value: 0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
         brushmode: { type: "i", value: 0 },
+        brushsize: { type: "f", value: 100.0 },
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
         color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) }
@@ -214,11 +215,12 @@ var render = function (time) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, b) {
+export function updateparameters(f, k, m, s, b, bs) {
     mUniforms.feed.value = f;
     mUniforms.kill.value = k;
     mUniforms.mode.value = m;
     mUniforms.brushmode.value = b;
+    mUniforms.brushsize.value = bs;
     speedscale = s;
 }
 

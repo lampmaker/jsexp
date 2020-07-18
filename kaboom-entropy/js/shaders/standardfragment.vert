@@ -153,7 +153,7 @@ void main()
 
   vec2 dst = uv + d * vec2(du, dv);
   if (mode==1){
-    if ((R > 0.48) || (R < 0.125))
+    if ((R > 0.49))
     {
       dst.r = 1.0;
       dst.g = 1.0;
@@ -162,6 +162,7 @@ void main()
   }
 
 /*MOD2*/  
+
   if ((brushmode==0)&&(brush.x > 0.0))
   {
     vec2 diff = (vUv - brush) / texel;
@@ -184,13 +185,24 @@ void main()
     }
   }
 
-  if (brushmode==1){
-    vec2 buv = texture2D(tBrush, vUv).rg;
+  if (brushmode==1){ //view
+    vec2 buv = texture2D(tBrush, vUv).rg;  
     dst.r=buv.r;
     dst.g=buv.g;
   }
-  if (brushmode==2){
-
+  if (brushmode==2){ //on
+    vec2 buv = texture2D(tBrush, vUv).rg;  
+    if (buv.g>0.0){
+      dst.r=0.8;
+      dst.g=0.8;
+    }   
+  }
+if (brushmode==3){ //on
+    vec2 buv = texture2D(tBrush, vUv).rg;  
+    if (buv.g>0.0){
+      dst.r=0.0;
+      dst.g=0.0;
+    }   
   }
 
   gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);

@@ -17,6 +17,7 @@ guiData = {
     gkill: 0.05,
     choice: "round",
     brushmode: "paint",
+    brushsize: 100.0,
     mod1: "",
     mod2: "",
     gclean: clean,
@@ -34,9 +35,20 @@ function mupdateparameters() {
     var mode = 0;
     if (guiData.choice == "round") mode = 1
     var bm = 0;
-    if (guiData.brushmode == "On") bm = 1;
-    if (guiData.brushmode == "Off") bm = 2;
-    updateparameters(guiData.gfeed, guiData.gkill, mode, guiData.speed, bm);
+    switch (guiData.brushmode) {
+        case "View":
+            bm = 1;
+            break;
+        case "On":
+            bm = 2;
+            break;
+        case "Off":
+            bm = 3;
+            break;
+        default:
+            break;
+    }
+    updateparameters(guiData.gfeed, guiData.gkill, mode, guiData.speed, bm, guiData.brushsize);
 }
 
 function mupdatemodifications() {
@@ -80,7 +92,8 @@ $(function () {
         gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
         gui.add(guiData, 'choice', ['rect', 'round']).name('choice').onChange(mupdateparameters);;
-        gui.add(guiData, 'brushmode', ['paint', 'On', 'Off']).name('brush mode').onChange(mupdateparameters);;
+        gui.add(guiData, 'brushmode', ['paint', 'View', 'On', 'Off']).name('brush mode').onChange(mupdateparameters);;
+        gui.add(guiData, 'brushsize', 0, 1000.0).name('brush size').onFinishChange(mupdateparameters);;
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var f1 = gui.addFolder('Colors');
