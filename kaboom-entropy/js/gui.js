@@ -70,7 +70,7 @@ $(function () {
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        gui.add(guiData, 'gkill', 0.00, .100).name('kill').onChange(mupdateparameters);
+        gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
         gui.add(guiData, 'choice', ['rect', 'round']).name('choice').onChange(mupdateparameters);;
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
