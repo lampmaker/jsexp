@@ -6,6 +6,7 @@ window.snapshot = snapshot;         // expose functions from module
 
 var gui, guiData, x, y;
 var loaded = false;
+var midiconnected = false;
 
 guiData = {
     cwidth: 1024,
@@ -80,7 +81,23 @@ function updatescreen() {
 }
 
 
+
+function onMIDISuccess(midiAccess) {
+    console.log(midiAccess);
+    console.log('This browser supports WebMIDI!');
+    var inputs = midiAccess.inputs;
+    var outputs = midiAccess.outputs;
+    midiconnected = (midiAccess.inputs.length > 0);
+}
+
+function onMIDIFailure() {
+    console.log('Could not access your MIDI devices.');
+}
+
 $(function () {
+    navigator.requestMIDIAccess()
+        .then(onMIDISuccess, onMIDIFailure);
+
     $.getJSON('/js/entropy/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
