@@ -445,11 +445,58 @@
         "c3": "#edeaea",
         "c3pos": 1
       }
+    },
+    "map": {
+      "0": {
+        "cwidth": 1024,
+        "cheight": 1024,
+        "speed": 1,
+        "gfeed": 0.01,
+        "gkill": 0.05,
+        "mod1": "k=.05+x/50.0;f=.02+y/20.0;Da=Da*0.4568;Db=Db*0.4568;",
+        "mod2": "",
+        "shape": "round",
+        "maskedit": "paint",
+        "maskmode": 0,
+        "masksize": 100,
+        "c1": "#c56510",
+        "c1pos": 0.078,
+        "c2": "#000000",
+        "c2pos": 0.18,
+        "c3": "#edeaea",
+        "c3pos": 0.37
+      }
+    },
+    "Gradient2": {
+      "0": {
+        "cwidth": 1024,
+        "cheight": 1024,
+        "speed": 1,
+        "gfeed": 0.037964043894466504,
+        "gkill": 0.05542376838664488,
+        "mod1": "k=k+x/80.0;Da=Da*0.4568;Db=Db*0.4568;",
+        "mod2": "",
+        "shape": "round",
+        "maskedit": "paint",
+        "maskmode": 0,
+        "masksize": 100,
+        "c1": "#000000",
+        "c1pos": 0.078,
+        "c2": "#000000",
+        "c2pos": 0.16186200378071833,
+        "c3": "#edeaea",
+        "c3pos": 0.22991493383742911
+      }
     }
   },
-  "preset": "Transformation",
+  "preset": "Gradient2",
   "closed": false,
   "folders": {
+    "Mask": {
+      "preset": "Default",
+      "closed": true,
+      "folders": {}
+    },
     "Colors": {
       "preset": "Default",
       "closed": false,
