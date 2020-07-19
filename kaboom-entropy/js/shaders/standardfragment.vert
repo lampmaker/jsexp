@@ -8,10 +8,11 @@ uniform sampler2D tBrush;
 uniform float delta;
 uniform float feed;
 uniform float kill;
-uniform int mode;
+uniform int shape;
 uniform vec2 brush;
 uniform float brmode;
-uniform int brushmode;
+uniform int maskmode;
+uniform int editmode;
 
 vec2 texel = vec2(1.0 / screenWidth, 1.0 / screenHeight);
 float step_x = 1.0 / screenWidth;
@@ -152,7 +153,7 @@ void main()
 
 
   vec2 dst = uv + d * vec2(du, dv);
-  if (mode==1){
+  if (shape==1){
     if ((R > 0.49))
     {
       dst.r = 1.0;
@@ -161,9 +162,9 @@ void main()
     }
   }
 
-/*MOD2*/  
+/*MOD2*/  // mod will be inserted here. 
 
-  if ((brushmode==0)&&(brush.x > 0.0))
+  if ((editmode==0) && (brush.x > 0.0))
   {
     vec2 diff = (vUv - brush) / texel;
     float dist = dot(diff, diff);
@@ -185,25 +186,11 @@ void main()
     }
   }
 
-  if (brushmode==1){ //view
-    vec2 buv = texture2D(tBrush, vUv).rg;  
-    dst.r=buv.r;
-    dst.g=buv.g;
-  }
-  if (brushmode==2){ //on
-    vec2 buv = texture2D(tBrush, vUv).rg;  
-    if (buv.g>0.0){
-      dst.r=0.8;
-      dst.g=0.8;
-    }   
-  }
-if (brushmode==3){ //on
-    vec2 buv = texture2D(tBrush, vUv).rg;  
-    if (buv.g>0.0){
-      dst.r=0.0;
-      dst.g=0.0;
-    }   
-  }
+  vec2 buv = texture2D(tBrush, vUv).rg;  
+  if ( (maskmode == 0 ) && ( buv.g >  0.0 )) { dst.r=0.8;    dst.g=0.8;   }
+  if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
+  if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
+  if ( (maskmode == 3 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.0;   }
 
   gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);
 }

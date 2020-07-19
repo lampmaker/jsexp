@@ -2,12 +2,14 @@ varying vec2 vUv;
 uniform float screenWidth;
 uniform float screenHeight;
 uniform sampler2D tSource;
+uniform sampler2D tBrush;
 uniform float delta;
 uniform float feed;
 uniform float kill;
 uniform vec4 color1;
 uniform vec4 color2;
 uniform vec4 color3;
+uniform int editmode;
 //uniform vec4 color4;
 //uniform vec4 color5;
 
@@ -21,6 +23,10 @@ onderstaande lijst kijkt naar de waarde van de pixel en geeft dan een RGB waarde
 void main()
 {
     float value = texture2D(tSource, vUv).g;
+        if (editmode==1) {
+             value = texture2D(tBrush, vUv).g;
+    }
+    
     float a;
     vec3 col;
     if(value <= color1.a)

@@ -75,8 +75,9 @@ function init() {
         brmode: { type: "f", value: 0.0 },
         mode: { type: "i", value: 0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
-        brushmode: { type: "i", value: 0 },
-        brushsize: { type: "f", value: 100.0 },
+        editmode: { type: "i", value: 0 },
+        maskmode: { type: "i", value: 0 },
+        masksize: { type: "f", value: 100.0 },
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
         color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) }
@@ -187,9 +188,8 @@ function renderSystem() {
 }
 //==================================================================================================================================
 function renderScreen() {
-    mUniforms.tSource.value = mTexture1.texture;
+    //mUniforms.tSource.value = mTexture1.texture;
     //  mUniforms.tSource.value = mBrushtexture1.texture;
-
     mScreenQuad.material = mScreenMaterial;
     mRenderer.render(mScene, mCamera);
 }
@@ -204,23 +204,27 @@ var render = function (time) {
     mUniforms.delta.value = dt * speedscale;
     mRenderer.clear();
     renderBrush();
-    mScreenQuad.material = mGSMaterial;
-    for (var i = 0; i < 4; ++i) {
-        renderSystem();
+    if (mUniforms.editmode.value != 1) {
+        mScreenQuad.material = mGSMaterial;
+        for (var i = 0; i < 4; ++i) {
+            renderSystem();
+        }
     }
     mRenderer.setRenderTarget(null);
     mUniforms.brush.value = mMinusOnes;
+    mUniforms.tSource.value = mTexture1.texture;
     renderScreen();
     requestAnimationFrame(render);
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, b, bs) {
+export function updateparameters(f, k, m, s, e, b, bs) {
     mUniforms.feed.value = f;
     mUniforms.kill.value = k;
     mUniforms.mode.value = m;
-    mUniforms.brushmode.value = b;
-    mUniforms.brushsize.value = bs;
+    mUniforms.editmode.value = e;
+    mUniforms.maskmode.value = b;
+    mUniforms.masksize.value = bs;
     speedscale = s;
 }
 
@@ -244,9 +248,6 @@ export function updateModifications(mod1, mod2) {
     });
 
 }
-
-
-
 
 
 //==================================================================================================================================

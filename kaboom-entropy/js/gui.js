@@ -11,13 +11,13 @@ guiData = {
     cwidth: 1024,
     cheight: 1024,
     t: 'Default',
-
     speed: 1,
     gfeed: 0.01,
     gkill: 0.05,
-    choice: "round",
-    brushmode: "paint",
-    brushsize: 100.0,
+    shape: "round",
+    maskedit: "paint",
+    maskmode: 0,
+    masksize: 100.0,
     mod1: "",
     mod2: "",
     gclean: clean,
@@ -32,23 +32,24 @@ guiData = {
 
 
 function mupdateparameters() {
-    var mode = 0;
-    if (guiData.choice == "round") mode = 1
-    var bm = 0;
-    switch (guiData.brushmode) {
+    var shapemode = 0;
+    if (guiData.shape == "round") shapemode = 1
+
+    var editmode = 0;  // paint
+    switch (guiData.maskedit) {
         case "View":
-            bm = 1;
+            editmode = 1;
             break;
-        case "On":
-            bm = 2;
+        case "Edit":
+            editmode = 2;
             break;
         case "Off":
-            bm = 3;
+            editmode = 3;
             break;
         default:
             break;
     }
-    updateparameters(guiData.gfeed, guiData.gkill, mode, guiData.speed, bm, guiData.brushsize);
+    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize);
 }
 
 function mupdatemodifications() {
@@ -91,11 +92,14 @@ $(function () {
         gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onFinishChange(mupdateparameters);
         gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
-        gui.add(guiData, 'choice', ['rect', 'round']).name('choice').onChange(mupdateparameters);;
-        gui.add(guiData, 'brushmode', ['paint', 'View', 'On', 'Off']).name('brush mode').onChange(mupdateparameters);;
-        gui.add(guiData, 'brushsize', 0, 1000.0).name('brush size').onFinishChange(mupdateparameters);;
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
+        var maskgui = gui.addFolder('Mask');
+        gui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
+        gui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
+        gui.add(guiData, 'maskmode', 0, 3).name(' Mask mode').onChange(mupdateparameters);;
+        gui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
+
         var f1 = gui.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
