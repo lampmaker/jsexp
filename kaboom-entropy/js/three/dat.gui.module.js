@@ -1020,6 +1020,20 @@ var Controller = function () {
 
 		}
 	}, {
+		key: 'setRatio',
+		value: function setRatio(newValue) {
+
+			this.object[this.property] = newValue;
+			if (this.__onChange) {
+
+				this.__onChange.call(this, newValue);
+
+			}
+			this.updateDisplay();
+			return this;
+
+		}
+	}, {
 		key: 'getValue',
 		value: function getValue() {
 
@@ -1546,7 +1560,15 @@ var NumberController = function (_Controller) {
 			return get(NumberController.prototype.__proto__ || Object.getPrototypeOf(NumberController.prototype), 'setValue', this).call(this, _v);
 
 		}
-	}, {
+	},
+	{
+		key: 'setRatio',
+		value: function setRatio(v) {   // v=0..1
+			var _v = this.__min + (this.__max - this.__min) * v;
+			return get(NumberController.prototype.__proto__ || Object.getPrototypeOf(NumberController.prototype), 'setRatio', this).call(this, _v);
+		}
+	},
+	{
 		key: 'min',
 		value: function min(minValue) {
 

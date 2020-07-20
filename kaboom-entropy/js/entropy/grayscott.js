@@ -220,7 +220,7 @@ var render = function (time) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs,df,dk) {
+export function updateparameters(f, k, m, s, e, b, bs, df, dk) {
     mUniforms.df.value = df;
     mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
