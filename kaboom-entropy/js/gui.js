@@ -15,6 +15,14 @@ guiData = {
     speed: 1,
     gfeed: 0.01,
     gkill: 0.05,
+    gfx:0.0,
+    gfxd:0.0,
+    gfy:0.0,
+    gfyd:0.0,
+    gkx:0.0,
+    gkxd:0.0,
+    gky:0.0,
+    gkyd:0.0,
     shape: "round",
     maskedit: "paint",
     maskmode: 0,
@@ -50,7 +58,10 @@ function mupdateparameters() {
         default:
             break;
     }
-    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize);
+
+    var df=[guiData.gfx,guiData.gfxd,guiData.gfy,guiData.gfyd];
+    var dk=[guiData.gkx,guiData.gkxd,guiData.gky,guiData.gkyd];
+    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize,df,dk);
 }
 
 function mupdatemodifications() {
@@ -109,6 +120,15 @@ $(function () {
         gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onFinishChange(mupdateparameters);
         gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        var g1=gui.addFolder('Gradient');
+        g1.add(guiData,'gfx',-100,100).name('feed-dx').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gfxd',-100,100).name('feed-dx-center').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gfy',-100,100).name('feed-dy').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gfyd',-100,100).name('feed-dy-center').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gkx',-100,100).name('kill-dx').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gkxd',-100,100).name('kill-dx-center').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gky',-100,100).name('kill-dy').onFinishChange(mupdateparameters);
+        g1.add(guiData,'gkyd',-100,100).name('kill-dy-center').onFinishChange(mupdateparameters);
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var maskgui = gui.addFolder('Mask');

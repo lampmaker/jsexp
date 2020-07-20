@@ -72,6 +72,8 @@ function init() {
         delta: { type: "f", value: 1.0 },
         feed: { type: "f", value: .1 },
         kill: { type: "f", value: .055 },
+        df: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
+        dk: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         brmode: { type: "f", value: 0.0 },
         mode: { type: "i", value: 0 },
         brush: { type: "v2", value: new THREE.Vector2(-10, -10) },
@@ -218,7 +220,9 @@ var render = function (time) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs) {
+export function updateparameters(f, k, m, s, e, b, bs,df,dk) {
+    mUniforms.df.value = df;
+    mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
     mUniforms.kill.value = k;
     mUniforms.mode.value = m;

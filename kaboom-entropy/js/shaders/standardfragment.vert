@@ -13,6 +13,8 @@ uniform vec2 brush;
 uniform float brmode;
 uniform int maskmode;
 uniform int editmode;
+uniform vec4 df;
+uniform vec4 dk;
 
 vec2 texel = vec2(1.0 / screenWidth, 1.0 / screenHeight);
 float step_x = 1.0 / screenWidth;
@@ -146,6 +148,14 @@ void main()
   float f=feed;
   float k=kill;
   float d=delta;
+
+
+   f= f + ((x - 0.5) * df.r + xd * df.g + (y - 0.5) * df.b + yd * df.a) * 0.0002;
+   k= k + ((x - 0.5) * dk.r + xd * dk.g + (y - 0.5) * dk.b + yd * dk.a) * 0.0002;
+
+
+
+
   /*MOD1*/  // mod inserted here
 
   float du =  Da * lapl.r - uv.r * uv.g * uv.g + f * (1.0 - uv.r);
