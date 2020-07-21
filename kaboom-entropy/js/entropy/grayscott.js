@@ -218,6 +218,24 @@ var render = function (time) {
     renderScreen();
     requestAnimationFrame(render);
 }
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+
+export function addGrouptoScene(g){
+//   var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
+//    camera.position.set( 0, 0, 200 );
+
+    mScene.background = new THREE.Color( 0xb0b0b0 );
+    mScene.add(g);
+    mRenderer.setRenderTarget(mBrushtexture1);
+    mScreenQuad.visible=false;
+    mRenderer.render();
+    updateparamd(ffa);
+    //renderBrush();
+    //mScreenQuad.visible=true;
+    
+}
 
 //==================================================================================================================================
 export function updateparameters(f, k, m, s, e, b, bs, df, dk) {

@@ -1,5 +1,6 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications } from '/js/entropy/grayscott.js'
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
+import { SVGLoader } from '/js/three/SVGLoader.js';
 window.clean = clean;
 window.snapshot = snapshot;         // expose functions from module
 
@@ -30,6 +31,7 @@ guiData = {
     maskedit: "paint",
     maskmode: 0,
     masksize: 100.0,
+    maskfile: loadSVG,
     mod1: "",
     mod2: "",
     gclean: clean,
@@ -179,26 +181,26 @@ $(function () {
         gui.add(guiData, 'gclean').name('Start');
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
-        gspeed = gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onChange(mupdateparameters);
-        gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onFinishChange(mupdateparameters);
+        gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
+        gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
         var g1 = gui.addFolder('Gradient');
-        gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onChange(mupdateparameters);
-        gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onChange(mupdateparameters);
-        gfy = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onChange(mupdateparameters);
-        gfyd = g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onChange(mupdateparameters);
-        gkx = g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onChange(mupdateparameters);
-        gkxd = g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onChange(mupdateparameters);
-        gky = g1.add(guiData, 'gky', -100, 100).name('kill-dy').onChange(mupdateparameters);
-        gkyd = g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onChange(mupdateparameters);
+        g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gky', -100, 100).name('kill-dy').onFinishChange(mupdateparameters);
+        g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onFinishChange(mupdateparameters);
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var maskgui = gui.addFolder('Mask');
-        gui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
-        gui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
-        gui.add(guiData, 'maskmode', 0, 3).name(' Mask mode').onChange(mupdateparameters);;
-        gui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
-
+        maskgui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskmode', 0, 3).name(' Mask mode').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskfile').name('load from SVG');
         var f1 = gui.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
@@ -213,3 +215,40 @@ $(function () {
 
 });
 
+//========================================================================================================
+//========================================================================================================
+function loadSVG() {
+    //
+    var url = './img/sample.svg'
+    //
+    var loader = new SVGLoader();
+    loader.load(url, function (data) {
+        var paths = data.paths;
+        var group = new THREE.Group();
+        group.scale.multiplyScalar(0.025);
+        group.position.x = 0;//- 70;
+        group.position.y = 0;//70;
+        group.scale.y *= - 1;
+        
+        for (var i = 0; i < paths.length; i++) {
+            var path = paths[i];
+            var fillColor = path.userData.style.fill;
+            var material = new THREE.MeshBasicMaterial({
+                color: new THREE.Color().setStyle(fillColor),
+                opacity: path.userData.style.fillOpacity,
+                transparent: path.userData.style.fillOpacity < 1,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            var shapes = path.toShapes(true);
+            for (var j = 0; j < shapes.length; j++) {
+                var shape = shapes[j];
+                var geometry = new THREE.ShapeBufferGeometry(shape);
+                var mesh = new THREE.Mesh(geometry, material);
+                group.add(mesh);
+            }
+        }
+        addGrouptoScene(group);
+        console.log('loadSVG done');
+    });
+}
