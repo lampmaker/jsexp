@@ -181,18 +181,18 @@ $(function () {
         gui.add(guiData, 'gclean').name('Start');
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
-        gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onFinishChange(mupdateparameters);
-        gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        gspeed = gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onChange(mupdateparameters);
+        gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
+        gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
         var g1 = gui.addFolder('Gradient');
-        g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gky', -100, 100).name('kill-dy').onFinishChange(mupdateparameters);
-        g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onFinishChange(mupdateparameters);
+        gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onFinishChange(mupdateparameters);
+        gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onFinishChange(mupdateparameters);
+        gfyd = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onFinishChange(mupdateparameters);
+        gfyd = g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onFinishChange(mupdateparameters);
+        gkx = g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onFinishChange(mupdateparameters);
+        gkxd = g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onFinishChange(mupdateparameters);
+        gky = g1.add(guiData, 'gky', -100, 100).name('kill-dy').onFinishChange(mupdateparameters);
+        gkyd = g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onFinishChange(mupdateparameters);
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var maskgui = gui.addFolder('Mask');
@@ -231,9 +231,9 @@ function loadSVG() {
                 path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-      
-        var material= new THREE.MeshNormalMaterial({color:0xFFFFFF});
- 
+
+        var material = new THREE.MeshNormalMaterial({ color: 0xFFFFFF });
+
         var shapes = path.toShapes(true, false);
         for (var j = 0; j < shapes.length; j++) {
             var shape = shapes[j];
@@ -245,16 +245,16 @@ function loadSVG() {
         //-- repositioning  and scaling
         group.scale.y *= - 1;
         var box = new THREE.BoxHelper(group, 0xffff00);
-        
+
         box.geometry.computeBoundingBox();
         var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
         var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
         var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
 
-        var S=Math.max(dimX,dimY)*1.05;
-        group.scale.x*=(1/S);
-        group.scale.y*=(1/S);
-        group.scale.z*=(1/S);
+        var S = Math.max(dimX, dimY) * 1.05;
+        group.scale.x *= (1 / S);
+        group.scale.y *= (1 / S);
+        group.scale.z *= (1 / S);
         box.update();
         box.geometry.computeBoundingBox();
         var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
@@ -265,8 +265,8 @@ function loadSVG() {
         group.position.z = 0.1;
         box.geometry.computeBoundingBox();
         dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
-         dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
-         dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);      
+        dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
+        dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
 
 
         addGrouptoScene(group)
