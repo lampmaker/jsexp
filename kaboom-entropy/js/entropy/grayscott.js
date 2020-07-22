@@ -109,7 +109,6 @@ function init() {
     mScreenQuad = new THREE.Mesh(plane, mScreenMaterial);
     mScene.add(mScreenQuad);
 
-
     mColorsNeedUpdate = true;
     resize(canvas.clientWidth, canvas.clientHeight, true);
 
@@ -223,18 +222,24 @@ var render = function (time) {
 //==================================================================================================================================
 
 export function addGrouptoScene(g){
+    console.log('add group to scene');
 //   var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
 //    camera.position.set( 0, 0, 200 );
-
-    mScene.background = new THREE.Color( 0xb0b0b0 );
+    //mScene.background = new THREE.Color( 0xb0b0b0 );
     mScene.add(g);
+    console.log(mScene);
+    mScreenQuad.visible=false;    
     mRenderer.setRenderTarget(mBrushtexture1);
-    mScreenQuad.visible=false;
-    mRenderer.render();
-    updateparamd(ffa);
-    //renderBrush();
-    //mScreenQuad.visible=true;
+    mRenderer.render(mScene,mCamera);
+    mRenderer.setRenderTarget(null);
+    mRenderer.render(mScene,mCamera);
+   // renderBrush();
     
+   // renderBrush();
+    mScreenQuad.visible=true;
+    g.visible=false;
+    mRenderer.render(mScene,mCamera);
+   //stophere(ffa);  
 }
 
 //==================================================================================================================================

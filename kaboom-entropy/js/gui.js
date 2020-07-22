@@ -219,36 +219,56 @@ $(function () {
 //========================================================================================================
 function loadSVG() {
     //
-    var url = './img/sample.svg'
+    var url = './img/hart2.svg'
     //
     var loader = new SVGLoader();
     loader.load(url, function (data) {
-        var paths = data.paths;
+        var tpaths = data.paths;
         var group = new THREE.Group();
-        group.scale.multiplyScalar(0.025);
-        group.position.x = 0;//- 70;
-        group.position.y = 0;//70;
-        group.scale.y *= - 1;
-        
-        for (var i = 0; i < paths.length; i++) {
-            var path = paths[i];
-            var fillColor = path.userData.style.fill;
-            var material = new THREE.MeshBasicMaterial({
-                color: new THREE.Color().setStyle(fillColor),
-                opacity: path.userData.style.fillOpacity,
-                transparent: path.userData.style.fillOpacity < 1,
-                side: THREE.DoubleSide,
-                depthWrite: false
-            });
-            var shapes = path.toShapes(true);
-            for (var j = 0; j < shapes.length; j++) {
-                var shape = shapes[j];
-                var geometry = new THREE.ShapeBufferGeometry(shape);
-                var mesh = new THREE.Mesh(geometry, material);
-                group.add(mesh);
+        var path = new THREE.ShapePath();
+        for (var i = 0; i < tpaths.length; i++) {
+            for (var j = 0; j < tpaths[i].subPaths.length; j++) {
+                path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-        addGrouptoScene(group);
-        console.log('loadSVG done');
+      
+        var material= new THREE.MeshNormalMaterial({color:0xFFFFFF});
+ 
+        var shapes = path.toShapes(true, false);
+        for (var j = 0; j < shapes.length; j++) {
+            var shape = shapes[j];
+            var geometry = new THREE.ExtrudeGeometry(shape, { depth: 5, bevelEnabled: false });
+            var mesh = new THREE.Mesh(geometry, material);
+            group.add(mesh);
+        }
+
+        //-- repositioning  and scaling
+        group.scale.y *= - 1;
+        var box = new THREE.BoxHelper(group, 0xffff00);
+        
+        box.geometry.computeBoundingBox();
+        var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
+        var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
+        var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
+
+        var S=Math.max(dimX,dimY)*1.05;
+        group.scale.x*=(1/S);
+        group.scale.y*=(1/S);
+        group.scale.z*=(1/S);
+        box.update();
+        box.geometry.computeBoundingBox();
+        var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
+        var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
+        var centerZ = (box.geometry.boundingBox.max.z + box.geometry.boundingBox.min.z) / 2;
+        group.position.x = -centerX;
+        group.position.y = -centerY;
+        group.position.z = 0.1;
+        box.geometry.computeBoundingBox();
+        dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
+         dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
+         dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);      
+
+
+        addGrouptoScene(group)
     });
 }
