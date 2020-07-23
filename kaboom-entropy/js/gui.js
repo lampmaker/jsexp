@@ -219,7 +219,7 @@ $(function () {
 //========================================================================================================
 function loadSVG() {
     //
-    var url = './img/hart2.svg'
+    var url = './img/olifant.svg'
     //
     var loader = new SVGLoader();
     loader.load(url, function (data) {
