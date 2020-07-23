@@ -1,4 +1,4 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene ,testfunction} from '/js/entropy/grayscott.js'
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, testfunction } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
 import { SVGLoader } from '/js/three/SVGLoader.js';
 window.clean = clean;
@@ -41,7 +41,7 @@ guiData = {
     c1pos: 0.1,
     c2pos: 0.2,
     c3pos: 0.4,
-    ftest:testfunction
+    ftest: testfunction
 
 };
 
@@ -126,12 +126,16 @@ function parsemidi(m) {
             gk.setRatio(value)
             break;
         case 5:   // slider 3
+            gfx.setRatio(value);
             break;
         case 6:   // slider 4
+            gfy.setRatio(value);
             break;
         case 7:   // slider 5
+            gkx.setRatio(value);
             break;
-        case 8:   // slider 6
+        case 8:   // slider 
+            gky.setRatio(value);
             break;
         case 9:   // slider 7
             break;
@@ -188,7 +192,7 @@ $(function () {
         var g1 = gui.addFolder('Gradient');
         gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onFinishChange(mupdateparameters);
         gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onFinishChange(mupdateparameters);
-        gfyd = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onFinishChange(mupdateparameters);
+        gfy = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onFinishChange(mupdateparameters);
         gfyd = g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onFinishChange(mupdateparameters);
         gkx = g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onFinishChange(mupdateparameters);
         gkxd = g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onFinishChange(mupdateparameters);
@@ -210,18 +214,33 @@ $(function () {
         f1.addColor(guiData, 'c3').name("Color 2").onChange(updatecolors);
         f1.add(guiData, 'c3pos', 0.00, 1.0).name('position').onChange(updatecolors);
         f1.close();
-        gui.add(guiData,'ftest').name('test function');
+        gui.add(guiData, 'ftest').name('test function');
         loadshaders();
+        const fileSelector = document.getElementById('file-selector');
+        fileSelector.addEventListener('change', (event) => {
+            const fileList = event.target.files;
+            console.log(fileList[0].name);
+            parseSVG(fileList[0].name);
+        });
         loaded = true;
+
     });
 
 });
 
 //========================================================================================================
 //========================================================================================================
+
+
+
+
 function loadSVG() {
-    //
+
+
     var url = './img/olifant.svg'
+
+
+
     //
     var loader = new SVGLoader();
     loader.load(url, function (data) {

@@ -29,6 +29,7 @@ var speedscale = 1;
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
+var thinning = 0;
 
 var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, shader_thinning;
 
@@ -46,6 +47,7 @@ export function loadshaders() {
     loader.load("js/shaders/brushfragment.vert", function (data) { shader_brush = data; });
     loader.load("js/shaders/thinningfragment.vert", function (data) { shader_thinning = data; });
 };
+
 
 //==================================================================================================================================
 function init() {
@@ -83,7 +85,8 @@ function init() {
         masksize: { type: "f", value: 100.0 },
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
-        color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) }
+        color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) },
+        toggle: { type: "i", value: 0 }
     };
     mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3];
 
@@ -170,36 +173,41 @@ export function resize(width, height, force) {
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
 //==================================================================================================================================
-export function testfunction(x){
+export function testfunction(x) {
     console.log('testfunction');
-    
-    mUniforms.tSource.value = mTexture1.texture;
+
+    mUniforms.tSource.value = mTexture2.texture;
     mScreenQuad.material = mScreenMaterial;
-    mRenderer.setRenderTarget(mTexture2);
+    mRenderer.setRenderTarget(mTexture1);
     mRenderer.render(mScene, mCamera);
-   // texture 2 bevat nu de data.
-
-    mRenderer.setRenderTarget(null);
-    mRenderer.render(mScene, mCamera);
-    // laat het op het scherm zien
-
-    mScreenQuad.material=mThinningMaterial;
-  
-    mRenderer.clear();
-//        for (var i = 0; i < 4; ++i) {
-            // use texture 2 as source, render to texture 1
-            mUniforms.tSource.value = mTexture2.texture;
-            mRenderer.setRenderTarget(null);
-            //mRenderer.setRenderTarget(mTexture1);
-            mRenderer.render(mScene, mCamera);
-            mUniforms.tSource.value = mTexture1.texture;
-            mRenderer.setRenderTarget(mTexture2);
-            mRenderer.render(mScene, mCamera);
-  //      }
+    thinning = 0;
+    /*
+    
+        // texture 2 bevat nu de data.
+        //
+    
         mRenderer.setRenderTarget(null);
-    renderScreen();
-    mRenderer.setRenderTarget(null);
-    mRenderer.render(mScene,mCamera);
+        mRenderer.render(mScene, mCamera);
+        // laat het op het scherm zien
+    
+        //for (var i = 0; i < 10; ++i) {
+        mUniforms.toggle = 0;
+        mUniforms.tSource.value = mBrushtexture1.texture;
+        mScreenQuad.material = mThinningMaterial;
+        mRenderer.setRenderTarget(mBrushtexture2);
+        mRenderer.render(mScene, mCamera);
+        mUniforms.toggle = 1;
+        mUniforms.tSource.value = mBrushtexture2.texture;
+        mRenderer.setRenderTarget(mBrushtexture1);
+        mRenderer.render(mScene, mCamera);
+    
+        //}
+        mRenderer.setRenderTarget(null);
+        //renderScreen();
+        //mRenderer.setRenderTarget(null);
+        mRenderer.render(mScene, mCamera);
+        mRenderer.setRenderTarget(null);
+        */
 }
 //==================================================================================================================================
 //==================================================================================================================================
@@ -216,10 +224,12 @@ function renderBrush() {
 //==================================================================================================================================
 function renderSystem() {
     // use texture 1 as source, render to texture 2
+    mUniforms.toggle = 0;
     mUniforms.tSource.value = mTexture1.texture;
     mRenderer.setRenderTarget(mTexture2);
     mRenderer.render(mScene, mCamera);
     // use texture 2 as source, render to texture 1
+    mUniforms.toggle = 1;
     mUniforms.tSource.value = mTexture2.texture;
     mRenderer.setRenderTarget(mTexture1);
     mRenderer.render(mScene, mCamera);
@@ -243,9 +253,16 @@ var render = function (time) {
     mRenderer.clear();
     renderBrush();
     if (mUniforms.editmode.value != 1) {
-        mScreenQuad.material = mGSMaterial;
+        if (thinning) {
+            mScreenQuad.material = mThinningMaterial;
+        }
+        else {
+            mScreenQuad.material = mGSMaterial;
+        }
+
         for (var i = 0; i < 4; ++i) {
             renderSystem();
+
         }
     }
     mRenderer.setRenderTarget(null);
@@ -258,25 +275,25 @@ var render = function (time) {
 //==================================================================================================================================
 //==================================================================================================================================
 
-export function addGrouptoScene(g){
+export function addGrouptoScene(g) {
     console.log('add group to scene');
-//   var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
-//    camera.position.set( 0, 0, 200 );
+    //   var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
+    //    camera.position.set( 0, 0, 200 );
     //mScene.background = new THREE.Color( 0xb0b0b0 );
     mScene.add(g);
     console.log(mScene);
-    mScreenQuad.visible=false;    
+    mScreenQuad.visible = false;
     mRenderer.setRenderTarget(mBrushtexture1);
-    mRenderer.render(mScene,mCamera);
+    mRenderer.render(mScene, mCamera);
     mRenderer.setRenderTarget(null);
-    mRenderer.render(mScene,mCamera);
-   // renderBrush();
-    
-   // renderBrush();
-    mScreenQuad.visible=true;
-    g.visible=false;
-    mRenderer.render(mScene,mCamera);
-   //stophere(ffa);  
+    mRenderer.render(mScene, mCamera);
+    // renderBrush();
+
+    // renderBrush();
+    mScreenQuad.visible = true;
+    g.visible = false;
+    mRenderer.render(mScene, mCamera);
+    //stophere(ffa);  
 }
 
 //==================================================================================================================================
