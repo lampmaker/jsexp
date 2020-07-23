@@ -17,7 +17,7 @@ var mCamera;
 var mUniforms;
 var mColors; //for gradient
 var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2;
-var mGSMaterial, mScreenMaterial, mBrushMaterial;
+var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial;
 var mScreenQuad;
 
 //
@@ -30,7 +30,7 @@ var speedscale = 1;
 var mMinusOnes = new THREE.Vector2(-1, -1);
 
 
-var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original;
+var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, shader_thinning;
 
 var shaderloadingmanager = new THREE.LoadingManager();
 var loader = new THREE.FileLoader(shaderloadingmanager);
@@ -44,6 +44,7 @@ export function loadshaders() {
     loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; shader_stdf_original = data; });
     loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
     loader.load("js/shaders/brushfragment.vert", function (data) { shader_brush = data; });
+    loader.load("js/shaders/thinningfragment.vert", function (data) { shader_thinning = data; });
 };
 
 //==================================================================================================================================
@@ -98,11 +99,16 @@ function init() {
         fragmentShader: shader_scrf,
     });
 
-
     mBrushMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
         vertexShader: shader_stdv,
         fragmentShader: shader_brush,
+    });
+
+    mThinningMaterial = new THREE.ShaderMaterial({
+        uniforms: mUniforms,
+        vertexShader: shader_stdv,
+        fragmentShader: shader_thinning,
     });
 
     var plane = new THREE.PlaneGeometry(1.0, 1.0);
@@ -164,6 +170,37 @@ export function resize(width, height, force) {
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
 //==================================================================================================================================
+export function testfunction(x){
+    console.log('testfunction');
+    
+    mUniforms.tSource.value = mTexture1.texture;
+    mScreenQuad.material = mScreenMaterial;
+    mRenderer.setRenderTarget(mTexture2);
+    mRenderer.render(mScene, mCamera);
+   // texture 2 bevat nu de data.
+
+    mRenderer.setRenderTarget(null);
+    mRenderer.render(mScene, mCamera);
+    // laat het op het scherm zien
+
+    mScreenQuad.material=mThinningMaterial;
+  
+    mRenderer.clear();
+//        for (var i = 0; i < 4; ++i) {
+            // use texture 2 as source, render to texture 1
+            mUniforms.tSource.value = mTexture2.texture;
+            mRenderer.setRenderTarget(null);
+            //mRenderer.setRenderTarget(mTexture1);
+            mRenderer.render(mScene, mCamera);
+            mUniforms.tSource.value = mTexture1.texture;
+            mRenderer.setRenderTarget(mTexture2);
+            mRenderer.render(mScene, mCamera);
+  //      }
+        mRenderer.setRenderTarget(null);
+    renderScreen();
+    mRenderer.setRenderTarget(null);
+    mRenderer.render(mScene,mCamera);
+}
 //==================================================================================================================================
 //==================================================================================================================================
 function renderBrush() {
