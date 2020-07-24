@@ -204,7 +204,10 @@ void main()
   if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
   if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
   if ( (maskmode == 3 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.0;   }
+  if ( (maskmode == 4 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.0;   }
+  if ( (maskmode == 5 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.8;   }
+  if ( (maskmode == 6 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
 
-  gl_FragColor = vec4(dst.r, dst.g, 0.0, 1.0);
+  gl_FragColor = vec4(dst.r, dst.g, 1.0, 0.0);
 }
 //=====================================================================================================================

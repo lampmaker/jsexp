@@ -32,6 +32,7 @@ guiData = {
     maskmode: 0,
     masksize: 100.0,
     maskfile: loadSVG,
+    maskfilename: "olifant",
     mod1: "",
     mod2: "",
     gclean: clean,
@@ -190,21 +191,22 @@ $(function () {
         gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
         var g1 = gui.addFolder('Gradient');
-        gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onFinishChange(mupdateparameters);
-        gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onFinishChange(mupdateparameters);
-        gfy = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onFinishChange(mupdateparameters);
-        gfyd = g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onFinishChange(mupdateparameters);
-        gkx = g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onFinishChange(mupdateparameters);
-        gkxd = g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onFinishChange(mupdateparameters);
-        gky = g1.add(guiData, 'gky', -100, 100).name('kill-dy').onFinishChange(mupdateparameters);
-        gkyd = g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onFinishChange(mupdateparameters);
+        gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onChange(mupdateparameters);
+        gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onChange(mupdateparameters);
+        gfy = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onChange(mupdateparameters);
+        gfyd = g1.add(guiData, 'gfyd', -100, 100).name('feed-dy-center').onChange(mupdateparameters);
+        gkx = g1.add(guiData, 'gkx', -100, 100).name('kill-dx').onChange(mupdateparameters);
+        gkxd = g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onChange(mupdateparameters);
+        gky = g1.add(guiData, 'gky', -100, 100).name('kill-dy').onChange(mupdateparameters);
+        gkyd = g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onChange(mupdateparameters);
         gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var maskgui = gui.addFolder('Mask');
         maskgui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
-        maskgui.add(guiData, 'maskmode', 0, 3).name(' Mask mode').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskmode', 0, 5).name(' Mask mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskfilename').name('File name');
         maskgui.add(guiData, 'maskfile').name('load from SVG');
         var f1 = gui.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
@@ -236,8 +238,8 @@ $(function () {
 
 function loadSVG() {
 
-
-    var url = './img/olifant.svg'
+    var s1 = '/img/'
+    var url = s1.concat(guiData.maskfilename, '.svg');
 
 
 
