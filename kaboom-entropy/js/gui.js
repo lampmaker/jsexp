@@ -218,12 +218,6 @@ $(function () {
         f1.close();
         gui.add(guiData, 'ftest').name('test function');
         loadshaders();
-        const fileSelector = document.getElementById('file-selector');
-        fileSelector.addEventListener('change', (event) => {
-            const fileList = event.target.files;
-            console.log(fileList[0].name);
-            parseSVG(fileList[0].name);
-        });
         loaded = true;
 
     });

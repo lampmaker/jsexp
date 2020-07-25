@@ -22,21 +22,22 @@ float step_y = 1.0 / screenHeight;
 
 
 void main()
-{
-    const float lim=0.5;
+{  
     bool points[9]; // true: on / black 
-    points[0]= (texture2D(tSource, vUv + vec2( 0.0    , 0.0   )).r < lim); // center point
-    points[1]= (texture2D(tSource, vUv + vec2( 0.0    , step_y)).r < lim);
-    points[2]= (texture2D(tSource, vUv + vec2( step_x , step_y)).r < lim);
-    points[3]= (texture2D(tSource, vUv + vec2( step_x , 0.0   )).r < lim);
-    points[4]= (texture2D(tSource, vUv + vec2( step_x ,-step_y)).r < lim);
-    points[5]= (texture2D(tSource, vUv + vec2( 0.0    ,-step_y)).r < lim);
-    points[6]= (texture2D(tSource, vUv + vec2(-step_x ,-step_y)).r < lim);
-    points[7]= (texture2D(tSource, vUv + vec2(-step_x , 0.0   )).r < lim);
-    points[8]= (texture2D(tSource, vUv + vec2(-step_x , step_y)).r < lim);   
+    vec4 value=texture2D(tSource, vUv);
+    points[0]= (value.g < color1.a); // center point
+    points[1]= (texture2D(tSource, vUv + vec2( 0.0    , step_y )).g < color1.a);
+    points[2]= (texture2D(tSource, vUv + vec2( step_x , step_y )).g < color1.a);
+    points[3]= (texture2D(tSource, vUv + vec2( step_x , 0.0    )).g < color1.a);
+    points[4]= (texture2D(tSource, vUv + vec2( step_x ,-step_y )).g < color1.a);
+    points[5]= (texture2D(tSource, vUv + vec2( 0.0    ,-step_y )).g < color1.a);
+    points[6]= (texture2D(tSource, vUv + vec2(-step_x ,-step_y )).g < color1.a);
+    points[7]= (texture2D(tSource, vUv + vec2(-step_x , 0.0    )).g < color1.a);
+    points[8]= (texture2D(tSource, vUv + vec2(-step_x , step_y )).g < color1.a);   
 
     int NumNonZeroes=0;
     int NumTransitions=0;
+    bool deletepixel=false;
     
     for (int i=1 ; i<9 ; i++) {
         if  (points[i])  NumNonZeroes++;
@@ -46,33 +47,23 @@ void main()
     }
     if ( points[1] != points[8] ) NumTransitions++;    
 
-    bool deletepixel=false;
+    if (points[0]){ // we can skip this if already black
+        deletepixel=(NumNonZeroes>=5);        
+    }
+    deletepixel=false;
+//        if (points[0] && ( NumNonZeroes>=2 ) && ( NumNonZeroes<=6 ) && (NumTransitions==1) && (!(points[1] && points[3] && points[5]) ) && (!(points[3] && points[5] && points[7])) && points[7]) {
+ //           deletepixel=true;
+  //          }
     
-    if (toggle==0) {
-          if (points[0] && ( NumNonZeroes>=2 ) && ( NumNonZeroes<=6 ) && (NumTransitions==1) && (!(points[1] && points[3] && points[5]) ) && (!(points[3] && points[5] && points[7])) && points[7]) {
-            deletepixel=true;
-            }
+    if (vUv.x>0.5) deletepixel=true;  // for debugging
+    if (vUv.y>0.5) {value.r=1.0; value.g=1.0;}
+
+    if (deletepixel) {       
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
     else
-    {
-        if (points[0] || ( NumNonZeroes>=2 ) || ( NumNonZeroes<=6 ) || (NumTransitions==1) || (!(points[1] && points[3] && points[5])) || (!(points[3] && points[5] && points[7])) || points[7]) {
-            deletepixel=true;
-        }
-    }
-
-    if (deletepixel) points[0]=false;
-
-    if (points[0]) {       
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    }
-    else
-    {       
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    }
-    
-
-
-
-
+    {   
+        gl_FragColor = value;
+    }   
     
 }

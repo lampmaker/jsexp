@@ -176,20 +176,27 @@ export function resize(width, height, force) {
 export function testfunction(x) {
     console.log('testfunction');
 
-    mUniforms.tSource.value = mTexture2.texture;
-    mScreenQuad.material = mScreenMaterial;
-    mRenderer.setRenderTarget(mTexture1);
-    mRenderer.render(mScene, mCamera);
-    thinning = 0;
+    // render texture 2 to texture 1.
+    //render_to_texture(mScreenMaterial, mTexture1, mTexture2);
+    //  mRenderer.setRenderTarget(null);
+    //  mRenderer.render(mScene, mCamera);
+    ;
+
+    //   mUniforms.tSource.value = mTexture2.texture;
+    //  mScreenQuad.material = mScreenMaterial;
+    //  mRenderer.setRenderTarget(mTexture1);
+    //  mRenderer.render(mScene, mCamera);
+
+    thinning = 100;
+    // texture 1 bevat nu de data.
+    //
+
+    //    mRenderer.setRenderTarget(null);
+    //    mRenderer.render(mScene, mCamera);
+
+
+    // laat het op het scherm zien
     /*
-    
-        // texture 2 bevat nu de data.
-        //
-    
-        mRenderer.setRenderTarget(null);
-        mRenderer.render(mScene, mCamera);
-        // laat het op het scherm zien
-    
         //for (var i = 0; i < 10; ++i) {
         mUniforms.toggle = 0;
         mUniforms.tSource.value = mBrushtexture1.texture;
@@ -207,39 +214,31 @@ export function testfunction(x) {
         //mRenderer.setRenderTarget(null);
         mRenderer.render(mScene, mCamera);
         mRenderer.setRenderTarget(null);
-        */
+      */
 }
 //==================================================================================================================================
+function render_to_texture(material, source, target) {
+    mScreenQuad.material = material;
+    mUniforms.tSource.value = source.texture;
+    mRenderer.setRenderTarget(target);
+    mRenderer.render(mScene, mCamera);
+}
 //==================================================================================================================================
 function renderBrush() {
-    mScreenQuad.material = mBrushMaterial;
-    mUniforms.tSource.value = mBrushtexture1.texture;
-    mRenderer.setRenderTarget(mBrushtexture2);
-    mRenderer.render(mScene, mCamera);
-    mUniforms.tSource.value = mBrushtexture2.texture;
-    mRenderer.setRenderTarget(mBrushtexture1);
-    mRenderer.render(mScene, mCamera);
+    render_to_texture(mBrushMaterial, mBrushtexture1, mBrushtexture2);
+    render_to_texture(mBrushMaterial, mBrushtexture2, mBrushtexture1);
     mUniforms.tBrush.value = mBrushtexture1.texture;
 }
 //==================================================================================================================================
 function renderSystem() {
-    // use texture 1 as source, render to texture 2
     mUniforms.toggle = 0;
-    mUniforms.tSource.value = mTexture1.texture;
-    mRenderer.setRenderTarget(mTexture2);
-    mRenderer.render(mScene, mCamera);
-    // use texture 2 as source, render to texture 1
+    render_to_texture(mGSMaterial, mTexture1, mTexture2);
     mUniforms.toggle = 1;
-    mUniforms.tSource.value = mTexture2.texture;
-    mRenderer.setRenderTarget(mTexture1);
-    mRenderer.render(mScene, mCamera);
+    render_to_texture(mGSMaterial, mTexture2, mTexture1);
 }
 //==================================================================================================================================
 function renderScreen() {
-    //mUniforms.tSource.value = mTexture1.texture;
-    //  mUniforms.tSource.value = mBrushtexture1.texture;
-    mScreenQuad.material = mScreenMaterial;
-    mRenderer.render(mScene, mCamera);
+    render_to_texture(mScreenMaterial, mTexture1, null);
 }
 //==================================================================================================================================
 //==================================================================================================================================
@@ -252,29 +251,33 @@ var render = function (time) {
     mUniforms.delta.value = dt * speedscale;
     mRenderer.clear();
     renderBrush();
-    if (mUniforms.editmode.value != 1) {
-        if (thinning) {
-            mScreenQuad.material = mThinningMaterial;
-        }
-        else {
-            mScreenQuad.material = mGSMaterial;
-        }
 
-        for (var i = 0; i < 4; ++i) {
-            renderSystem();
-
+    if (thinning > 0) {
+        mUniforms.toggle = 0;
+        render_to_texture(mThinningMaterial, mTexture1, mTexture2);
+        mUniforms.toggle = 1;
+        render_to_texture(mThinningMaterial, mTexture2, mTexture1);
+        render_to_texture(mThinningMaterial, mTexture1, null);
+        thinning--
+        if (thinning == 0) {
+            thinning = 1;
         }
     }
-    mRenderer.setRenderTarget(null);
-    mUniforms.brush.value = mMinusOnes;
-    mUniforms.tSource.value = mTexture1.texture;
-    renderScreen();
+    else {
+        if (mUniforms.editmode.value != 1) {
+            for (var i = 0; i < 4; ++i) {
+                renderSystem();
+            }
+            mUniforms.brush.value = mMinusOnes;
+            renderScreen();
+        }
+    }
+
     requestAnimationFrame(render);
 }
 //==================================================================================================================================
 //==================================================================================================================================
 //==================================================================================================================================
-
 export function addGrouptoScene(g) {
     console.log('add group to scene');
     //   var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
@@ -287,9 +290,6 @@ export function addGrouptoScene(g) {
     mRenderer.render(mScene, mCamera);
     mRenderer.setRenderTarget(null);
     mRenderer.render(mScene, mCamera);
-    // renderBrush();
-
-    // renderBrush();
     mScreenQuad.visible = true;
     g.visible = false;
     mRenderer.render(mScene, mCamera);
