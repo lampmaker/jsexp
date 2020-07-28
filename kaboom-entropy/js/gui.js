@@ -1,4 +1,4 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, testfunction } from '/js/entropy/grayscott.js'
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, testfunction, record } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
 import { SVGLoader } from '/js/three/SVGLoader.js';
 window.clean = clean;
@@ -11,7 +11,7 @@ var midiconnected = false;
 
 
 var gspeed, gf, gk, gfx, gfy, gfxd, gfyd, gkx, gky, gkxd, gkyd;
-
+//=================================================================================================================
 guiData = {
     cwidth: 1024,
     cheight: 1024,
@@ -42,10 +42,11 @@ guiData = {
     c1pos: 0.1,
     c2pos: 0.2,
     c3pos: 0.4,
-    ftest: testfunction
+    ftest: testfunction,
+    grecord:record
 
 };
-
+//=================================================================================================================
 
 function mupdateparameters() {
     var shapemode = 0;
@@ -70,11 +71,11 @@ function mupdateparameters() {
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
     updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk);
 }
-
+//=================================================================================================================
 function mupdatemodifications() {
     updateModifications(guiData.mod1, guiData.mod2);
 }
-
+//=================================================================================================================
 var hexToRgb = function (hex, a) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ?
@@ -91,13 +92,13 @@ function updatecolors() {
     var c3 = hexToRgb(guiData.c3, guiData.c3pos);
     updateUniformsColors2(c1, c2, c3);
 }
-
+//=================================================================================================================
 function updatescreen() {
     //  console.log('mupdate screen')
     resize(guiData.cwidth, guiData.cheight, false)
     if (!loaded) return;
 }
-
+//=================================================================================================================
 
 function parsemidi(m) {
     var value;
@@ -154,7 +155,7 @@ function parsemidi(m) {
 
 
 }
-
+//=================================================================================================================
 function onMIDISuccess(midiAccess) {
     console.log(midiAccess);
     console.log('This browser supports WebMIDI!');
@@ -165,16 +166,15 @@ function onMIDISuccess(midiAccess) {
         input.onmidimessage = getMIDIMessage;
     }
 }
-
 function getMIDIMessage(midiMessage) {
     console.log(midiMessage.data);
     parsemidi(midiMessage.data);
 }
-
 function onMIDIFailure() {
     console.log('Could not access your MIDI devices.');
 }
-
+//=================================================================================================================
+//=================================================================================================================
 $(function () {
     navigator.requestMIDIAccess()
         .then(onMIDISuccess, onMIDIFailure);
@@ -217,6 +217,7 @@ $(function () {
         f1.add(guiData, 'c3pos', 0.00, 1.0).name('position').onChange(updatecolors);
         f1.close();
         gui.add(guiData, 'ftest').name('test function');
+        gui.add(guiData, 'grecord').name('RECORD');
         loadshaders();
         loaded = true;
 
@@ -226,18 +227,10 @@ $(function () {
 
 //========================================================================================================
 //========================================================================================================
-
-
-
-
 function loadSVG() {
-
     var s1 = '/img/'
     var url = s1.concat(guiData.maskfilename, '.svg');
 
-
-
-    //
     var loader = new SVGLoader();
     loader.load(url, function (data) {
         var tpaths = data.paths;
@@ -248,9 +241,7 @@ function loadSVG() {
                 path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-
         var material = new THREE.MeshNormalMaterial({ color: 0xFFFFFF });
-
         var shapes = path.toShapes(true, false);
         for (var j = 0; j < shapes.length; j++) {
             var shape = shapes[j];
@@ -262,7 +253,6 @@ function loadSVG() {
         //-- repositioning  and scaling
         group.scale.y *= - 1;
         var box = new THREE.BoxHelper(group, 0xffff00);
-
         box.geometry.computeBoundingBox();
         var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
         var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
@@ -285,7 +275,12 @@ function loadSVG() {
         dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
         dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
 
-
         addGrouptoScene(group)
     });
 }
+
+//=================================================================================================================
+//=================================================================================================================
+
+
+
