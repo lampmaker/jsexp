@@ -1,4 +1,4 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, testfunction, record } from '/js/entropy/grayscott.js'
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, testfunction, cnvs } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
 import { SVGLoader } from '/js/three/SVGLoader.js';
 window.clean = clean;
@@ -9,8 +9,11 @@ var gui, guiData, x, y;
 var loaded = false;
 var midiconnected = false;
 
+var stream, mediaRecorder,recordedChunks=[];
 
-var gspeed, gf, gk, gfx, gfy, gfxd, gfyd, gkx, gky, gkxd, gkyd;
+
+
+var gspeed, gf, gk, gfx, gfy, gfxd, gfyd, gkx, gky, gkxd, gkyd,recbtn;
 //=================================================================================================================
 guiData = {
     cwidth: 1024,
@@ -217,11 +220,49 @@ $(function () {
         f1.add(guiData, 'c3pos', 0.00, 1.0).name('position').onChange(updatecolors);
         f1.close();
         gui.add(guiData, 'ftest').name('test function');
-        gui.add(guiData, 'grecord').name('RECORD');
+        recbtn=gui.add(guiData, 'grecord').name('RECORD');
         loadshaders();
         loaded = true;
+        //var canvas=cnvs();
+        stream = cnvs().captureStream(15 /*fps*/);
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm; codecs=vp9"
+            //mimeType: "video/webm; codecs=h264"
+        });
+        mediaRecorder.ondataavailable = function (e) {
+            recordedChunks.push(event.data);
+            if (mediaRecorder.state === 'recording') {
+                // after stop data avilable event run one more time
+                mediaRecorder.stop();
+            }
+        }
+        
+        mediaRecorder.onstop = function (event) {
+            console.log('stop');
+            var blob = new Blob(recordedChunks, {
+                type: "video/webm"
+            });
+            var url = URL.createObjectURL(blob);
+            //res(url);
+            window.open(url);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'test.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            }, 100);
+        }
+        
 
     });
+
+    
+
+
 
 });
 
@@ -284,3 +325,19 @@ function loadSVG() {
 
 
 
+
+function record () 
+{
+    if (mediaRecorder.state == 'recording') {
+        // after stop data avilable event run one more time
+        mediaRecorder.stop();
+        recbtn.name('RECORD');
+        return;
+    }	
+    var recordedChunks = [];
+    mediaRecorder.start(4000);
+    console.log('start');
+    recbtn.name('STOP');
+}
+   
+ 

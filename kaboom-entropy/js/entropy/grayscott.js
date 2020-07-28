@@ -30,8 +30,6 @@ var speedscale = 1;
 var mMinusOnes = new THREE.Vector2(-1, -1);
 var thinning = 0;
 
-var recording = false;
-
 var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, shader_thinning;
 
 var shaderloadingmanager = new THREE.LoadingManager();
@@ -42,6 +40,8 @@ shaderloadingmanager.onLoad = function () {
 };
 
 export function loadshaders() {
+    canvasQ = $('#myCanvas');
+    canvas = canvasQ.get(0);
     loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
     loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; shader_stdf_original = data; });
     loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
@@ -54,8 +54,7 @@ export function loadshaders() {
 function init() {
 
 
-    canvasQ = $('#myCanvas');
-    canvas = canvasQ.get(0);
+ 
 
     canvas.onmousedown = onMouseDown;
     canvas.onmouseup = onMouseUp;
@@ -391,55 +390,6 @@ export function snapshot() {
 }
 
 
-
-export function record () 
-{
-//	function record(canvas, time) {
-	var time=4000;
-    var recordedChunks = [];
-    if (recording) {               
-        console.log('busy');
-    }
-    else
-    return new Promise(function (res, rej) {
-        recording=true;
-        var stream = canvas.captureStream(30 /*fps*/);
-        var mediaRecorder = new MediaRecorder(stream, {
-            mimeType: "video/webm; codecs=vp9"
-            //mimeType: "video/webm; codecs=h264"
-        });
-
-        //ondataavailable will fire in interval of `time || 4000 ms`
-        mediaRecorder.start(time || 4000);
-        console.log('start');
-        mediaRecorder.ondataavailable = function (e) {
-            recordedChunks.push(event.data);
-            if (mediaRecorder.state === 'recording') {
-                // after stop data avilable event run one more time
-                mediaRecorder.stop();
-            }
-        }
-        mediaRecorder.onstop = function (event) {
-            console.log('stop');
-            var blob = new Blob(recordedChunks, {
-                type: "video/webm"
-            });
-            var url = URL.createObjectURL(blob);
-            res(url);
-            window.open(url);
-            
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'test.webm';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(url);
-            }, 100);
-
-
-        }
-    })
+export function cnvs() {
+    return canvas;
 }
