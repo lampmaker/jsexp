@@ -20,50 +20,53 @@ float step_x = 1.0 / screenWidth;
 float step_y = 1.0 / screenHeight;
 //http://fourier.eng.hmc.edu/e161/lectures/morphology/node2.html
 
-
+//http://jaredgerschler.blog/2018/02/25/the-zhang-suen-thinning-algorithm-introduction-and-applications/
 void main()
 {  
-    bool points[9]; // true: on / black 
+    bool points[11]; // true: on / black 
     vec4 value=texture2D(tSource, vUv);
-    points[0]= (value.g < color1.a); // center point
-    points[1]= (texture2D(tSource, vUv + vec2( 0.0    , step_y )).g < color1.a);
-    points[2]= (texture2D(tSource, vUv + vec2( step_x , step_y )).g < color1.a);
-    points[3]= (texture2D(tSource, vUv + vec2( step_x , 0.0    )).g < color1.a);
-    points[4]= (texture2D(tSource, vUv + vec2( step_x ,-step_y )).g < color1.a);
-    points[5]= (texture2D(tSource, vUv + vec2( 0.0    ,-step_y )).g < color1.a);
-    points[6]= (texture2D(tSource, vUv + vec2(-step_x ,-step_y )).g < color1.a);
-    points[7]= (texture2D(tSource, vUv + vec2(-step_x , 0.0    )).g < color1.a);
-    points[8]= (texture2D(tSource, vUv + vec2(-step_x , step_y )).g < color1.a);   
+    float limit=0.5;
 
-    int NumNonZeroes=0;
+    // points: true = black: needs thinning.  False: white; nothing to be done.
+    points[1]= (value.g < limit); // center point
+    points[2]= (texture2D(tSource, vUv + vec2( 0.0    , step_y )).g < limit);
+    points[3]= (texture2D(tSource, vUv + vec2( step_x , step_y )).g < limit);
+    points[4]= (texture2D(tSource, vUv + vec2( step_x , 0.0    )).g < limit);
+    points[5]= (texture2D(tSource, vUv + vec2( step_x ,-step_y )).g < limit);
+    points[6]= (texture2D(tSource, vUv + vec2( 0.0    ,-step_y )).g < limit);
+    points[7]= (texture2D(tSource, vUv + vec2(-step_x ,-step_y )).g < limit);
+    points[8]= (texture2D(tSource, vUv + vec2(-step_x , 0.0    )).g < limit);
+    points[9]= (texture2D(tSource, vUv + vec2(-step_x , step_y )).g < limit);   
+    points[10]=points[2];
+
+    int NumBlackPixels=0;
     int NumTransitions=0;
-    bool deletepixel=false;
-    
-    for (int i=1 ; i<9 ; i++) {
-        if  (points[i])  NumNonZeroes++;
-        if (i<8) {
-            if ( points[i] != points[i+1] ) NumTransitions++;         
+    for (int i=2 ; i<10 ; i++) {
+        if  (points[i])  NumBlackPixels++;        
+        if ( points[i] != points[i+1] ) NumTransitions++;                 
+    }
+   //---------------------------------------------------
+    if (points[1]) {         
+        bool c=false;
+        c= (NumBlackPixels>=2) && (NumBlackPixels<=6);
+        c = (c && (NumTransitions==2));
+        if (toggle==1){
+            c = (c && (!(points[2] && points[4] && points [6])));
+            c = (c && (!(points[4] && points[6] && points [8])));
         }
+        else {
+            c = (c && (!(points[2] && points[4] && points [8])));
+            c = (c && (!(points[2] && points[6] && points [8])));
+        }        
+        if (c) points[1]=false;        
     }
-    if ( points[1] != points[8] ) NumTransitions++;    
-
-    if (points[0]){ // we can skip this if already black
-        deletepixel=(NumNonZeroes>=5);        
-    }
-    deletepixel=false;
-//        if (points[0] && ( NumNonZeroes>=2 ) && ( NumNonZeroes<=6 ) && (NumTransitions==1) && (!(points[1] && points[3] && points[5]) ) && (!(points[3] && points[5] && points[7])) && points[7]) {
- //           deletepixel=true;
-  //          }
     
-    if (vUv.x>0.5) deletepixel=true;  // for debugging
-    if (vUv.y>0.5) {value.r=1.0; value.g=1.0;}
-
-    if (deletepixel) {       
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    if (points[1]) {       
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); // black
     }
     else
     {   
-        gl_FragColor = value;
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0); // white
     }   
     
 }

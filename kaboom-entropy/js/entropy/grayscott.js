@@ -186,8 +186,9 @@ export function testfunction(x) {
     //  mScreenQuad.material = mScreenMaterial;
     //  mRenderer.setRenderTarget(mTexture1);
     //  mRenderer.render(mScene, mCamera);
-
-    thinning = 100;
+    //render_to_texture(mScreenMaterial, mTexture1, mTexture2);
+    //render_to_texture(mScreenMaterial, mTexture2, mTexture1);
+    thinning = 1;
     // texture 1 bevat nu de data.
     //
 
@@ -252,16 +253,19 @@ var render = function (time) {
     mRenderer.clear();
     renderBrush();
 
-    if (thinning > 0) {
-        mUniforms.toggle = 0;
-        render_to_texture(mThinningMaterial, mTexture1, mTexture2);
-        mUniforms.toggle = 1;
-        render_to_texture(mThinningMaterial, mTexture2, mTexture1);
-        render_to_texture(mThinningMaterial, mTexture1, null);
-        thinning--
-        if (thinning == 0) {
-            thinning = 1;
-        }
+    if (thinning > 0) {        
+        if (thinning==1) {
+            render_to_texture(mScreenMaterial, mTexture1, mTexture2);
+            render_to_texture(mThinningMaterial, mTexture2, mTexture1);
+            thinning++        
+        }   
+        else {
+            mUniforms.toggle = 0;
+            render_to_texture(mThinningMaterial, mTexture1, mTexture2);
+            mUniforms.toggle = 1;
+            render_to_texture(mThinningMaterial, mTexture2, mTexture1);
+        }                    
+        render_to_texture(mThinningMaterial, mTexture1, null);                
     }
     else {
         if (mUniforms.editmode.value != 1) {

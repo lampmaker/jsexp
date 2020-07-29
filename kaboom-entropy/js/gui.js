@@ -88,6 +88,7 @@ var hexToRgb = function (hex, a) {
             a
         ] : null;
 }
+
 function updatecolors() {
     //console.log('mupdatecolors')
     var c1 = hexToRgb(guiData.c1, guiData.c1pos);
@@ -222,6 +223,8 @@ $(function () {
         gui.add(guiData, 'ftest').name('test function');
         recbtn=gui.add(guiData, 'grecord').name('RECORD');
         loadshaders();
+        updatecolors();
+        updateparameters();
         loaded = true;
         //var canvas=cnvs();
         stream = cnvs().captureStream(15 /*fps*/);
@@ -335,7 +338,7 @@ function record ()
         return;
     }	
     var recordedChunks = [];
-    mediaRecorder.start(4000);
+    mediaRecorder.start(40000);
     console.log('start');
     recbtn.name('STOP');
 }
