@@ -109,11 +109,13 @@
 				"wolf": 'models/svg/wolf.svg',
 				"uil": 'models/svg/uil.svg',
 				"catwalk": 'models/svg/catwalk.svg',
+				"dolfijn": 'models/svg/dolfijn.svg',
 				"koe": 'models/svg/koe.svg',
 				"paard": 'models/svg/paard.svg',
 				"dieren": 'models/svg/dieren.svg',
 				"jachtluipaard": 'models/svg/jachtluipaard.svg',
 				"giraffe": 'models/svg/giraffe.svg',
+				"kat1": 'models/svg/kat1.svg',
 				"Three.js": 'models/svg/threejs.svg',
 				"Joins and caps": 'models/svg/lineJoinsAndCaps.svg',
 			}).name('SVG File').onChange(update);
@@ -161,7 +163,7 @@
 			const light0 = new THREE.AmbientLight(0x101010);
 			scene.add(light0);
 			const light1 = new THREE.SpotLight(0xFFFFFF);
-			light1.position.set(-150, 100, 300);
+			light1.position.set(-150, 100, 500);
 			light1.castShadow = true;
 			light1.shadowCameraVisible = true;
 			light1.shadow.mapSize.width = 16384;  // default
