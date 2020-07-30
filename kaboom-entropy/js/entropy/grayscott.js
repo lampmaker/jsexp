@@ -50,6 +50,8 @@ export function loadshaders() {
         delta: { type: "f", value: 1.0 },
         feed: { type: "f", value: .1 },
         kill: { type: "f", value: .055 },
+        maskfeed: { type: "f", value: .1 },
+        maskkill: { type: "f", value: .055 },
         df: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         dk: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         brmode: { type: "f", value: 0.0 },
@@ -254,11 +256,13 @@ export function addGrouptoScene(g) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs, df, dk) {
+export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk) {
     mUniforms.df.value = df;
     mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
     mUniforms.kill.value = k;
+    mUniforms.maskfeed.value = mf;
+    mUniforms.maskkill.value = mk;
     mUniforms.mode.value = m;
     mUniforms.editmode.value = e;
     mUniforms.maskmode.value = b;

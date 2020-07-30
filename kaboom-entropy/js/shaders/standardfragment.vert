@@ -8,7 +8,11 @@ uniform sampler2D tBrush;
 uniform float delta;
 uniform float feed;
 uniform float kill;
+uniform float maskfeed;
+uniform float maskkill;
+
 uniform int shape;
+
 uniform vec2 brush;
 uniform float brmode;
 uniform int maskmode;
@@ -157,7 +161,17 @@ void main()
    k= k + ((x - 0.5) * dk.r + xd * dk.g + (y - 0.5) * dk.b + yd * dk.a) * 0.0002;
 
 
-
+  vec2 buv = texture2D(tBrush, vUv).rg;  
+  if ( (maskmode == 7 ) && ( buv.g >  0.0 )) { f=maskfeed; k=maskkill;   }
+  if ( (maskmode == 8 ) && ( buv.g ==  0.0 )) { f=maskfeed; k=maskkill;   }
+  /*
+  if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
+  if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
+  if ( (maskmode == 3 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.0;   }
+  if ( (maskmode == 4 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.0;   }
+  if ( (maskmode == 5 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.8;   }
+  if ( (maskmode == 6 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
+*/
 
   /*MOD1*/  // mod inserted here
 
@@ -199,7 +213,7 @@ void main()
     }
   }
 
-  vec2 buv = texture2D(tBrush, vUv).rg;  
+  buv = texture2D(tBrush, vUv).rg;  
   if ( (maskmode == 0 ) && ( buv.g >  0.0 )) { dst.r=0.8;    dst.g=0.8;   }
   if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
   if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }

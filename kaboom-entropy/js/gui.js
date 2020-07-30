@@ -36,6 +36,8 @@ guiData = {
     masksize: 100.0,
     maskfile: loadSVG,
     maskfilename: "olifant",
+    maskfeed: 0.01,
+    maskkill: 0.05,
     mod1: "",
     mod2: "",
     gclean: clean,
@@ -73,7 +75,7 @@ function mupdateparameters() {
 
     var df = [guiData.gfx, guiData.gfxd, guiData.gfy, guiData.gfyd];
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
-    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk);
+    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill);
 }
 //=================================================================================================================
 function mupdatemodifications() {
@@ -195,7 +197,8 @@ $(function () {
         gspeed = gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onChange(mupdateparameters);
         gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
-        var g1 = gui.addFolder('Gradient');
+        var g0 = gui.addFolder('Menu');
+        var g1 = g0.addFolder('Advanced');
         gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onChange(mupdateparameters);
         gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onChange(mupdateparameters);
         gfy = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onChange(mupdateparameters);
@@ -204,16 +207,18 @@ $(function () {
         gkxd = g1.add(guiData, 'gkxd', -100, 100).name('kill-dx-center').onChange(mupdateparameters);
         gky = g1.add(guiData, 'gky', -100, 100).name('kill-dy').onChange(mupdateparameters);
         gkyd = g1.add(guiData, 'gkyd', -100, 100).name('kill-dy-center').onChange(mupdateparameters);
-        gui.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
-        gui.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
-        var maskgui = gui.addFolder('Mask');
+        g1.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
+        g1.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
+        var maskgui = g0.addFolder('Mask');
         maskgui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
-        maskgui.add(guiData, 'maskmode', 0, 5).name(' Mask mode').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskmode', 0, 8).step(1).name(' Mask mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
         maskgui.add(guiData, 'maskfilename').name('File name');
         maskgui.add(guiData, 'maskfile').name('load from SVG');
-        var f1 = gui.addFolder('Colors');
+        maskgui.add(guiData, 'maskfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
+        maskgui.add(guiData, 'maskkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        var f1 = g0.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
         f1.addColor(guiData, 'c2').name("Color 2").onChange(updatecolors);
@@ -223,7 +228,9 @@ $(function () {
         f1.add(guiData, 'fthinning', 0, 20).name('Thinning').onChange(updatethinning);
         f1.close();
         //gui.add(guiData, 'ftest').name('test function');
-        recbtn = gui.add(guiData, 'grecord').name('RECORD');
+        var f2 = g0.addFolder('Tools');
+        f2.close();
+        recbtn = f2.add(guiData, 'grecord').name('RECORD');
         loadshaders();
         updatecolors();
         // updateparameters();
