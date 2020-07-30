@@ -16,8 +16,8 @@ var mCamera;
 // webgl 
 var mUniforms;
 var mColors; //for gradient
-var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2;
-var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial;
+var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2, mThinningTexture1, mThinningTexture2;
+var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial, mAverageMaterial;
 var mScreenQuad;
 
 //
@@ -30,7 +30,7 @@ var speedscale = 1;
 var mMinusOnes = new THREE.Vector2(-1, -1);
 var thinning = 0;
 
-var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, shader_thinning;
+var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, shader_thinning, shader_average;
 
 var shaderloadingmanager = new THREE.LoadingManager();
 var loader = new THREE.FileLoader(shaderloadingmanager);
@@ -42,31 +42,6 @@ shaderloadingmanager.onLoad = function () {
 export function loadshaders() {
     canvasQ = $('#myCanvas');
     canvas = canvasQ.get(0);
-    loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
-    loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; shader_stdf_original = data; });
-    loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
-    loader.load("js/shaders/brushfragment.vert", function (data) { shader_brush = data; });
-    loader.load("js/shaders/thinningfragment.vert", function (data) { shader_thinning = data; });
-};
-
-
-//==================================================================================================================================
-function init() {
-
-
- 
-
-    canvas.onmousedown = onMouseDown;
-    canvas.onmouseup = onMouseUp;
-    canvas.onmousemove = onMouseMove;
-
-    mRenderer = new THREE.WebGLRenderer({ canvas: canvas, preserveDrawingBuffer: true });
-
-    mScene = new THREE.Scene();
-    mCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, -10000, 10000);
-    mCamera.position.z = 100;
-    mScene.add(mCamera);
-
     mUniforms = {
         screenWidth: { type: "f", value: undefined },
         screenHeight: { type: "f", value: undefined },
@@ -89,19 +64,37 @@ function init() {
         toggle: { type: "i", value: 0 }
     };
     mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3];
+    loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
+    loader.load("js/shaders/standardfragment.vert", function (data) { shader_stdf = data; shader_stdf_original = data; });
+    loader.load("js/shaders/standardvertex.vert", function (data) { shader_stdv = data; });
+    loader.load("js/shaders/brushfragment.vert", function (data) { shader_brush = data; });
+    loader.load("js/shaders/thinningfragment.vert", function (data) { shader_thinning = data; });
+    loader.load("js/shaders/averagefragment.vert", function (data) { shader_average = data; });
+};
+
+
+//==================================================================================================================================
+function init() {
+    canvas.onmousedown = onMouseDown;
+    canvas.onmouseup = onMouseUp;
+    canvas.onmousemove = onMouseMove;
+    mRenderer = new THREE.WebGLRenderer({ canvas: canvas, preserveDrawingBuffer: true });
+    mScene = new THREE.Scene();
+    mCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, -10000, 10000);
+    mCamera.position.z = 100;
+    mScene.add(mCamera);
+
 
     mGSMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
         vertexShader: shader_stdv,
         fragmentShader: shader_stdf,
     });
-
     mScreenMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
         vertexShader: shader_stdv,
         fragmentShader: shader_scrf,
     });
-
     mBrushMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
         vertexShader: shader_stdv,
@@ -112,6 +105,12 @@ function init() {
         uniforms: mUniforms,
         vertexShader: shader_stdv,
         fragmentShader: shader_thinning,
+    });
+
+    mAverageMaterial = new THREE.ShaderMaterial({
+        uniforms: mUniforms,
+        vertexShader: shader_stdv,
+        fragmentShader: shader_average,
     });
 
     var plane = new THREE.PlaneGeometry(1.0, 1.0);
@@ -168,54 +167,14 @@ export function resize(width, height, force) {
     mTexture2 = new newtarget(canvasWidth, canvasHeight);
     mBrushtexture1 = new newtarget(canvasWidth, canvasHeight);
     mBrushtexture2 = new newtarget(canvasWidth, canvasHeight);
-
+    mThinningTexture1 = new newtarget(canvasWidth, canvasHeight);
+    mThinningTexture2 = new newtarget(canvasWidth, canvasHeight);
     mUniforms.screenWidth.value = canvasWidth / 2;
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
 //==================================================================================================================================
-export function testfunction(x) {
-    console.log('testfunction');
-
-    // render texture 2 to texture 1.
-    //render_to_texture(mScreenMaterial, mTexture1, mTexture2);
-    //  mRenderer.setRenderTarget(null);
-    //  mRenderer.render(mScene, mCamera);
-    ;
-
-    //   mUniforms.tSource.value = mTexture2.texture;
-    //  mScreenQuad.material = mScreenMaterial;
-    //  mRenderer.setRenderTarget(mTexture1);
-    //  mRenderer.render(mScene, mCamera);
-    //render_to_texture(mScreenMaterial, mTexture1, mTexture2);
-    //render_to_texture(mScreenMaterial, mTexture2, mTexture1);
-    thinning = 1;
-    // texture 1 bevat nu de data.
-    //
-
-    //    mRenderer.setRenderTarget(null);
-    //    mRenderer.render(mScene, mCamera);
-
-
-    // laat het op het scherm zien
-    /*
-        //for (var i = 0; i < 10; ++i) {
-        mUniforms.toggle = 0;
-        mUniforms.tSource.value = mBrushtexture1.texture;
-        mScreenQuad.material = mThinningMaterial;
-        mRenderer.setRenderTarget(mBrushtexture2);
-        mRenderer.render(mScene, mCamera);
-        mUniforms.toggle = 1;
-        mUniforms.tSource.value = mBrushtexture2.texture;
-        mRenderer.setRenderTarget(mBrushtexture1);
-        mRenderer.render(mScene, mCamera);
-    
-        //}
-        mRenderer.setRenderTarget(null);
-        //renderScreen();
-        //mRenderer.setRenderTarget(null);
-        mRenderer.render(mScene, mCamera);
-        mRenderer.setRenderTarget(null);
-      */
+export function updatethinning(x) {
+    thinning = x;
 }
 //==================================================================================================================================
 function render_to_texture(material, source, target) {
@@ -253,30 +212,24 @@ var render = function (time) {
     mRenderer.clear();
     renderBrush();
 
-    if (thinning > 0) {        
-        if (thinning==1) {
-            render_to_texture(mScreenMaterial, mTexture1, mTexture2);
-            render_to_texture(mThinningMaterial, mTexture2, mTexture1);
-            thinning++        
-        }   
-        else {
-            mUniforms.toggle = 0;
-            render_to_texture(mThinningMaterial, mTexture1, mTexture2);
-            mUniforms.toggle = 1;
-            render_to_texture(mThinningMaterial, mTexture2, mTexture1);
-        }                    
-        render_to_texture(mThinningMaterial, mTexture1, null);                
-    }
-    else {
-        if (mUniforms.editmode.value != 1) {
-            for (var i = 0; i < 4; ++i) {
-                renderSystem();
-            }
-            mUniforms.brush.value = mMinusOnes;
-            renderScreen();
+    if (mUniforms.editmode.value != 1) {
+        for (var i = 0; i < 4; ++i) {
+            renderSystem();
         }
+        mUniforms.brush.value = mMinusOnes;
+        renderScreen();
     }
 
+    if (thinning > 0) {
+        render_to_texture(mScreenMaterial, mTexture1, mThinningTexture2);
+        for (i = 0; i < thinning; i++) {
+            mUniforms.toggle = 0;
+            render_to_texture(mThinningMaterial, mThinningTexture2, mThinningTexture1);
+            mUniforms.toggle = 1;
+            render_to_texture(mThinningMaterial, mThinningTexture1, mThinningTexture2);
+        }
+        render_to_texture(mAverageMaterial, mThinningTexture2, null);
+    }
     requestAnimationFrame(render);
 }
 //==================================================================================================================================

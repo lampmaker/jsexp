@@ -1,4 +1,4 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, testfunction, cnvs } from '/js/entropy/grayscott.js'
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, updatethinning, cnvs } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
 import { SVGLoader } from '/js/three/SVGLoader.js';
 window.clean = clean;
@@ -9,11 +9,11 @@ var gui, guiData, x, y;
 var loaded = false;
 var midiconnected = false;
 
-var stream, mediaRecorder,recordedChunks=[];
+var stream, mediaRecorder, recordedChunks = [];
 
 
 
-var gspeed, gf, gk, gfx, gfy, gfxd, gfyd, gkx, gky, gkxd, gkyd,recbtn;
+var gspeed, gf, gk, gfx, gfy, gfxd, gfyd, gkx, gky, gkxd, gkyd, recbtn;
 //=================================================================================================================
 guiData = {
     cwidth: 1024,
@@ -45,8 +45,9 @@ guiData = {
     c1pos: 0.1,
     c2pos: 0.2,
     c3pos: 0.4,
-    ftest: testfunction,
-    grecord:record
+    //ftest: testfunction,
+    fthinning: 0,
+    grecord: record
 
 };
 //=================================================================================================================
@@ -219,12 +220,13 @@ $(function () {
         f1.add(guiData, 'c2pos', 0.00, 1.0).name('position').onChange(updatecolors);
         f1.addColor(guiData, 'c3').name("Color 2").onChange(updatecolors);
         f1.add(guiData, 'c3pos', 0.00, 1.0).name('position').onChange(updatecolors);
+        f1.add(guiData, 'fthinning', 0, 20).name('Thinning').onChange(updatethinning);
         f1.close();
-        gui.add(guiData, 'ftest').name('test function');
-        recbtn=gui.add(guiData, 'grecord').name('RECORD');
+        //gui.add(guiData, 'ftest').name('test function');
+        recbtn = gui.add(guiData, 'grecord').name('RECORD');
         loadshaders();
         updatecolors();
-        updateparameters();
+        // updateparameters();
         loaded = true;
         //var canvas=cnvs();
         stream = cnvs().captureStream(15 /*fps*/);
@@ -239,7 +241,7 @@ $(function () {
                 mediaRecorder.stop();
             }
         }
-        
+
         mediaRecorder.onstop = function (event) {
             console.log('stop');
             var blob = new Blob(recordedChunks, {
@@ -255,15 +257,15 @@ $(function () {
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
             }, 100);
         }
-        
+
 
     });
 
-    
+
 
 
 
@@ -329,18 +331,17 @@ function loadSVG() {
 
 
 
-function record () 
-{
+function record() {
     if (mediaRecorder.state == 'recording') {
         // after stop data avilable event run one more time
         mediaRecorder.stop();
         recbtn.name('RECORD');
         return;
-    }	
+    }
     var recordedChunks = [];
     mediaRecorder.start(40000);
     console.log('start');
     recbtn.name('STOP');
 }
-   
- 
+
+

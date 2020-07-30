@@ -14,7 +14,6 @@
   "remembered": {
     "Default": {
       "0": {
-        "t": "Default",
         "cwidth": 1024,
         "cheight": 1024,
         "gfeed": 0.037,
@@ -30,386 +29,146 @@
     },
     "Negative bubbles (sigma)": {
       "0": {
-        "cwidth": 2000,
-        "cheight": 1024,
         "gfeed": 0.1,
-        "gkill": 0.055,
-        "choice": "a",
-        "mod1": "d=(x*x)/10.0+0.001;",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.055
       }
     },
     "Bubbles (rho)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.098,
-        "gkill": 0.057,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.057
       }
     },
     "Precritical bubbles (rho/kappa)": {
       "0": {
-        "cwidth": 2000,
-        "cheight": 1024,
         "gfeed": 0.085,
-        "gkill": 0.059,
-        "choice": "a",
-        "mod1": "d=(x*x)/10.0+0.001;",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.059
       }
     },
     "Worms and loops (kappa)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.082,
-        "gkill": 0.06,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.06
       }
     },
     "Stable solitons (nu)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.074,
-        "gkill": 0.064,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.064
       }
     },
     "The U-Skate world (pi)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.062,
-        "gkill": 0.0609,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.0609
       }
     },
     "Worms (mu)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.058,
-        "gkill": 0.065,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.065
       }
     },
     "Worms join into maze (kappa)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.046,
-        "gkill": 0.063,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.063
       }
     },
     "Negatons (iota)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.046,
-        "gkill": 0.059,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.059
       }
     },
     "Turing patterns (delta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.042,
-        "gkill": 0.059,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.059
       }
     },
     "Chaos to Turing negatons (beta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.039,
-        "gkill": 0.058,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.058
       }
     },
     "Fingerprints (theta/kappa)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.037,
-        "gkill": 0.06,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.06
       }
     },
     "Chaos with negatons (beta/delta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.0353,
-        "gkill": 0.0566,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.0566
       }
     },
     "Spots and worms (eta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.034,
-        "gkill": 0.0618,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.0618
       }
     },
     "Self-replicating spots (lambda)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.03,
-        "gkill": 0.063,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.063
       }
     },
     "Super-resonant mazes (theta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.03,
-        "gkill": 0.0565,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.0565
       }
     },
     "Mazes (kappa)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.029,
-        "gkill": 0.0565,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.0565
       }
     },
     "Mazes with some chaos (gamma)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.026,
-        "gkill": 0.055,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.055
       }
     },
     "Chaos (beta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.026,
-        "gkill": 0.051,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.051
       }
     },
     "Pulsating solitons (zeta)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.025,
-        "gkill": 0.06,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.06
       }
     },
     "Warring microbes (epsilon)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.022,
-        "gkill": 0.059,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.059
       }
     },
     "Spots and loops (alpha)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.018,
-        "gkill": 0.051,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.051
       }
     },
     "Moving spots (alpha)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.014,
-        "gkill": 0.054,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.054
       }
     },
     "Waves (xi)": {
       "0": {
-        "t": "Default",
-        "cwidth": 1024,
-        "cheight": 1024,
         "gfeed": 0.014,
-        "gkill": 0.045,
-        "choice": "a",
-        "c1": "#c56510",
-        "c1pos": 0.078,
-        "c2": "#000000",
-        "c2pos": 0.18,
-        "c3": "#edeaea",
-        "c3pos": 0.37
+        "gkill": 0.045
       }
     },
     "gradient": {
@@ -421,11 +180,11 @@
         "choice": "a",
         "mod1": "f=0.1-0.015*(1.0-xd);k=0.055+0.004*(1.0-xd);d=(1.0-xd);",
         "mod2": "if( yd>0.9) {dst.r=0.0;dst.g=1.0;}",
-        "c1": "#c56510",
-        "c1pos": 0.078,
+        "c1": "#ffffff",
+        "c1pos": 0.178,
         "c2": "#000000",
         "c2pos": 0.18,
-        "c3": "#edeaea",
+        "c3": "#000000",
         "c3pos": 0.37
       }
     },
@@ -459,11 +218,11 @@
         "maskedit": "paint",
         "maskmode": 0,
         "masksize": 100,
-        "c1": "#c56510",
-        "c1pos": 0.078,
+        "c1": "#ffffff",
+        "c1pos": 0.178,
         "c2": "#000000",
         "c2pos": 0.18,
-        "c3": "#edeaea",
+        "c3": "#000000",
         "c3pos": 0.37
       }
     },
