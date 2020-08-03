@@ -49,7 +49,9 @@ guiData = {
     c3pos: 0.4,
     //ftest: testfunction,
     fthinning: 0,
-    grecord: record
+    grecord: record,
+    scale0: 1.0,
+    scale: 1.0
 
 };
 //=================================================================================================================
@@ -102,7 +104,7 @@ function updatecolors() {
 //=================================================================================================================
 function updatescreen() {
     //  console.log('mupdate screen')
-    resize(guiData.cwidth, guiData.cheight, false)
+    resize(guiData.cwidth, guiData.cheight, false, guiData.scale0, guiData.scale)
     if (!loaded) return;
 }
 //=================================================================================================================
@@ -194,6 +196,8 @@ $(function () {
         gui.add(guiData, 'gclean').name('Start');
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
+        gui.add(guiData, 'scale', 0.1, 3).name('scale').onFinishChange(updatescreen);
+        gui.add(guiData, 'scale0', 0.1, 1).name('scale0').onFinishChange(updatescreen);
         gspeed = gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onChange(mupdateparameters);
         gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);

@@ -175,11 +175,12 @@ void main()
 
   /*MOD1*/  // mod inserted here
 
-  float du =  Da * lapl.r - uv.r * uv.g * uv.g + f * (1.0 - uv.r);
-  float dv =  Db * lapl.g + uv.r * uv.g * uv.g - (f + k) * uv.g;
+  float du =  (Da * lapl.r) - (uv.r * uv.g * uv.g) + f * (1.0 - uv.r);
+  float dv =  (Db * lapl.g) + (uv.r * uv.g * uv.g) - (f + k) * uv.g;
 
 
   vec2 dst = uv + d * vec2(du, dv);
+  
   if (shape==1){
     if ((R > 0.49))
     {
