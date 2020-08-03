@@ -16,7 +16,8 @@ var mCamera;
 // webgl 
 var mUniforms;
 var mColors; //for gradient
-var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2, mThinningTexture1, mThinningTexture2;
+//var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2, mThinningTexture1, mThinningTexture2;
+var mRDTexture, mBrushtexture, mThinningTexture, mTempTexture;
 var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial, mAverageMaterial;
 var mScreenQuad;
 
@@ -165,12 +166,21 @@ export function resize(width, height, force) {
     mRenderer.setSize(canvasWidth, canvasHeight);
 
     // TODO: Possible memory leak?
-    mTexture1 = new newtarget(canvasWidth, canvasHeight);
-    mTexture2 = new newtarget(canvasWidth, canvasHeight);
+    var scale = 1;
+    /*
+    mTexture1 = new newtarget(canvasWidth * scale, canvasHeight * scale);
+    mTexture2 = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mBrushtexture1 = new newtarget(canvasWidth, canvasHeight);
     mBrushtexture2 = new newtarget(canvasWidth, canvasHeight);
     mThinningTexture1 = new newtarget(canvasWidth, canvasHeight);
     mThinningTexture2 = new newtarget(canvasWidth, canvasHeight);
+    */
+
+    mRDTexture = new newtarget(canvasWidth, canvasHeight);
+    mBrushtexture = new newtarget(canvasWidth, canvasHeight);
+    mThinningTexture = new newtarget(canvasWidth, canvasHeight);
+    mTempTexture = new newtarget(canvasWidth, canvasHeight);
+
     mUniforms.screenWidth.value = canvasWidth / 2;
     mUniforms.screenHeight.value = canvasHeight / 2;
 }
@@ -187,20 +197,20 @@ function render_to_texture(material, source, target) {
 }
 //==================================================================================================================================
 function renderBrush() {
-    render_to_texture(mBrushMaterial, mBrushtexture1, mBrushtexture2);
-    render_to_texture(mBrushMaterial, mBrushtexture2, mBrushtexture1);
-    mUniforms.tBrush.value = mBrushtexture1.texture;
+    render_to_texture(mBrushMaterial, mBrushtexture, mTempTexture);
+    render_to_texture(mBrushMaterial, mTempTexture, mBrushtexture);
+    mUniforms.tBrush.value = mBrushtexture.texture;
 }
 //==================================================================================================================================
 function renderSystem() {
     mUniforms.toggle = 0;
-    render_to_texture(mGSMaterial, mTexture1, mTexture2);
+    render_to_texture(mGSMaterial, mRDTexture, mTempTexture);
     mUniforms.toggle = 1;
-    render_to_texture(mGSMaterial, mTexture2, mTexture1);
+    render_to_texture(mGSMaterial, mTempTexture, mRDTexture);
 }
 //==================================================================================================================================
 function renderScreen() {
-    render_to_texture(mScreenMaterial, mTexture1, null);
+    render_to_texture(mScreenMaterial, mRDTexture, null);
 }
 //==================================================================================================================================
 //==================================================================================================================================
@@ -223,14 +233,14 @@ var render = function (time) {
     }
 
     if (thinning > 0) {
-        render_to_texture(mScreenMaterial, mTexture1, mThinningTexture2);
+        render_to_texture(mScreenMaterial, mRDTexture, mThinningTexture);
         for (i = 0; i < thinning; i++) {
             mUniforms.toggle = 0;
-            render_to_texture(mThinningMaterial, mThinningTexture2, mThinningTexture1);
+            render_to_texture(mThinningMaterial, mThinningTexture, mTempTexture);
             mUniforms.toggle = 1;
-            render_to_texture(mThinningMaterial, mThinningTexture1, mThinningTexture2);
+            render_to_texture(mThinningMaterial, mTempTexture, mThinningTexture);
         }
-        render_to_texture(mAverageMaterial, mThinningTexture2, null);
+        render_to_texture(mAverageMaterial, mThinningTexture, null);
     }
     requestAnimationFrame(render);
 }
@@ -245,7 +255,7 @@ export function addGrouptoScene(g) {
     mScene.add(g);
     console.log(mScene);
     mScreenQuad.visible = false;
-    mRenderer.setRenderTarget(mBrushtexture1);
+    mRenderer.setRenderTarget(mBrushtexture);
     mRenderer.render(mScene, mCamera);
     mRenderer.setRenderTarget(null);
     mRenderer.render(mScene, mCamera);
