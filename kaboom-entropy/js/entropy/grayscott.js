@@ -18,7 +18,7 @@ var mUniforms;
 var mColors; //for gradient
 //var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2, mThinningTexture1, mThinningTexture2;
 var mRDTexture, mBrushtexture, mThinningTexture, mTempTexture;
-var mRD0Texture, mTemp0Texture;
+var mRD0Texture, mTemp0Texture, mEmtpytexture;
 var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial, mAverageMaterial;
 var mScreenQuad;
 
@@ -42,6 +42,14 @@ shaderloadingmanager.onLoad = function () {
     init();
 };
 
+export function getuniforms() {
+    return mUniforms;
+}
+
+export function setUniforms(M) {
+    mUniforms = M;
+}
+
 export function loadshaders() {
     canvasQ = $('#myCanvas');
     canvas = canvasQ.get(0);
@@ -49,7 +57,7 @@ export function loadshaders() {
         screenWidth: { type: "f", value: undefined },
         screenHeight: { type: "f", value: undefined },
         tSource: { type: "t", value: undefined },
-        tBrush: { type: "t", value: undefined },
+        tMask: { type: "t", value: undefined },
         delta: { type: "f", value: 1.0 },
         feed: { type: "f", value: .1 },
         kill: { type: "f", value: .055 },
@@ -184,6 +192,7 @@ export function resize(width, height, force, mscale0, scale) {
 
     mRDTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mBrushtexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
+    mEmtpytexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mThinningTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mTempTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
 
@@ -205,7 +214,7 @@ function render_to_texture(material, source, target) {
 function renderBrush() {
     render_to_texture(mBrushMaterial, mBrushtexture, mTempTexture);
     render_to_texture(mBrushMaterial, mTempTexture, mBrushtexture);
-    mUniforms.tBrush.value = mBrushtexture.texture;
+    mUniforms.tMask.value = mBrushtexture.texture;
 }
 //==================================================================================================================================
 function renderSystem() {
@@ -230,7 +239,6 @@ var render = function (time) {
     mRenderer.clear();
 
     //  if (scale0 == 1) 
-    renderBrush();
 
     if (scale0 != 1) {   // maak mask van feed & kill vormen         
         var w0 = mUniforms.screenWidth.value;
@@ -255,16 +263,21 @@ var render = function (time) {
         mUniforms.screenWidth.value = w0;
         mUniforms.screenHeight.value = h0;
         mUniforms.brush.value = mMinusOnes;
-
-        render_to_texture(mScreenMaterial, mRD0Texture, null);
+        mUniforms.tMask.value = mEmtpytexture;
+        render_to_texture(mScreenMaterial, mRD0Texture, mBrushtexture);
 
     }
+    renderBrush();
 
     if (mUniforms.editmode.value != 1) {
         for (var i = 0; i < 4; ++i) {
             renderSystem();
         }
         mUniforms.brush.value = mMinusOnes;
+        renderScreen();
+    }
+    else {  // mask view 
+        render_to_texture(mScreenMaterial, mBrushtexture, null);
     }
 
     renderScreen();

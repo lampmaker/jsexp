@@ -2,7 +2,7 @@ varying vec2 vUv;
 uniform float screenWidth;
 uniform float screenHeight;
 uniform sampler2D tSource;
-uniform sampler2D tBrush;
+uniform sampler2D tMask;
 uniform float delta;
 uniform float feed;
 uniform float kill;
@@ -24,7 +24,7 @@ void main()
 {
     float value = texture2D(tSource, vUv).g;
         if (editmode==1) {
-             value = texture2D(tBrush, vUv).g;
+             value = texture2D(tMask, vUv).g;
     }
     
     float a;

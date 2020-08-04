@@ -4,7 +4,7 @@ varying vec2 vUv;
 uniform float screenWidth;
 uniform float screenHeight;
 uniform sampler2D tSource;
-uniform sampler2D tBrush;
+uniform sampler2D tMask;
 uniform float delta;
 uniform float feed;
 uniform float kill;
@@ -161,7 +161,7 @@ void main()
    k= k + ((x - 0.5) * dk.r + xd * dk.g + (y - 0.5) * dk.b + yd * dk.a) * 0.0002;
 
 
-  vec2 buv = texture2D(tBrush, vUv).rg;  
+  vec2 buv = texture2D(tMask, vUv).rg;  
   if ( (maskmode == 7 ) && ( buv.g >  0.0 )) { f=maskfeed; k=maskkill;   }
   if ( (maskmode == 8 ) && ( buv.g ==  0.0 )) { f=maskfeed; k=maskkill;   }
   /*
@@ -214,7 +214,7 @@ void main()
     }
   }
 
-  buv = texture2D(tBrush, vUv).rg;  
+  buv = texture2D(tMask, vUv).rg;  
   if ( (maskmode == 0 ) && ( buv.g >  0.0 )) { dst.r=0.8;    dst.g=0.8;   }
   if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
   if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
