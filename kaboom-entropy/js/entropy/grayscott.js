@@ -17,7 +17,8 @@ var mCamera;
 var mUniforms;
 var mColors; //for gradient
 //var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2, mThinningTexture1, mThinningTexture2;
-var mRDTexture, mBrushtexture, mThinningTexture, mTempTexture, mTempTexture2;
+var mRDTexture, mBrushtexture, mThinningTexture, mTempTexture;
+var mRD0Texture, mTemp0Texture;
 var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial, mAverageMaterial;
 var mScreenQuad;
 
@@ -27,7 +28,7 @@ var mLastTime = 0;
 var mClearMode = 2; /* First click will make it 3, which is the better simplex noise */
 var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 var speedscale = 1;
-var scale0 = 1;
+var scale0 = 1.0;
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 var thinning = 0;
@@ -54,6 +55,8 @@ export function loadshaders() {
         kill: { type: "f", value: .055 },
         maskfeed: { type: "f", value: .1 },
         maskkill: { type: "f", value: .055 },
+        l0feed: { type: "f", value: .1 },
+        l0kill: { type: "f", value: .055 },
         df: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         dk: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         brmode: { type: "f", value: 0.0 },
@@ -176,9 +179,11 @@ export function resize(width, height, force, mscale0, scale) {
     mThinningTexture1 = new newtarget(canvasWidth, canvasHeight);
     mThinningTexture2 = new newtarget(canvasWidth, canvasHeight);
     */
-    mTempTexture2 = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
+    mTemp0Texture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
+    mRD0Texture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
+
     mRDTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
-    mBrushtexture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
+    mBrushtexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mThinningTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mTempTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
 
@@ -224,40 +229,45 @@ var render = function (time) {
     mUniforms.delta.value = dt * speedscale;
     mRenderer.clear();
 
-    if (scale0 == 1) renderBrush();
-    if (scale0 != 1) {   // maak mask van feed & kill vormen 
-        var w0 = mUniforms.screenWidth;
-        var h0 = mUniforms.screenHeight;
+    //  if (scale0 == 1) 
+    renderBrush();
+
+    if (scale0 != 1) {   // maak mask van feed & kill vormen         
+        var w0 = mUniforms.screenWidth.value;
+        var h0 = mUniforms.screenHeight.value;
         var f0 = mUniforms.feed;
         var k0 = mUniforms.kill;
-        mUniforms.kill = mUniforms.maskkill;
-        mUniforms.feed = mUniforms.maskfeed;
-        mUniforms.screenWidth = w0 * scale0;
-        mUniforms.screenHeight = h0 * scale0;
+        mUniforms.kill = mUniforms.l0kill;
+        mUniforms.feed = mUniforms.l0feed;
+        mUniforms.screenWidth.value = w0 * scale0;
+        mUniforms.screenHeight.value = h0 * scale0;
+
         for (var i = 0; i < 4; ++i) {
             mUniforms.toggle = 0;
-            render_to_texture(mGSMaterial, mBrushtexture, mTempTexture2);
+            render_to_texture(mGSMaterial, mRD0Texture, mTemp0Texture);
             mUniforms.toggle = 1;
-            render_to_texture(mGSMaterial, mTempTexture2, mBrushtexture);
+            render_to_texture(mGSMaterial, mTemp0Texture, mRD0Texture);
         }
+        // render_to_texture(mGSMaterial, mRD0Texture, mRDTexture);
+
         mUniforms.kill = k0;
         mUniforms.feed = f0;
-        mUniforms.screenWidth = w0;
-        mUniforms.screenHeight = h0;
+        mUniforms.screenWidth.value = w0;
+        mUniforms.screenHeight.value = h0;
+        mUniforms.brush.value = mMinusOnes;
+
+        render_to_texture(mScreenMaterial, mRD0Texture, null);
+
     }
 
-
-
-
-
     if (mUniforms.editmode.value != 1) {
-
         for (var i = 0; i < 4; ++i) {
             renderSystem();
         }
         mUniforms.brush.value = mMinusOnes;
-        renderScreen();
     }
+
+    renderScreen();
 
     if (thinning > 0) {
         render_to_texture(mScreenMaterial, mRDTexture, mThinningTexture);
@@ -293,7 +303,7 @@ export function addGrouptoScene(g) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk) {
+export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, l0f, l0k) {
     mUniforms.df.value = df;
     mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
@@ -304,6 +314,9 @@ export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk) {
     mUniforms.editmode.value = e;
     mUniforms.maskmode.value = b;
     mUniforms.masksize.value = bs;
+    mUniforms.l0feed = l0f;
+    mUniforms.l0kill = l0k;
+
     speedscale = s;
 }
 

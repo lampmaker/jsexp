@@ -16,8 +16,8 @@
       "0": {
         "cwidth": 1024,
         "cheight": 1024,
-        "gfeed": 0.037,
-        "gkill": 0.06,
+        "gfeed": 0.1,
+        "gkill": 0.055,
         "choice": "a",
         "c1": "#ffffff",
         "c1pos": 0.178,

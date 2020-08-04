@@ -51,7 +51,9 @@ guiData = {
     fthinning: 0,
     grecord: record,
     scale0: 1.0,
-    scale: 1.0
+    scale: 1.0,
+    level0feed: 0.01,
+    level0kill: 0.05
 
 };
 //=================================================================================================================
@@ -77,7 +79,7 @@ function mupdateparameters() {
 
     var df = [guiData.gfx, guiData.gfxd, guiData.gfy, guiData.gfyd];
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
-    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill);
+    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.level0feed, guiData.level0kill);
 }
 //=================================================================================================================
 function mupdatemodifications() {
@@ -197,7 +199,7 @@ $(function () {
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'scale', 0.1, 3).name('scale').onFinishChange(updatescreen);
-        gui.add(guiData, 'scale0', 0.1, 1).name('scale0').onFinishChange(updatescreen);
+
         gspeed = gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onChange(mupdateparameters);
         gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
@@ -222,6 +224,10 @@ $(function () {
         maskgui.add(guiData, 'maskfile').name('load from SVG');
         maskgui.add(guiData, 'maskfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
         maskgui.add(guiData, 'maskkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        var l0 = maskgui.addFolder('Leve0 maskk');
+        l0.add(guiData, 'scale0', 0.1, 1).name('scale0').onFinishChange(updatescreen);
+        l0.add(guiData, 'level0feed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
+        l0.add(guiData, 'level0kill', 0.04, .070).name('kill').onChange(mupdateparameters);
         var f1 = g0.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
