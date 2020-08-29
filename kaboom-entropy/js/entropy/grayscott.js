@@ -263,7 +263,7 @@ var render = function (time) {
         mUniforms.screenWidth.value = w0;
         mUniforms.screenHeight.value = h0;
         mUniforms.brush.value = mMinusOnes;
-        mUniforms.tMask.value = mEmtpytexture;
+        //mUniforms.tMask.value = mEmtpytexture;
         render_to_texture(mScreenMaterial, mRD0Texture, mBrushtexture);
 
     }
@@ -274,10 +274,6 @@ var render = function (time) {
             renderSystem();
         }
         mUniforms.brush.value = mMinusOnes;
-        renderScreen();
-    }
-    else {  // mask view 
-        render_to_texture(mScreenMaterial, mBrushtexture, null);
     }
 
     renderScreen();

@@ -201,8 +201,8 @@ $(function () {
         gui.add(guiData, 'scale', 0.1, 3).name('scale').onFinishChange(updatescreen);
 
         gspeed = gui.add(guiData, 'speed', 0.00, 1.0).name('speed').onChange(mupdateparameters);
-        gf = gui.add(guiData, 'gfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        gf = gui.add(guiData, 'gfeed', 0.00, 0.150).name('feed').step(.001).onChange(mupdateparameters);
+        gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').step(.0002).onChange(mupdateparameters);
         var g0 = gui.addFolder('Menu');
         var g1 = g0.addFolder('Advanced');
         gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onChange(mupdateparameters);
@@ -222,12 +222,12 @@ $(function () {
         maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
         maskgui.add(guiData, 'maskfilename').name('File name');
         maskgui.add(guiData, 'maskfile').name('load from SVG');
-        maskgui.add(guiData, 'maskfeed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        maskgui.add(guiData, 'maskkill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        maskgui.add(guiData, 'maskfeed', 0.00, 0.100).name('feed').step(.001).onChange(mupdateparameters);
+        maskgui.add(guiData, 'maskkill', 0.04, .070).name('kill').step(.0002).onChange(mupdateparameters);
         var l0 = maskgui.addFolder('Leve0 maskk');
         l0.add(guiData, 'scale0', 0.1, 1).name('scale0').onFinishChange(updatescreen);
-        l0.add(guiData, 'level0feed', 0.00, 0.100).name('feed').onChange(mupdateparameters);
-        l0.add(guiData, 'level0kill', 0.04, .070).name('kill').onChange(mupdateparameters);
+        l0.add(guiData, 'level0feed', 0.00, 0.100).name('feed').step(.001).onChange(mupdateparameters);
+        l0.add(guiData, 'level0kill', 0.04, .070).name('kill').step(.0002).onChange(mupdateparameters);
         var f1 = g0.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);

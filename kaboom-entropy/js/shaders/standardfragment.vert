@@ -157,8 +157,8 @@ void main()
   float d=delta;
 
 
-   f= f + ((x - 0.5) * df.r + xd * df.g + (y - 0.5) * df.b + yd * df.a) * 0.0002;
-   k= k + ((x - 0.5) * dk.r + xd * dk.g + (y - 0.5) * dk.b + yd * dk.a) * 0.0002;
+   f= f + ((x - 0.5) * df.r + xd * df.g + (y - 0.5) * df.b + yd * df.a) * 0.0005;
+   k= k + ((x - 0.5) * dk.r + xd * dk.g + (y - 0.5) * dk.b + yd * dk.a) * 0.0005;
 
 
   vec2 buv = texture2D(tMask, vUv).rg;  
