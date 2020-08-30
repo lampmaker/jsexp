@@ -117,6 +117,7 @@
 				"giraffe": 'models/svg/giraffe.svg',
 				"kat1": 'models/svg/kat1.svg',
 				"buffel": 'models/svg/buffel.svg',
+				"eland": 'models/svg/eland.svg',
 				"neushoorn": 'models/svg/neushoorn.svg',
 				"konijn": 'models/svg/konijn.svg',
 				"big5+1": 'models/svg/big5+1.svg',
@@ -124,6 +125,7 @@
 				"Three.js": 'models/svg/threejs.svg',
 				"ehv": 'models/svg/ehv.svg',
 				"border": 'models/svg/border.svg',
+				"kip3": 'models/svg/kip3.svg',
 				"Toller": 'models/svg/toller.svg',
 				"Joins and caps": 'models/svg/lineJoinsAndCaps.svg',
 			}).name('SVG File').onChange(update);
@@ -171,7 +173,7 @@
 			const light0 = new THREE.AmbientLight(0x101010);
 			scene.add(light0);
 			const light1 = new THREE.SpotLight(0xFFFFFF);
-			light1.position.set(-150, 100, 300);
+			light1.position.set(-200, 500, 600);
 			light1.castShadow = true;
 			light1.shadowCameraVisible = true;
 			light1.shadow.mapSize.width = 16384;  // default
@@ -227,7 +229,7 @@
 				var shapes = path.toShapes(true, false);
 				for (var j = 0; j < shapes.length; j++) {
 					var shape = shapes[j];
-					var geometry = new THREE.ExtrudeGeometry(shape, { depth: 5, bevelEnabled: false });
+					var geometry = new THREE.ExtrudeGeometry(shape, { depth: 4, bevelEnabled: false });
 					var mesh = new THREE.Mesh(geometry, material);
 					mesh.castShadow = true;
 					mesh.receiveShadow = true;
