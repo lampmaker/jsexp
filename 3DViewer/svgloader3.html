@@ -101,6 +101,7 @@
 		function createGUI() {
 			if (gui) gui.destroy();
 			gui = new GUI({ width: 350 });
+			/*
 			gui.add(guiData, 'currentURL', {
 				"olifant": 'models/svg/olifant.svg',
 				"leeuw": 'models/svg/leeuw.svg',
@@ -129,6 +130,9 @@
 				"Toller": 'models/svg/toller.svg',
 				"Joins and caps": 'models/svg/lineJoinsAndCaps.svg',
 			}).name('SVG File').onChange(update);
+*/
+			gui.add(guiData,'currentURL').name('filename').onFinishChange(update);
+
 			gui.add(guiData, 'offsetX', 0.0, 1.0).name('offset.x').onChange(updateUvTransform);
 			gui.add(guiData, 'offsetY', 0.0, 1.0).name('offset.y').onChange(updateUvTransform);
 			gui.add(guiData, 'repeatX', 0.001, 0.01).name('repeat.x').onChange(updateUvTransform);
