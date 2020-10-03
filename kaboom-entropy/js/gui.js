@@ -307,7 +307,6 @@ function loadpicture(url) {
     loader.load(url,
         // onLoad callback
         function (image) {
-
             var group = new THREE.Group();
             /*
             var plane = new THREE.PlaneGeometry(1, 1)
@@ -319,21 +318,23 @@ function loadpicture(url) {
             var tloader = new THREE.TextureLoader();
             var texture = tloader.load(url, function (tex) {
                 // tex and texture are the same in this example, but that might not always be the case
-                console.log(tex.image.width, tex.image.height);
                 console.log(texture.image.width, texture.image.height);
-                var planeGeometry = new THREE.PlaneGeometry(0.5, 0.5);
-                //var planeMaterial = new THREE.MeshLambertMaterial({ map: texture });
-                var planeMaterial = new THREE.MeshNormalMaterial({ color: 0xAAFFA1 });
+                var ratio = texture.image.width / texture.image.height;
+                if (ratio > 0) {
+                    var planeGeometry = new THREE.PlaneGeometry(1, 1 / ratio);
+                }
+                else {
+                    var planeGeometry = new THREE.PlaneGeometry(ratio, 1);
+                }
+                //var planeGeometry = new THREE.PlaneGeometry(min(1, ratio), max(1, 1 / ratio));
 
+                var planeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+                //var planeMaterial = new THREE.MeshNormalMaterial({ color: 0xAAFFA1 });
                 var plane = new THREE.Mesh(planeGeometry, planeMaterial);
                 group.add(plane);
                 group.position.z = 0.1;
                 addGrouptoScene(group);
-
             })
-
-
-
         },
         // onProgress callback currently not supported
         undefined,
