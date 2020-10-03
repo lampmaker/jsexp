@@ -164,6 +164,17 @@ void main()
   vec2 buv = texture2D(tMask, vUv).rg;  
   if ( (maskmode == 7 ) && ( buv.g >  0.0 )) { f=maskfeed; k=maskkill;   }
   if ( (maskmode == 8 ) && ( buv.g ==  0.0 )) { f=maskfeed; k=maskkill;   }
+
+   
+  if ((maskmode==9)||(maskmode==10)) {          /// ALLOWS FOR GRADIENT SLOPE OF MASK
+   float i=(buv.g+buv.r+buv.b)/3.0;   // i=0..1
+   if (maskmode==10) i=1.0-i;
+   f=f+(maskfeed-f)*i;
+   k=k+(maskkill-k)*i;
+  }
+
+
+
   /*
   if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
   if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
