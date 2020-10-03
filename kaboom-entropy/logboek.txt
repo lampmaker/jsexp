@@ -1,0 +1,6 @@
+Te doen:
+plaatjes importeren 
+-> standardfragment.vert ombouwen zodat hij (r+g+b) waardes omzet naar intensiteit en feed, kill rate vertaalt  :
+en een inverse switch voor intensiteit...?
+
+f=(f0)+(f1-f0)*intensiteit

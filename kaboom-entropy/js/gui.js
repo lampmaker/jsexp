@@ -34,7 +34,7 @@ guiData = {
     maskedit: "paint",
     maskmode: 0,
     masksize: 100.0,
-    maskfile: loadSVG,
+    maskfile: loadImage,
     maskfilename: "olifant",
     maskfeed: 0.01,
     maskkill: 0.05,
@@ -218,7 +218,7 @@ $(function () {
         var maskgui = g0.addFolder('Mask');
         maskgui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
-        maskgui.add(guiData, 'maskmode', 0, 8).step(1).name(' Mask mode').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'maskmode', 0, 10).step(1).name(' Mask mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
         maskgui.add(guiData, 'maskfilename').name('File name');
         maskgui.add(guiData, 'maskfile').name('load from SVG');
@@ -290,9 +290,63 @@ $(function () {
 
 //========================================================================================================
 //========================================================================================================
-function loadSVG() {
-    var s1 = '/img/'
-    var url = s1.concat(guiData.maskfilename, '.svg');
+function loadImage() {
+    var s1 = '/img/';
+    var url = s1.concat(guiData.maskfilename);
+    if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url);
+    if (guiData.maskfilename.split('.')[1] == null) {
+        url = s1.concat(guiData.maskfilename, '.svg')
+        loadSVG(url);
+    }
+    if (guiData.maskfilename.split('.')[1] == 'png') loadpicture(url);
+    if (guiData.maskfilename.split('.')[1] == 'jpg') loadpicture(url);
+}
+
+function loadpicture(url) {
+    var loader = new THREE.ImageLoader();
+    loader.load(url,
+        // onLoad callback
+        function (image) {
+
+            var group = new THREE.Group();
+            /*
+            var plane = new THREE.PlaneGeometry(1, 1)
+            var mesh = new THREE.Mesh(plane, image);
+            group.add(mesh);
+            group.position.z = 0.1;
+            addGrouptoScene(group);
+*/
+            var tloader = new THREE.TextureLoader();
+            var texture = tloader.load(url, function (tex) {
+                // tex and texture are the same in this example, but that might not always be the case
+                console.log(tex.image.width, tex.image.height);
+                console.log(texture.image.width, texture.image.height);
+                var planeGeometry = new THREE.PlaneGeometry(0.5, 0.5);
+                //var planeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+                var planeMaterial = new THREE.MeshNormalMaterial({ color: 0xAAFFA1 });
+
+                var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+                group.add(plane);
+                group.position.z = 0.1;
+                addGrouptoScene(group);
+
+            })
+
+
+
+        },
+        // onProgress callback currently not supported
+        undefined,
+        // onError callback
+        function () {
+            console.error('An error happened.');
+        }
+    );
+}
+
+
+
+function loadSVG(url) {
 
     var loader = new SVGLoader();
     loader.load(url, function (data) {
@@ -304,7 +358,7 @@ function loadSVG() {
                 path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-        var material = new THREE.MeshNormalMaterial({ color: 0xFFFFFF });
+        var material = new THREE.MeshNormalMaterial({ color: 0xAAAAAA });
         var shapes = path.toShapes(true, false);
         for (var j = 0; j < shapes.length; j++) {
             var shape = shapes[j];

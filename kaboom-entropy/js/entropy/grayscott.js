@@ -98,7 +98,9 @@ function init() {
     mCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, -10000, 10000);
     mCamera.position.z = 100;
     mScene.add(mCamera);
-
+    var light = new THREE.AmbientLight(0x404040); // soft white light
+    mScene.add(light);
+    mScene.background = new THREE.Color(0xFF0000);
 
     mGSMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
@@ -269,7 +271,7 @@ var render = function (time) {
     }
     renderBrush();
 
-    if (mUniforms.editmode.value != 1) {
+    if (mUniforms.editmode.value != 1) {    // 1 = view -> render brush only
         for (var i = 0; i < 4; ++i) {
             renderSystem();
         }
@@ -301,6 +303,10 @@ export function addGrouptoScene(g) {
     mScene.add(g);
     console.log(mScene);
     mScreenQuad.visible = false;
+
+
+
+
     mRenderer.setRenderTarget(mBrushtexture);
     mRenderer.render(mScene, mCamera);
     mRenderer.setRenderTarget(null);
@@ -308,7 +314,7 @@ export function addGrouptoScene(g) {
     mScreenQuad.visible = true;
     g.visible = false;
     mRenderer.render(mScene, mCamera);
-    //stophere(ffa);  
+
 }
 
 //==================================================================================================================================
