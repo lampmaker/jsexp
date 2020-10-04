@@ -19,6 +19,9 @@ uniform int maskmode;
 uniform int editmode;
 uniform vec4 df;
 uniform vec4 dk;
+uniform float img_l;
+uniform float img_h;
+
 
 vec2 texel = vec2(1.0 / screenWidth, 1.0 / screenHeight);
 float step_x = 1.0 / screenWidth;
@@ -168,10 +171,16 @@ void main()
    
   if ((maskmode==9)||(maskmode==10)) {          /// ALLOWS FOR GRADIENT SLOPE OF MASK
   vec3 buv3 = texture2D(tMask, vUv).rgb  ;
-   float i=(buv3.r + buv3.g + buv3.b) /3.0;   // i=0..1
-   if (maskmode==10) i=1.0-i;
-   f=f+(maskfeed-f)*i;
-   k=k+(maskkill-k)*i;
+    float i=(buv3.r + buv3.g + buv3.b)/ 3.0;   // i=0..1
+
+    i = img_l + i * img_h;
+    if (i<0.0) i=0.0;
+    if (i>1.0) i=1.0;
+    
+    
+    if (maskmode==10) i=1.0-i;
+    f=f+(maskfeed-f)*i;
+    k=k+(maskkill-k)*i;
   }
 
 

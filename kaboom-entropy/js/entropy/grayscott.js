@@ -76,7 +76,9 @@ export function loadshaders() {
         color1: { type: "v4", value: new THREE.Vector4(0, 0, 0.0, 0.1) },
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
         color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) },
-        toggle: { type: "i", value: 0 }
+        toggle: { type: "i", value: 0 },
+        img_l: { type: "f", value: 0.0 },
+        img_h: { type: "f", value: 1.0 }
     };
     mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3];
     loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
@@ -300,13 +302,32 @@ export function addGrouptoScene(g) {
     //   var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
     //    camera.position.set( 0, 0, 200 );
     //mScene.background = new THREE.Color( 0xb0b0b0 );
+
+    var box = new THREE.BoxHelper(g, 0xffff00);
+    box.geometry.computeBoundingBox();
+    var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
+    var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
+    var ratio = dimX / dimY;
+    var screenratio = mUniforms.screenWidth.value / mUniforms.screenHeight.value;
+    var r2 = screenratio;
+
+    if (r2 > 1) {
+        g.scale.x *= 1 / r2;
+    }
+    else {
+        g.scale.y *= r2;
+    }
+    box.update();
+    box.geometry.computeBoundingBox();
+    var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
+    var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
+    //  g.position.x = -centerX;
+    //  g.position.y = -centerY;
     mScene.add(g);
+
+    // scaling options here:  keep aspect ratio of image constant and fit into target
     console.log(mScene);
     mScreenQuad.visible = false;
-
-
-
-
     mRenderer.setRenderTarget(mBrushtexture);
     mRenderer.render(mScene, mCamera);
     mRenderer.setRenderTarget(null);
@@ -318,7 +339,7 @@ export function addGrouptoScene(g) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, l0f, l0k) {
+export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, l0f, l0k, imgl, imgh) {
     mUniforms.df.value = df;
     mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
@@ -329,9 +350,10 @@ export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, l0f, l0k)
     mUniforms.editmode.value = e;
     mUniforms.maskmode.value = b;
     mUniforms.masksize.value = bs;
-    mUniforms.l0feed = l0f;
-    mUniforms.l0kill = l0k;
-
+    mUniforms.l0feed.value = l0f;
+    mUniforms.l0kill.value = l0k;
+    mUniforms.img_l.value = imgl;
+    mUniforms.img_h.value = imgh;
     speedscale = s;
 }
 

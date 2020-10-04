@@ -53,8 +53,9 @@ guiData = {
     scale0: 1.0,
     scale: 1.0,
     level0feed: 0.01,
-    level0kill: 0.05
-
+    level0kill: 0.05,
+    image_low: 0,
+    image_high: 1
 };
 //=================================================================================================================
 
@@ -79,7 +80,7 @@ function mupdateparameters() {
 
     var df = [guiData.gfx, guiData.gfxd, guiData.gfy, guiData.gfyd];
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
-    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.level0feed, guiData.level0kill);
+    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.level0feed, guiData.level0kill, guiData.image_low, guiData.image_high);
 }
 //=================================================================================================================
 function mupdatemodifications() {
@@ -224,6 +225,8 @@ $(function () {
         maskgui.add(guiData, 'maskfile').name('load from SVG');
         maskgui.add(guiData, 'maskfeed', 0.00, 0.100).name('feed').step(.001).onChange(mupdateparameters);
         maskgui.add(guiData, 'maskkill', 0.04, .070).name('kill').step(.0002).onChange(mupdateparameters);
+        maskgui.add(guiData, 'image_low', 0.00, 1).name('image-low').step(.001).onChange(mupdateparameters);
+        maskgui.add(guiData, 'image_high', 0.1, 10).name('image-high').step(.001).onChange(mupdateparameters);
         var l0 = maskgui.addFolder('Leve0 maskk');
         l0.add(guiData, 'scale0', 0.1, 1).name('scale0').onFinishChange(updatescreen);
         l0.add(guiData, 'level0feed', 0.00, 0.100).name('feed').step(.001).onChange(mupdateparameters);
@@ -320,7 +323,7 @@ function loadpicture(url) {
                 // tex and texture are the same in this example, but that might not always be the case
                 console.log(texture.image.width, texture.image.height);
                 var ratio = texture.image.width / texture.image.height;
-                if (ratio > 0) {
+                if (ratio > 1) {
                     var planeGeometry = new THREE.PlaneGeometry(1, 1 / ratio);
                 }
                 else {

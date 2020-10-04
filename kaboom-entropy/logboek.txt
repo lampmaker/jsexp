@@ -4,3 +4,12 @@ plaatjes importeren
 en een inverse switch voor intensiteit...?
 
 f=(f0)+(f1-f0)*intensiteit
+
+
+
+werkt 
+nu nog 
+- schalen van plaatje (aspect ratio)
+
+- high / low level input plaatje  (niet altijd 100% zwart en wit nodig)
+
