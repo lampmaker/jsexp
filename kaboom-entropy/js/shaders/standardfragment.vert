@@ -19,8 +19,7 @@ uniform int maskmode;
 uniform int editmode;
 uniform vec4 df;
 uniform vec4 dk;
-uniform float img_l;
-uniform float img_h;
+uniform vec2 imgscale;
 
 
 vec2 texel = vec2(1.0 / screenWidth, 1.0 / screenHeight);
@@ -129,7 +128,22 @@ vec2 paint(){
     }
     return dst1;
 }
-// thinning algorithm ==================================================================================================
+//  ==================================================================================================
+vec2  laplace() {
+  vec2 uv = texture2D(tSource, vUv).rg;
+  vec2 uv0 = texture2D(tSource, vUv + vec2(-step_x, 0.0)).rg;
+  vec2 uv1 = texture2D(tSource, vUv + vec2(step_x, 0.0)).rg;
+  vec2 uv2 = texture2D(tSource, vUv + vec2(0.0, -step_y)).rg;
+  vec2 uv3 = texture2D(tSource, vUv + vec2(0.0, step_y)).rg;
+  return  (uv0 + uv1 + uv2 + uv3 - 4.0 * uv); //10485.76;
+}
+//=====================================================================================================================
+//=====================================================================================================================
+//===                                                                                                               ===
+//===                                                                                                               ===
+//===                                                                                                               ===
+//===                                                                                                               ===
+//=====================================================================================================================
 //=====================================================================================================================
 void main()
 {
@@ -138,71 +152,52 @@ void main()
     clearcommand();
     return;
   }
+
   vec2 uv = texture2D(tSource, vUv).rg;
-  vec2 uv0 = texture2D(tSource, vUv + vec2(-step_x, 0.0)).rg;
-  vec2 uv1 = texture2D(tSource, vUv + vec2(step_x, 0.0)).rg;
-  vec2 uv2 = texture2D(tSource, vUv + vec2(0.0, -step_y)).rg;
-  vec2 uv3 = texture2D(tSource, vUv + vec2(0.0, step_y)).rg;
+  vec2 lapl = laplace().rg; //10485.76;
+  
+  // position variables ---------------------------------------------------------------------------------------------------
+  float x=vUv.x;                                                                   // x
+  float y=vUv.y;                                                                   //y
+  float R = sqrt((vUv.x - 0.5) * (vUv.x - 0.5) + (vUv.y - 0.5) * (vUv.y - 0.5));   // radius
+  float xd = abs(vUv.x - 0.5)*2.0;                                                 // distance from center
+  float yd = abs(vUv.y - 0.5)*2.0;                                                 // distance from center
 
-  vec2 lapl = (uv0 + uv1 + uv2 + uv3 - 4.0 * uv); //10485.76;
-
-
-  float x=vUv.x;
-  float y=vUv.y;
-  float R = sqrt((vUv.x - 0.5) * (vUv.x - 0.5) + (vUv.y - 0.5) * (vUv.y - 0.5));
-  float xd = abs(vUv.x - 0.5)*2.0;
-  float yd = abs(vUv.y - 0.5)*2.0;
-
+  // main parameters variables ---------------------------------------------------------------------------------------------------
   float Da = 0.2097;  // diffusion rate A
   float Db= 0.105;  // diffusion rate B 
   float f=feed;
   float k=kill;
   float d=delta;
 
-
+  // feed, kill gradients vs position -------------------------------------------------------------------------------------
    f= f + ((x - 0.5) * df.r + xd * df.g + (y - 0.5) * df.b + yd * df.a) * 0.0005;
    k= k + ((x - 0.5) * dk.r + xd * dk.g + (y - 0.5) * dk.b + yd * dk.a) * 0.0005;
 
-
+  // 7,8 -> use maskfeed, maskkill -----------------------------------------------------------------------------------------
   vec2 buv = texture2D(tMask, vUv).rg  ;
   if ( (maskmode == 7 ) && ( buv.g >  0.0 )) { f=maskfeed; k=maskkill;   }
   if ( (maskmode == 8 ) && ( buv.g ==  0.0 )) { f=maskfeed; k=maskkill;   }
 
-   
+  // 9,10: use for images --------------------------------------------------------------------------------------------------- 
   if ((maskmode==9)||(maskmode==10)) {          /// ALLOWS FOR GRADIENT SLOPE OF MASK
   vec3 buv3 = texture2D(tMask, vUv).rgb  ;
     float i=(buv3.r + buv3.g + buv3.b)/ 3.0;   // i=0..1
-
-    i = img_l + i * img_h;
+    i = imgscale.r + i * imgscale.g;
     if (i<0.0) i=0.0;
     if (i>1.0) i=1.0;
-    
-    
     if (maskmode==10) i=1.0-i;
     f=f+(maskfeed-f)*i;
     k=k+(maskkill-k)*i;
   }
 
-
-
-  /*
-  if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }
-  if ( (maskmode == 2 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
-  if ( (maskmode == 3 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.0;   }
-  if ( (maskmode == 4 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.0;   }
-  if ( (maskmode == 5 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.8;   }
-  if ( (maskmode == 6 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
-*/
-
   /*MOD1*/  // mod inserted here
 
   float du =  (Da * lapl.r) - (uv.r * uv.g * uv.g) + f * (1.0 - uv.r);
   float dv =  (Db * lapl.g) + (uv.r * uv.g * uv.g) - (f + k) * uv.g;
-
-
   vec2 dst = uv + d * vec2(du, dv);
   
-  if (shape==1){
+  if (shape==1){  //circle
     if ((R > 0.49))
     {
       dst.r = 1.0;
@@ -213,6 +208,7 @@ void main()
 
 /*MOD2*/  // mod will be inserted here. 
 
+  // for painting with cursor ------------------------------------------------------------------------------------------------
   if ((editmode==0) && (brush.x > 0.0))
   {
     vec2 diff = (vUv - brush) / texel;
@@ -235,6 +231,7 @@ void main()
     }
   }
 
+  // apply mask --------------------------------------------------------------------------------------------------------------------
   buv = texture2D(tMask, vUv).rg;  
   if ( (maskmode == 0 ) && ( buv.g >  0.0 )) { dst.r=0.8;    dst.g=0.8;   }
   if ( (maskmode == 1 ) && ( buv.g >  0.0 )) { dst.r=0.0;    dst.g=0.0;   }

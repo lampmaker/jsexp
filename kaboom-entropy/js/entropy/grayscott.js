@@ -77,8 +77,7 @@ export function loadshaders() {
         color2: { type: "v4", value: new THREE.Vector4(1, 1, 1, 0.2) },
         color3: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.5, 0.24) },
         toggle: { type: "i", value: 0 },
-        img_l: { type: "f", value: 0.0 },
-        img_h: { type: "f", value: 1.0 }
+        imgscale: { type: "v2", value: new THREE.Vector2(0, 1) },
     };
     mColors = [mUniforms.color1, mUniforms.color2, mUniforms.color3];
     loader.load("js/shaders/screenfragment.vert", function (data) { shader_scrf = data; });
@@ -181,16 +180,6 @@ export function resize(width, height, force, mscale0, scale) {
 
     mRenderer.setSize(canvasWidth, canvasHeight);
 
-    // TODO: Possible memory leak?
-    //var scale = 1;
-    /*
-    mTexture1 = new newtarget(canvasWidth * scale, canvasHeight * scale);
-    mTexture2 = new newtarget(canvasWidth * scale, canvasHeight * scale);
-    mBrushtexture1 = new newtarget(canvasWidth, canvasHeight);
-    mBrushtexture2 = new newtarget(canvasWidth, canvasHeight);
-    mThinningTexture1 = new newtarget(canvasWidth, canvasHeight);
-    mThinningTexture2 = new newtarget(canvasWidth, canvasHeight);
-    */
     mTemp0Texture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
     mRD0Texture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
 
@@ -208,7 +197,7 @@ export function updatethinning(x) {
     thinning = x;
 }
 //==================================================================================================================================
-function render_to_texture(material, source, target) {
+function render_to_texture(material, source, target) {   // 
     mScreenQuad.material = material;
     mUniforms.tSource.value = source.texture;
     mRenderer.setRenderTarget(target);
@@ -231,8 +220,10 @@ function renderSystem() {
 function renderScreen() {
     render_to_texture(mScreenMaterial, mRDTexture, null);
 }
+
 //==================================================================================================================================
 //==================================================================================================================================
+//  MAIN RENDERING 
 //==================================================================================================================================
 var render = function (time) {
     var dt = (time - mLastTime) / 20.0;
@@ -242,39 +233,10 @@ var render = function (time) {
     mUniforms.delta.value = dt * speedscale;
     mRenderer.clear();
 
-    //  if (scale0 == 1) 
-
-    if (scale0 != 1) {   // maak mask van feed & kill vormen         
-        var w0 = mUniforms.screenWidth.value;
-        var h0 = mUniforms.screenHeight.value;
-        var f0 = mUniforms.feed;
-        var k0 = mUniforms.kill;
-        mUniforms.kill = mUniforms.l0kill;
-        mUniforms.feed = mUniforms.l0feed;
-        mUniforms.screenWidth.value = w0 * scale0;
-        mUniforms.screenHeight.value = h0 * scale0;
-
-        for (var i = 0; i < 4; ++i) {
-            mUniforms.toggle = 0;
-            render_to_texture(mGSMaterial, mRD0Texture, mTemp0Texture);
-            mUniforms.toggle = 1;
-            render_to_texture(mGSMaterial, mTemp0Texture, mRD0Texture);
-        }
-        // render_to_texture(mGSMaterial, mRD0Texture, mRDTexture);
-
-        mUniforms.kill = k0;
-        mUniforms.feed = f0;
-        mUniforms.screenWidth.value = w0;
-        mUniforms.screenHeight.value = h0;
-        mUniforms.brush.value = mMinusOnes;
-        //mUniforms.tMask.value = mEmtpytexture;
-        render_to_texture(mScreenMaterial, mRD0Texture, mBrushtexture);
-
-    }
     renderBrush();
 
     if (mUniforms.editmode.value != 1) {    // 1 = view -> render brush only
-        for (var i = 0; i < 4; ++i) {
+        for (var i = 0; i < 4; ++i) {         // render the system 4 times before displaying to screen
             renderSystem();
         }
         mUniforms.brush.value = mMinusOnes;
@@ -339,7 +301,7 @@ export function addGrouptoScene(g) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, l0f, l0k, imgl, imgh) {
+export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, imgl, imgh) {
     mUniforms.df.value = df;
     mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
@@ -350,10 +312,7 @@ export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, l0f, l0k,
     mUniforms.editmode.value = e;
     mUniforms.maskmode.value = b;
     mUniforms.masksize.value = bs;
-    mUniforms.l0feed.value = l0f;
-    mUniforms.l0kill.value = l0k;
-    mUniforms.img_l.value = imgl;
-    mUniforms.img_h.value = imgh;
+    mUniforms.imgscale.value = new THREE.Vector2(imgl, imgh);
     speedscale = s;
 }
 
