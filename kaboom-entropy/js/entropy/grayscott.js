@@ -18,7 +18,7 @@ var mUniforms;
 var mColors; //for gradient
 //var mTexture1, mTexture2, mBrushtexture1, mBrushtexture2, mThinningTexture1, mThinningTexture2;
 var mRDTexture, mBrushtexture, mThinningTexture, mTempTexture;
-var mRD0Texture, mTemp0Texture, mEmtpytexture;
+
 var mGSMaterial, mScreenMaterial, mBrushMaterial, mThinningMaterial, mAverageMaterial;
 var mScreenQuad;
 
@@ -28,7 +28,6 @@ var mLastTime = 0;
 var mClearMode = 2; /* First click will make it 3, which is the better simplex noise */
 var mPaintMode = 0; /* First click will make it 1, which is to paint blue */
 var speedscale = 1;
-var scale0 = 1.0;
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 var thinning = 0;
@@ -88,6 +87,9 @@ export function loadshaders() {
     loader.load("js/shaders/averagefragment.vert", function (data) { shader_average = data; });
 };
 
+export function gettexture() {
+    return mRDTexture;
+}
 
 //==================================================================================================================================
 function init() {
@@ -158,13 +160,12 @@ function newtarget(w, h) {
 }
 
 //==================================================================================================================================
-export function resize(width, height, force, mscale0, scale) {
+export function resize(width, height, force, scale) {
     // Set the new shape of canvas.
-    scale0 = mscale0;
     canvasWidth = canvasQ.width();
 
     canvasHeight = canvasQ.height();
-    if (!force && (canvasWidth == width) && (canvasHeight == height) && (scale == 1) && (scale0 == 1)) {
+    if (!force && (canvasWidth == width) && (canvasHeight == height) && (scale == 1)) {
         console.log('nothign to do')
         return;
     }
@@ -180,12 +181,10 @@ export function resize(width, height, force, mscale0, scale) {
 
     mRenderer.setSize(canvasWidth, canvasHeight);
 
-    mTemp0Texture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
-    mRD0Texture = new newtarget(canvasWidth * scale, canvasHeight * scale0 * scale);
 
     mRDTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mBrushtexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
-    mEmtpytexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
+    //   mEmtpytexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mThinningTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mTempTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
 
@@ -392,8 +391,12 @@ export function clean() {
 }
 //==================================================================================================================================
 export function snapshot() {
-    var dataURL = canvas.toDataURL("image/png");
-    window.open(dataURL, "name-" + Math.random());
+    //var dataURL = canvas.toDataURL("image/png");
+    //window.open(dataURL, "name-" + Math.random());
+
+    requestAnimationFrame(render);
+    renderScreen();
+    return mRenderer.domElement.toDataURL();
 }
 
 

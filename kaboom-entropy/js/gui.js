@@ -1,6 +1,9 @@
-import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, updatethinning, cnvs } from '/js/entropy/grayscott.js'
+
+//import { getImgdata, imagedataToSVG, imagedataToTracedata } from '/js/imagetracer_V1.2.6.js';
+import { loadshaders, clean, snapshot, updateUniformsColors2, updateparameters, resize, updateModifications, addGrouptoScene, updatethinning, cnvs, gettexture } from '/js/entropy/grayscott.js'
 import { GUI } from '/js/three/dat.gui.module.js'
 import { SVGLoader } from '/js/three/SVGLoader.js';
+
 window.clean = clean;
 window.snapshot = snapshot;         // expose functions from module
 
@@ -35,6 +38,7 @@ guiData = {
     maskmode: 0,
     masksize: 100.0,
     maskfile: loadImage,
+    imagetracer: imgtr,
     maskfilename: "olifant",
     maskfeed: 0.01,
     maskkill: 0.05,
@@ -106,7 +110,7 @@ function updatecolors() {
 //=================================================================================================================
 function updatescreen() {
     //  console.log('mupdate screen')
-    resize(guiData.cwidth, guiData.cheight, false, guiData.scale0, guiData.scale)
+    resize(guiData.cwidth, guiData.cheight, false, guiData.scale)
     if (!loaded) return;
 }
 //=================================================================================================================
@@ -224,8 +228,8 @@ $(function () {
         maskgui.add(guiData, 'maskfile').name('load from SVG');
         maskgui.add(guiData, 'maskfeed', 0.00, 0.100).name('feed').step(.001).onChange(mupdateparameters);
         maskgui.add(guiData, 'maskkill', 0.04, .070).name('kill').step(.0002).onChange(mupdateparameters);
-        maskgui.add(guiData, 'image_low', -1, 1).name('image-low').step(.001).onChange(mupdateparameters);
-        maskgui.add(guiData, 'image_high', 0.1, 10).name('image-high').step(.001).onChange(mupdateparameters);
+        maskgui.add(guiData, 'image_low', -1, 1).name('image-brightness').step(.001).onChange(mupdateparameters);
+        maskgui.add(guiData, 'image_high', 0.1, 10).name('image-contrast').step(.001).onChange(mupdateparameters);
         var f1 = g0.addFolder('Colors');
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
@@ -239,6 +243,7 @@ $(function () {
         var f2 = g0.addFolder('Tools');
         f2.close();
         recbtn = f2.add(guiData, 'grecord').name('RECORD');
+        f2.add(guiData, 'imagetracer').name('Trace');
         loadshaders();
         updatecolors();
         // updateparameters();
@@ -415,3 +420,34 @@ function record() {
 }
 
 
+
+function imgtr() {
+    var canvasx = cnvs();
+
+    var offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = canvasx.width;
+    offscreenCanvas.height = canvasx.height;
+    var ctx = offscreenCanvas.getContext("2d");
+
+    ctx.drawImage(canvasx, 0, 0);
+    var imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+    console.log(imageData);
+    var svgdata = ImageTracer.imagedataToSVG(imageData);
+    console.log(svgdata);
+
+    var svg_win = window.open("", "svg_win");
+
+    var embedded_svg = document.getElementById("output-pic");
+    //var transplanted_svg = svg_win.document.importNode(embedded_svg, true);
+    var blank_root = svg_win.document.documentElement;
+    svg_win.document.removeChild(blank_root);
+    svg_win.document.appendChild(svgdata);
+
+
+
+
+
+
+
+}
