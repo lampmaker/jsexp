@@ -432,22 +432,12 @@ function imgtr() {
     ctx.drawImage(canvasx, 0, 0);
     var imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-    console.log(imageData);
-    var svgdata = ImageTracer.imagedataToSVG(imageData);
+    // console.log(imageData);
+    var svgdata = ImageTracer.imagedataToSVG(imageData, 'posterized1');
     console.log(svgdata);
 
-    var svg_win = window.open("", "svg_win");
-
-    var embedded_svg = document.getElementById("output-pic");
-    //var transplanted_svg = svg_win.document.importNode(embedded_svg, true);
-    var blank_root = svg_win.document.documentElement;
-    svg_win.document.removeChild(blank_root);
-    svg_win.document.appendChild(svgdata);
-
-
-
-
-
+    var myWindow = window.open("", "MsgWindow");
+    myWindow.document.documentElement.innerHTML = svgdata;
 
 
 }
