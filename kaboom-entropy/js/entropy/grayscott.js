@@ -271,12 +271,11 @@ export function addGrouptoScene(g) {
     var ratio = dimX / dimY;
     var screenratio = mUniforms.screenWidth.value / mUniforms.screenHeight.value;
     var r2 = screenratio;
-
-    if (r2 > 1) {
-        g.scale.x *= 1 / r2;
+    if (r2 < 1) {
+        //g.scale.x *= 1 / r2;
     }
     else {
-        g.scale.y *= r2;
+        //   g.scale.y *= r2;
     }
     box.update();
     box.geometry.computeBoundingBox();

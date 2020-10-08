@@ -130,12 +130,31 @@ vec2 paint(){
 }
 //  ==================================================================================================
 vec2  laplace() {
-  vec2 uv = texture2D(tSource, vUv).rg;
-  vec2 uv0 = texture2D(tSource, vUv + vec2(-step_x, 0.0)).rg;
-  vec2 uv1 = texture2D(tSource, vUv + vec2(step_x, 0.0)).rg;
-  vec2 uv2 = texture2D(tSource, vUv + vec2(0.0, -step_y)).rg;
-  vec2 uv3 = texture2D(tSource, vUv + vec2(0.0, step_y)).rg;
-  return  (uv0 + uv1 + uv2 + uv3 - 4.0 * uv); //10485.76;
+/*
+1  2  3  default:   0   1  0
+4  5  6             1  -4  0 
+7  8  9             0   1  0
+*/
+
+  //vec3 weight=vec3(-4.0 , 1.0 , 0.0);// center, edge, corner
+  vec3 weight=vec3(-4.0 , 1.0 , 0.5);// center, edge, corner
+  
+  vec2 uv1 = texture2D(tSource, vUv + vec2(-step_x  , step_y)).rg;
+  vec2 uv2 = texture2D(tSource, vUv + vec2(0.0      , step_y)).rg;
+  vec2 uv3 = texture2D(tSource, vUv + vec2( step_x  , step_y)).rg;
+  
+  vec2 uv4 = texture2D(tSource, vUv + vec2(-step_x  , 0.0)).rg;
+  vec2 uv5 = texture2D(tSource, vUv + vec2(0.0      , 0.0)).rg;
+  vec2 uv6 = texture2D(tSource, vUv + vec2( step_x  , 0.0)).rg;
+  vec2 uv7 = texture2D(tSource, vUv + vec2(-step_x  , -step_y)).rg;
+  vec2 uv8 = texture2D(tSource, vUv + vec2(0.0      , -step_y)).rg;
+  vec2 uv9 = texture2D(tSource, vUv + vec2( step_x  , -step_y)).rg;
+
+  vec2 L = uv5 * weight.r;
+  L = L + ( uv2 + uv4 + uv6 + uv8 ) * weight.g;
+ // L = L + (uv1+uv3+uv7+uv9) * weight.b;
+
+  return  L;
 }
 //=====================================================================================================================
 //=====================================================================================================================

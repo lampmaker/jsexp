@@ -39,6 +39,12 @@
         "gkill": 0.057
       }
     },
+    "Snake": {
+      "0": {
+        "gfeed": 0.064,
+        "gkill": 0.0634
+      }
+    },
     "Precritical bubbles (rho/kappa)": {
       "0": {
         "gfeed": 0.085,
