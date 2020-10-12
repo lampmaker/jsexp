@@ -5,6 +5,7 @@ var canvas;
 var canvasQ;
 var canvasWidth;
 var canvasHeight;
+var scale;
 var mMouseX, mMouseY;
 var mMouseDown = false;
 
@@ -160,18 +161,18 @@ function newtarget(w, h) {
 }
 
 //==================================================================================================================================
-export function resize(width, height, force, scale) {
+export function resize(width, height, force, _scale) {
     // Set the new shape of canvas.
     canvasWidth = canvasQ.width();
 
     canvasHeight = canvasQ.height();
-    if (!force && (canvasWidth == width) && (canvasHeight == height) && (scale == 1)) {
+    if (!force && (canvasWidth == width) && (canvasHeight == height) && (scale == _scale)) {
         console.log('nothign to do')
         return;
     }
     if (width == 0) width = canvasWidth;
     if (height == 0) width = canvasHeight;
-
+    scale = _scale;
     canvasQ.width(width);
     canvasQ.height(height);
 
