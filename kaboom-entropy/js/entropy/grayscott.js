@@ -13,6 +13,7 @@ var mMouseDown = false;
 var mRenderer;
 var mScene;
 var mCamera;
+var mCamera0;
 
 // webgl 
 var mUniforms;
@@ -37,6 +38,8 @@ var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, s
 
 var shaderloadingmanager = new THREE.LoadingManager();
 var loader = new THREE.FileLoader(shaderloadingmanager);
+
+import { OrbitControls } from '../three/OrbitControls.js';
 
 shaderloadingmanager.onLoad = function () {
     init();
@@ -101,10 +104,20 @@ function init() {
     mScene = new THREE.Scene();
     mCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, -10000, 10000);
     mCamera.position.z = 100;
+
+    mCamera0 = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, -10000, 10000);
+    mCamera.position.z = 100;
+
     mScene.add(mCamera);
+    mScene.add(mCamera0);
     var light = new THREE.AmbientLight(0x404040); // soft white light
     mScene.add(light);
-    mScene.background = new THREE.Color(0xFF0000);
+    mScene.background = new THREE.Color(0x000000FF);
+
+    //  var controls = new OrbitControls(mCamera, mRenderer.domElement);
+    //  controls.screenSpacePanning = true;
+
+
 
     mGSMaterial = new THREE.ShaderMaterial({
         uniforms: mUniforms,
@@ -201,7 +214,7 @@ function render_to_texture(material, source, target) {   //
     mScreenQuad.material = material;
     mUniforms.tSource.value = source.texture;
     mRenderer.setRenderTarget(target);
-    mRenderer.render(mScene, mCamera);
+    mRenderer.render(mScene, mCamera0);
 }
 //==================================================================================================================================
 function renderBrush() {
@@ -218,7 +231,12 @@ function renderSystem() {
 }
 //==================================================================================================================================
 function renderScreen() {
-    render_to_texture(mScreenMaterial, mRDTexture, null);
+    //    render_to_texture(mScreenMaterial, mRDTexture, null);
+    mScreenQuad.material = mScreenMaterial;
+    mUniforms.tSource.value = mRDTexture.texture;
+    mRenderer.setRenderTarget(null);
+    mRenderer.render(mScene, mCamera);
+
 }
 
 //==================================================================================================================================
