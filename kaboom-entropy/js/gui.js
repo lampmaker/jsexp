@@ -510,9 +510,9 @@ function imgtr() {
     myWindow.document.documentElement.innerHTML = svgdata;
 
 
-    var loader = new SVGLoader();
-    var data = loader.parse(svgdata);
-    makem3dfromsvg(data);
+   // var loader = new SVGLoader();
+   // var data = loader.parse(svgdata);
+    //makem3dfromsvg(data);
 
 
 }
