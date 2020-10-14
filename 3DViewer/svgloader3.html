@@ -40,7 +40,11 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			//renderer.setSize(window.innerWidth, window.innerHeight);
 
-			renderer.setSize(1024, 1024);
+			renderer.setSize(2048, 2048);
+
+
+
+
 			//renderer.setSize(2048,2048);
 			renderer.toneMapping = THREE.Uncharted2ToneMapping;
 			renderer.toneMapingExposure = 1;
@@ -78,7 +82,7 @@
 			camera.position.set(guiData.camX, guiData.camY, guiData.camZ);
 			//var controls = new OrbitControls(camera, renderer.domElement);
 			//controls.screenSpacePanning = true;
-
+			camera.aspect = 1;
 
 
 
@@ -298,12 +302,12 @@
 		}
 		//---------------------------------------------------------------------------------------------------------------------
 		function onWindowResize() {
-
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-
-			renderer.setSize(window.innerWidth, window.innerHeight);
-
+			/*
+						camera.aspect = window.innerWidth / window.innerHeight;
+						camera.updateProjectionMatrix();
+			
+						renderer.setSize(window.innerWidth, window.innerHeight);
+			*/
 		}
 		//---------------------------------------------------------------------------------------------------------------------
 		function animate() {
