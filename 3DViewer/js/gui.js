@@ -1,7 +1,7 @@
 function createGUI() {
-    if ( gui ) gui.destroy();
-    gui = new GUI( { width: 350 } );
-    gui.add( guiData, 'currentURL', {
+    if (gui) gui.destroy();
+    gui = new GUI({ width: 350 });
+    gui.add(guiData, 'currentURL', {
         "Tiger": 'models/svg/tiger.svg',
         "Three.js": 'models/svg/threejs.svg',
         "Joins and caps": 'models/svg/lineJoinsAndCaps.svg',
@@ -15,145 +15,148 @@ function createGUI() {
         "Test 7": 'models/svg/tests/7.svg',
         "kaboom": 'models/svg/sample.svg',
         "Units": 'models/svg/tests/units.svg'
-    } ).name( 'SVG File' ).onChange( update );
-    gui.add( guiData, 'drawStrokes' ).name( 'Draw strokes' ).onChange( update );
-    gui.add( guiData, 'drawFillShapes' ).name( 'Draw fill shapes' ).onChange( update );
-    gui.add( guiData, 'strokesWireframe' ).name( 'Wireframe strokes' ).onChange( update );
-    gui.add( guiData, 'fillShapesWireframe' ).name( 'Wireframe fill shapes' ).onChange( update );
+    }).name('SVG File').onChange(update);
+    gui.add(guiData, 'drawStrokes').name('Draw strokes').onChange(update);
+    gui.add(guiData, 'drawFillShapes').name('Draw fill shapes').onChange(update);
+    gui.add(guiData, 'strokesWireframe').name('Wireframe strokes').onChange(update);
+    gui.add(guiData, 'fillShapesWireframe').name('Wireframe fill shapes').onChange(update);
+
+
+
+    ;
+
 
     function update() {
-        loadSVG( guiData.currentURL );
+        loadSVG(guiData.currentURL);
     }
-    
 
-        import * as THREE from '../three.module.js';
-        import Stats from './stats.module.js';
-        import { GUI } from './dat.gui.module.js';
-        import { OrbitControls } from './OrbitControls.js';
-        import { SVGLoader } from './SVGLoader.js';
 
-        var renderer, stats, scene, camera, gui, guiData;
+    import * as THREE from '../three.module.js';
+    import Stats from './stats.module.js';
+    import { GUI } from './dat.gui.module.js';
+    import { OrbitControls } from './OrbitControls.js';
+    import { SVGLoader } from './SVGLoader.js';
 
-        init();
-        animate();
+    var renderer, stats, scene, camera, gui, guiData;
 
-        //
+    init();
+    animate();
 
-        function init() {
-            var container = document.getElementById( 'container' );
+    //
 
-            //
-            camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1000 );
-            camera.position.set( 0, 0, 200 );
-            //
-            renderer = new THREE.WebGLRenderer( { antialias: true } );
-            renderer.setPixelRatio( window.devicePixelRatio );
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            container.appendChild( renderer.domElement );
-        //
-
-            var controls = new OrbitControls( camera, renderer.domElement );
-            controls.screenSpacePanning = true;
-            //
-            stats = new Stats();
-            container.appendChild( stats.dom );
+    function init() {
+        var container = document.getElementById('container');
 
         //
-            window.addEventListener( 'resize', onWindowResize, false );
-
-            guiData = {
-                currentURL: 'models/svg/sample.svg',
-                drawFillShapes: true,
-                drawStrokes: true,
-                fillShapesWireframe: false,
-                strokesWireframe: false
-            };
-
-            loadSVG( guiData.currentURL );
-
-            createGUI();
-
-        }
-
-
-        function loadSVG( url ) {
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 0, 200);
         //
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color( 0xb0b0b0 );
-            //
-            var helper = new THREE.GridHelper( 160, 10 );
-            helper.rotation.x = Math.PI / 2;
-            scene.add( helper );
-            //
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        //
 
-            var loader = new SVGLoader();
-            loader.load( url, function ( data ) {
-                var paths = data.paths;
-                var group = new THREE.Group();
-                group.scale.multiplyScalar( 0.25 );
-                group.position.x = -50;//- 70;
-                group.position.y = -50;//70;
-                group.scale.y *= - 1;
+        //    var controls = new OrbitControls(camera, renderer.domElement);
+        //    controls.screenSpacePanning = true;
+        //
+        stats = new Stats();
+        container.appendChild(stats.dom);
 
-                for ( var i = 0; i < paths.length; i ++ ) {
+        //
+        window.addEventListener('resize', onWindowResize, false);
 
-                    var path = paths[ i ];
+        guiData = {
+            currentURL: 'models/svg/sample.svg',
+            drawFillShapes: true,
+            drawStrokes: true,
+            fillShapesWireframe: false,
+            strokesWireframe: false
+        };
 
-                    var fillColor = path.userData.style.fill;
+        loadSVG(guiData.currentURL);
 
-                    if ( guiData.drawFillShapes){//} && fillColor !== undefined && fillColor !== 'none' ) {
+        createGUI();
 
-                        var material = new THREE.MeshBasicMaterial( {
-                            color: new THREE.Color().setStyle( fillColor ),
-                            opacity: path.userData.style.fillOpacity,
-                            transparent: path.userData.style.fillOpacity < 1,
-                            side: THREE.DoubleSide,
-                            depthWrite: false,
-                            wireframe: guiData.fillShapesWireframe
-                        } );
+    }
 
-                        var shapes = path.toShapes( true );
 
-                        for ( var j = 0; j < shapes.length; j ++ ) {
+    function loadSVG(url) {
+        //
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xb0b0b0);
+        //
+        var helper = new THREE.GridHelper(160, 10);
+        helper.rotation.x = Math.PI / 2;
+        scene.add(helper);
+        //
 
-                            var shape = shapes[ j ];
+        var loader = new SVGLoader();
+        loader.load(url, function (data) {
+            var paths = data.paths;
+            var group = new THREE.Group();
+            group.scale.multiplyScalar(0.25);
+            group.position.x = -50;//- 70;
+            group.position.y = -50;//70;
+            group.scale.y *= - 1;
 
-                            var geometry = new THREE.ShapeBufferGeometry( shape );
-                            var mesh = new THREE.Mesh( geometry, material );
-                            group.add( mesh );
+            for (var i = 0; i < paths.length; i++) {
 
-                        }
+                var path = paths[i];
+
+                var fillColor = path.userData.style.fill;
+
+                if (guiData.drawFillShapes) {//} && fillColor !== undefined && fillColor !== 'none' ) {
+
+                    var material = new THREE.MeshBasicMaterial({
+                        color: new THREE.Color().setStyle(fillColor),
+                        opacity: path.userData.style.fillOpacity,
+                        transparent: path.userData.style.fillOpacity < 1,
+                        side: THREE.DoubleSide,
+                        depthWrite: false,
+                        wireframe: guiData.fillShapesWireframe
+                    });
+
+                    var shapes = path.toShapes(true);
+
+                    for (var j = 0; j < shapes.length; j++) {
+
+                        var shape = shapes[j];
+
+                        var geometry = new THREE.ShapeBufferGeometry(shape);
+                        var mesh = new THREE.Mesh(geometry, material);
+                        group.add(mesh);
 
                     }
 
-                    
+                }
 
-                    var strokeColor = path.userData.style.stroke;
 
-                    if ( guiData.drawStrokes && strokeColor !== undefined && strokeColor !== 'none' ) {
 
-                        var material = new THREE.MeshBasicMaterial( {
-                            color: new THREE.Color().setStyle( strokeColor ),
-                            opacity: path.userData.style.strokeOpacity,
-                            transparent: path.userData.style.strokeOpacity < 1,
-                            side: THREE.DoubleSide,
-                            depthWrite: false,
-                            wireframe: guiData.strokesWireframe
-                        } );
+                var strokeColor = path.userData.style.stroke;
 
-                        for ( var j = 0, jl = path.subPaths.length; j < jl; j ++ ) {
+                if (guiData.drawStrokes && strokeColor !== undefined && strokeColor !== 'none') {
 
-                            var subPath = path.subPaths[ j ];
+                    var material = new THREE.MeshBasicMaterial({
+                        color: new THREE.Color().setStyle(strokeColor),
+                        opacity: path.userData.style.strokeOpacity,
+                        transparent: path.userData.style.strokeOpacity < 1,
+                        side: THREE.DoubleSide,
+                        depthWrite: false,
+                        wireframe: guiData.strokesWireframe
+                    });
 
-                            var geometry = SVGLoader.pointsToStroke( subPath.getPoints(), path.userData.style );
+                    for (var j = 0, jl = path.subPaths.length; j < jl; j++) {
 
-                            if ( geometry ) {
+                        var subPath = path.subPaths[j];
 
-                                var mesh = new THREE.Mesh( geometry, material );
+                        var geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData.style);
 
-                                group.add( mesh );
+                        if (geometry) {
 
-                            }
+                            var mesh = new THREE.Mesh(geometry, material);
+
+                            group.add(mesh);
 
                         }
 
@@ -161,35 +164,37 @@ function createGUI() {
 
                 }
 
-                scene.add( group );
+            }
 
-            } );
+            scene.add(group);
 
-        }
+        });
 
-        function onWindowResize() {
+    }
 
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+    function onWindowResize() {
 
-            renderer.setSize( window.innerWidth, window.innerHeight );
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
 
-        }
+        renderer.setSize(window.innerWidth, window.innerHeight);
 
-        function animate() {
+    }
 
-            requestAnimationFrame( animate );
+    function animate() {
 
-            render();
-            stats.update();
+        requestAnimationFrame(animate);
 
-        }
+        render();
+        stats.update();
 
-        function render() {
+    }
 
-            renderer.render( scene, camera );
+    function render() {
 
-        }
+        renderer.render(scene, camera);
 
-    
+    }
+
+
 }
