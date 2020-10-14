@@ -6,6 +6,8 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<link type="text/css" rel="stylesheet" href="main.css">
+	<script type="text/javascript" src="js/jquery/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
 	<style>
 		body {
 			background-color: #b0b0b0;
@@ -15,9 +17,13 @@
 
 <body>
 	<div id="container"></div>
+	<canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
+	<script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
+
 	<div id="info">
 		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - SVGLoader
 	</div>
+
 	<script type="module">
 		import * as THREE from '../js/three.module.js';
 		import Stats from './js/stats.module.js';
@@ -31,20 +37,17 @@
 		animate();
 		//---------------------------------------------------------------------------------------------------------------------
 		function init() {
-			var container = document.getElementById('container');
+			var canvasQ = $('#myCanvas');
+			var canvas = canvasQ.get(0);
 
 			//
-			renderer = new THREE.WebGLRenderer({ antialias: true, precision: 'highp' });
+			renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, precision: 'highp' });
 			renderer.shadowMapEnabled = true;
 			renderer.shadowMapType = THREE.PCFSoftShadowMap;
-			renderer.setPixelRatio(window.devicePixelRatio);
-			//renderer.setSize(window.innerWidth, window.innerHeight);
+			//renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(canvasQ.Width, canvasQ.Height);
 
-			renderer.setSize(2048, 2048);
-
-
-
-
+			//renderer.setSize(1024, 1024);
 			//renderer.setSize(2048,2048);
 			renderer.toneMapping = THREE.Uncharted2ToneMapping;
 			renderer.toneMapingExposure = 1;
@@ -82,9 +85,9 @@
 			camera.position.set(guiData.camX, guiData.camY, guiData.camZ);
 			//var controls = new OrbitControls(camera, renderer.domElement);
 			//controls.screenSpacePanning = true;
-			camera.aspect = 1;
+			//camera.aspect = 1;
 
-
+			onWindowResize();
 
 			loadSVG(guiData.currentURL);
 			createGUI();
@@ -302,12 +305,13 @@
 		}
 		//---------------------------------------------------------------------------------------------------------------------
 		function onWindowResize() {
-			/*
-						camera.aspect = window.innerWidth / window.innerHeight;
-						camera.updateProjectionMatrix();
-			
-						renderer.setSize(window.innerWidth, window.innerHeight);
-			*/
+			var canvasQ = $('#myCanvas');
+			var canvasWidth = canvasQ.width();
+			var canvasHeight = canvasQ.height();
+			camera.aspect = canvasWidth / canvasHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(canvasWidth, canvasHeight);
+
 		}
 		//---------------------------------------------------------------------------------------------------------------------
 		function animate() {
