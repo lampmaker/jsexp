@@ -13,7 +13,10 @@ guiData = {
     cheight: 1024,
     maskfile: loadImage,
     maskfilename: "olifant",
-    resetview:resetcam
+    resetview:resetcam,
+    _savejpg:saveasjpg,
+    _export3D:export3D
+
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -27,6 +30,10 @@ function resetcam(){
 resetview(0,0,700);
 }
 //=================================================================================================================
+function saveasjpg(){
+
+}
+function export3D(){}
 //=================================================================================================================
 $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
@@ -38,6 +45,8 @@ $(function () {
         gui.add(guiData, 'maskfilename').name('File name');
         gui.add(guiData, 'maskfile').name('load from SVG');
         gui.add(guiData, 'resetview').name('Reset view');
+        gui.add(guiData, '_savejpg').name('save jpeg');
+        gui.add(guiData, '_export3D').name('save as 3D');
     });
     init();
 

@@ -1,6 +1,7 @@
 import * as THREE from '/js/three/three.module.js';
 import { OrbitControls } from '/js/three/OrbitControls.js';
 import { SVGLoader } from '/js/three/SVGLoader.js';
+
 import { GLTFExporter } from '/js/three/GLTFExporter.js';
 
 var canvas;
@@ -14,7 +15,8 @@ var mMouseDown = false;
 // scene stuff
 var Renderer;
 var Scene;
-var Camera,controls, light0, light1
+var Camera,controls, light0, light1;
+var group;
 //=======================================================================================================
 //=======================================================================================================
 export function init(){
@@ -33,15 +35,15 @@ export function init(){
     
     //container.appendChild(renderer.domElement);   -- what i this? 
     // init camera ----------------------------------------------------------------------------------------------------
-    Camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+    Camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 100, 10000);
     Camera.position.set(0,0,700);
     
     controls = new OrbitControls(Camera, Renderer.domElement);
     controls.screenSpacePanning = true;
     resize(canvasWidth,canvasHeight);    //set everything right
     // init lights  ----------------------------------------------------------------------------------------------------
-    var L1 = 0x0A0A0A;
-	light0 = new THREE.AmbientLight(0x000000);
+    var L1 = 0xA0A0A0;
+	light0 = new THREE.AmbientLight(L1);
     Scene.add(light0);
 
     light1 = new THREE.SpotLight(0xFFFFFF - L1);
@@ -60,11 +62,29 @@ export function init(){
     light1.shadowDarkness = 11;
     light1.target.position.set(0,0,0);
     Scene.add(light1);
+
+    // init background  ----------------------------------------------------------------------------------------------------
+    var tablematerial = new THREE.MeshLambertMaterial({
+        color: 0xFFFFFF,
+        //ide: THREE.DoubleSide,
+        //map: ttexture,
+        //	bump: tbump,
+        depthWrite: false,
+    });
+    var table = new THREE.PlaneGeometry(canvasWidth, canvasHeight);
+    var tablemesh = new THREE.Mesh(table, tablematerial);
+    tablemesh.position.z = -1;
+    tablemesh.receiveShadow = true;
+	tablemesh.castShadow = false;
+	Scene.add(tablemesh);
+
+    // init object   ----------------------------------------------------------------------------------------------------
     // init others  ----------------------------------------------------------------------------------------------------
     var helper = new THREE.GridHelper(1000, 10);
     helper.rotation.x = Math.PI / 2;
     //scene.add(helper);
     animate();
+
 }
 //=======================================================================================================
 //=======================================================================================================
@@ -89,26 +109,21 @@ export function resetview(cx,cy,cz){
 //=======================================================================================================
 export function loadSVG(url){
     var loader = new SVGLoader();
+    var old=Scene.getObjectByName('svg');
+    Scene.remove(old);
+    Scene.children
     loader.load(url, function (data) {
         var tpaths = data.paths;
-        var group = new THREE.Group();
+        group = new THREE.Group();;
+        group.name='svg';
+            
         var path = new THREE.ShapePath();
         for (var i = 0; i < tpaths.length; i++) {
             for (var j = 0; j < tpaths[i].subPaths.length; j++) {
                 path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-        /*
-        var material = new THREE.MeshBasicMaterial( {
-            color: new THREE.Color().setStyle( fillColor ),
-            opacity: path.userData.style.fillOpacity,
-            transparent: path.userData.style.fillOpacity < 1,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-            wireframe: guiData.fillShapesWireframe
-        } );
-        */
-
+       
         var texture = new THREE.TextureLoader().load("img/plywood1.jpg");
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
@@ -117,10 +132,11 @@ export function loadSVG(url){
         texture.center.y = 0;
         //texture.offset=(0,0);
         //var material= new THREE.MeshNormalMaterial();
+        var sidecolor=0x202020;
         var material = [
             new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA }),
-            new THREE.MeshStandardMaterial({ map: texture, color: 0x202020 }),
-            new THREE.MeshStandardMaterial({ map: texture, color: 0x202020 }),
+            new THREE.MeshStandardMaterial({ map: texture,color: sidecolor }),
+            new THREE.MeshStandardMaterial({ map: texture,color: sidecolor })
         ];
         var shapes = path.toShapes(true, false);
         for (var j = 0; j < shapes.length; j++) {
@@ -128,15 +144,15 @@ export function loadSVG(url){
             var geometry = new THREE.ExtrudeGeometry(shape, {
                 depth: 4,
                 bevelEnabled: true,
-                bevelThickness: 0.4,
-                bevelSize: 0.4,
+               bevelThickness: 0.4,
+               bevelSize: 0.4,
             });
             var mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             group.add(mesh);				
         }
-        //-- repositioning 
+         //-- repositioning 
         group.scale.y *= - 1;
         group.castShadow = true;
         var box = new THREE.BoxHelper(group, 0xffff00);
@@ -160,8 +176,7 @@ export function loadSVG(url){
         group.position.z += 1;
         box.update();
         box.geometry.computeBoundingBox();
-
-        Scene.add(group);
+        Scene.add(group);        
     });
 }
 
