@@ -1,7 +1,6 @@
 
 import { init,resize,loadSVG,resetview,export3D } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
-import { SVGLoader } from '/js/three/SVGLoader.js';
 
 
 var gui, guiData, x, y;
@@ -35,7 +34,7 @@ function saveasjpg(){
 }
 //=================================================================================================================
 $(function () {
-    $.getJSON('/js/3Dviewer/presets.json', function (json) {
+       $.getJSON('/js/3Dviewer/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);

@@ -1,7 +1,8 @@
 import * as THREE from '/js/three/three.module.js';
 import { OrbitControls } from '/js/three/OrbitControls.js';
 import { SVGLoader } from '/js/three/SVGLoader.js';
-import { GLTFExporter } from '/js/three/GLTFExporter.js';
+import {GLTFExporter} from '/js/three/GLTFExporter.js'
+import { SimplifyModifier } from '/js/three/SimplifyModifier.js';
 
 var canvas;
 var canvasQ;
@@ -15,7 +16,7 @@ var mMouseDown = false;
 var Renderer;
 var Scene;
 var Camera,controls, light0, light1;
-var group;
+var SVGgeometry,SVGmesh, material;
 //=======================================================================================================
 //=======================================================================================================
 export function init(){
@@ -112,9 +113,18 @@ function savetoFile (data,filename,type){
 }
 
 export function export3D(){
+    console.log('exporting')
     var _binary=true;
     var Exportscene = new THREE.Scene();
-    Exportscene.add(Scene.getObjectByName('svg'));
+    var simplifiedmesh=SVGmesh.clone();
+
+    const modifier = new SimplifyModifier();
+    var count = simplifiedmesh.geometry.attributes.position.count; // number of vertices to remove
+    console.log("Number of vertices at start:",count);
+   // simplifiedmesh.geometry = modifier.modify( simplifiedmesh.geometry, Math.floor(count/2 ));
+    count = Math.floor( simplifiedmesh.geometry.attributes.position.count); // number of vertices to remove
+    console.log("Number of vertices after simplification:",count);
+    Exportscene.add(simplifiedmesh);
     console.log("LOG: export3d");
     var options = {binary:_binary };
     var exporter = new GLTFExporter();        
@@ -150,8 +160,6 @@ export function loadSVG(url){
     console.log('OPENING SVG');    
     loader.load(url, function (data) {
         var tpaths = data.paths;
-        group = new THREE.Group();;
-        group.name='svg';
         console.log('opened');    
         var path = new THREE.ShapePath();
         for (var i = 0; i < tpaths.length; i++) {
@@ -169,40 +177,43 @@ export function loadSVG(url){
         //texture.offset=(0,0);
         //var material= new THREE.MeshNormalMaterial();
         var sidecolor=0x202020;
-        var material = [
+        material = [
             new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA }),
             new THREE.MeshStandardMaterial({ map: texture,color: sidecolor }),
             new THREE.MeshStandardMaterial({ map: texture,color: sidecolor })
         ];
         console.log('load shapes');    
         var shapes = path.toShapes(true, false);
+        const modifier = new SimplifyModifier();   
         for (var j = 0; j < shapes.length; j++) {
             var shape = shapes[j];
-            //var geometry = new THREE.ExtrudeGeometry(shape, {
-            var geometry = new THREE.ExtrudeBufferGeometry(shape, {
-                depth: 4,
-                bevelEnabled: true,
+            SVGgeometry = new THREE.ExtrudeBufferGeometry(shape, {
+               depth: 4,
+               bevelEnabled: true,
                bevelThickness: 0.4,
                bevelSize: 0.4,
+               steps:1,
+               BevelSegments:1,
+               curveSegments:5
             });
-            var mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            group.add(mesh);				
+            SVGmesh = new THREE.Mesh(SVGgeometry, material);
+            SVGmesh.name='SVG';
+            SVGmesh.castShadow = true;
+            SVGmesh.receiveShadow = true;            
         }
         console.log('shapes loaded');    
          //-- repositioning 
-        group.scale.y *= - 1;
-        group.castShadow = true;
-        var box = new THREE.BoxHelper(group, 0xffff00);
+         SVGmesh.scale.y *= - 1;
+         SVGmesh.castShadow = true;
+        var box = new THREE.BoxHelper(SVGmesh, 0xffff00);
         box.geometry.computeBoundingBox();
         var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
         var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
         var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
         var l = Math.max(dimX, dimY);
         l = 590 / l;
-        group.scale.x *= l;
-        group.scale.y *= l;
+        SVGmesh.scale.x *= l;
+        SVGmesh.scale.y *= l;
         box.update();
 
         console.log('Breed: ', dimX*l, ' , Hoog: ', dimY*l);
@@ -211,12 +222,12 @@ export function loadSVG(url){
         var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
         var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
         var centerZ = (box.geometry.boundingBox.max.z + box.geometry.boundingBox.min.z) / 2;
-        group.position.x = -centerX;
-        group.position.y = -centerY;
-        group.position.z += 1;
+        SVGmesh.position.x = -centerX;
+        SVGmesh.position.y = -centerY;
+        SVGmesh.position.z += 1;
         box.update();
         box.geometry.computeBoundingBox();
-        Scene.add(group);        
+        Scene.add(SVGmesh);        
     });
 }
 
