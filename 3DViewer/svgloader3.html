@@ -17,7 +17,7 @@
 
 <body>
 	<div id="container"></div>
-	<canvas id="myCanvas" class="viewer" style="width:2048px;height:2048px"></canvas>
+	<canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
 	<script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
 
 	<div id="info">
@@ -30,11 +30,47 @@
 		import { GUI } from './js/dat.gui.module.js';
 		import { OrbitControls } from './js/OrbitControls.js';
 		import { SVGLoader } from './js/SVGLoader.js';
+		import { GLTFExporter } from './js/GLTFExporter.js';
 
-		var renderer, stats, scene, camera, gui, guiData, material, texture;
+		var renderer, stats, scene, camera, gui, guiData, material, texture, tablemesh,light0,light1
 
 		init();
 		animate();
+		function downloadJSON(json, filename) {
+			saveString(JSON.stringify(json), filename);
+		}
+
+		var link = document.createElement('a');
+		link.style.display = 'none';
+		document.body.appendChild(link); // Firefox workaround, see #6594
+
+		function save(blob, filename) {
+			link.href = URL.createObjectURL(blob);
+			link.download = filename;
+			link.click();
+			// URL.revokeObjectURL( url ); breaks Firefox...
+		}
+
+		function saveString(text, filename) {
+			save(new Blob([text], { type: 'text/plain' }), filename);
+		}
+
+		function export3d() {
+			console.log("LOG: export3d")
+			var options = {
+				onlyVisble: false,
+				binary: false
+			}
+			var exporter = new GLTFExporter();
+				//tablemesh.visible=false;
+				//light1.visible=false;
+				//light0.visible=false;				
+			// Parse the input and generate the glTF output
+			exporter.parse(scene, function (gltf) {
+				console.log(gltf);
+				downloadJSON(gltf, 'test.gltf');
+			}, options);
+		}
 		//---------------------------------------------------------------------------------------------------------------------
 		function init() {
 			var canvasQ = $('#myCanvas');
@@ -49,10 +85,10 @@
 
 			//renderer.setSize(1024, 1024);
 			//renderer.setSize(2048,2048);
-			renderer.toneMapping = THREE.Uncharted2ToneMapping;
-			renderer.toneMapingExposure = 1;
-			renderer.toneMappingWhitePoint = .9;
-			container.appendChild(renderer.domElement);
+			//renderer.toneMapping = THREE.Uncharted2ToneMapping;
+			//renderer.toneMapingExposure = 1;
+			//renderer.toneMappingWhitePoint = .9;
+			//container.appendChild(renderer.domElement);
 
 			renderer.shadowMapEnabled = true;
 			renderer.shadowMapSoft = true;
@@ -67,7 +103,7 @@
 			window.addEventListener('resize', onWindowResize, false);
 
 			guiData = {
-				currentURL: 'models/svg/border_coco.svg',
+				currentURL: 'models/svg/sample.svg',
 				extrudeGeometry: true,
 				offsetX: 0,
 				offsetY: 0,
@@ -78,7 +114,8 @@
 				centerY: 0.5,
 				camX: 0,
 				camY: 0,
-				camZ: 700
+				camZ: 700,
+				export3d: export3d,
 			};
 
 			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
@@ -158,7 +195,7 @@
 			gui.add(guiData, 'camX', -500, 500).name('cam.x').onChange(updateUvTransform);
 			gui.add(guiData, 'camY', -500, 500).name('cam.y').onChange(updateUvTransform);
 			gui.add(guiData, 'camZ', 0.0, 2500).name('cam.z').onChange(updateUvTransform);
-
+			gui.add(guiData, 'export3d');
 
 			function update() {
 				loadSVG(guiData.currentURL);
@@ -184,11 +221,11 @@
 				depthWrite: false,
 			});
 			var table = new THREE.PlaneGeometry(1000, 1000);
-			var tablemesh = new THREE.Mesh(table, tablematerial);
+			tablemesh = new THREE.Mesh(table, tablematerial);
 			tablemesh.position.z = -0.5;
 			tablemesh.receiveShadow = true;
 			//tablemesh.castShadow = true;
-			scene.add(tablemesh);
+		//	scene.add(tablemesh);
 
 			var L1 = 0x000000;
 
@@ -197,10 +234,10 @@
 			//scene.add(directionalLight);
 
 
-			const light0 = new THREE.AmbientLight(0x808080);
-			scene.add(light0);
+			light0 = new THREE.AmbientLight(0x000000);
+			//scene.add(light0);
 
-			const light1 = new THREE.SpotLight(0xFFFFFF - L1);
+			light1 = new THREE.SpotLight(0xFFFFFF - L1);
 			//const light1 = new THREE.DirectionalLight(0xFFFFFF, 1);
 
 			light1.position.set(-500, 1000, 2000);
@@ -214,7 +251,7 @@
 			light1.shadow.camera.far = 3200;      // default
 			light1.shadow.camera.fov = 80;
 			light1.shadowDarkness = 11;
-			//light1.target = tablemesh;
+			light1.target.position.set(0,0,0);
 			scene.add(light1);
 			//var spotLightHelper = new THREE.SpotLightHelper(light1);
 			//	scene.add(spotLightHelper);
@@ -272,7 +309,7 @@
 					var mesh = new THREE.Mesh(geometry, material);
 					mesh.castShadow = true;
 					mesh.receiveShadow = true;
-					group.add(mesh);
+					group.add(mesh);				
 				}
 				//-- repositioning 
 				group.scale.y *= - 1;

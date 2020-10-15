@@ -1,9 +1,3 @@
-Te doen:
-plaatjes importeren 
--> standardfragment.vert ombouwen zodat hij (r+g+b) waardes omzet naar intensiteit en feed, kill rate vertaalt  :
-en een inverse switch voor intensiteit...?
-
-f=(f0)+(f1-f0)*intensiteit
 
 
 
@@ -12,4 +6,25 @@ nu nog
 - schalen van plaatje (aspect ratio)
 
 - high / low level input plaatje  (niet altijd 100% zwart en wit nodig)
+
+
+
+
+afmetingen scherm bij 3d viewre
+- in centimeters ?
+- importeren svg -> standaard svchaal max 590   -> custommizen met sliders.
+
+
+UITZOEKEN:
+
+renderen :
+-preservedrawinbuffer?
+
+
+
+
+
+
+
+
 
