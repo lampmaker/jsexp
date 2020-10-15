@@ -1,7 +1,6 @@
 import * as THREE from '/js/three/three.module.js';
 import { OrbitControls } from '/js/three/OrbitControls.js';
 import { SVGLoader } from '/js/three/SVGLoader.js';
-
 import { GLTFExporter } from '/js/three/GLTFExporter.js';
 
 var canvas;
@@ -99,6 +98,42 @@ export function resize(width, height) {
     Camera.aspect = canvasWidth/canvasHeight;
     Camera.updateProjectionMatrix();
 }
+//=======================================================================================================
+//=======================================================================================================
+
+function savetoFile (data,filename,type){
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link); // Firefox workaround, see #6594
+    var blob = new Blob([data],{ type: type });
+    link.href = URL.createObjectURL(blob);
+	link.download = filename;
+	link.click();
+}
+
+export function export3D(){
+    var _binary=true;
+    var Exportscene = new THREE.Scene();
+    Exportscene.add(Scene.getObjectByName('svg'));
+    console.log("LOG: export3d");
+    var options = {binary:_binary };
+    var exporter = new GLTFExporter();        
+    exporter.parse(Exportscene, function (data) {
+        console.log(data);
+        if(_binary){
+            savetoFile(data ,'test.glb','model/gltf-binary');
+        }
+        else {            
+            savetoFile(JSON.stringify(data) ,'test.gltf','text/plain');
+        }
+    }, 
+    options);
+}
+
+
+//=======================================================================================================
+//=======================================================================================================
+
 export function resetview(cx,cy,cz){
     controls.reset();
     Camera.position.set(cx,cy,cz);
@@ -143,7 +178,8 @@ export function loadSVG(url){
         var shapes = path.toShapes(true, false);
         for (var j = 0; j < shapes.length; j++) {
             var shape = shapes[j];
-            var geometry = new THREE.ExtrudeGeometry(shape, {
+            //var geometry = new THREE.ExtrudeGeometry(shape, {
+            var geometry = new THREE.ExtrudeBufferGeometry(shape, {
                 depth: 4,
                 bevelEnabled: true,
                bevelThickness: 0.4,

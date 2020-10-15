@@ -1,5 +1,5 @@
 
-import { init,resize,loadSVG,resetview } from './3dviewer.js';
+import { init,resize,loadSVG,resetview,export3D } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { SVGLoader } from '/js/three/SVGLoader.js';
 
@@ -33,7 +33,6 @@ resetview(0,0,700);
 function saveasjpg(){
 
 }
-function export3D(){}
 //=================================================================================================================
 $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
