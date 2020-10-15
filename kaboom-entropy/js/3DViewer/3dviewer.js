@@ -112,11 +112,12 @@ export function loadSVG(url){
     var old=Scene.getObjectByName('svg');
     Scene.remove(old);
     Scene.children
+    console.log('OPENING SVG');    
     loader.load(url, function (data) {
         var tpaths = data.paths;
         group = new THREE.Group();;
         group.name='svg';
-            
+        console.log('opened');    
         var path = new THREE.ShapePath();
         for (var i = 0; i < tpaths.length; i++) {
             for (var j = 0; j < tpaths[i].subPaths.length; j++) {
@@ -138,6 +139,7 @@ export function loadSVG(url){
             new THREE.MeshStandardMaterial({ map: texture,color: sidecolor }),
             new THREE.MeshStandardMaterial({ map: texture,color: sidecolor })
         ];
+        console.log('load shapes');    
         var shapes = path.toShapes(true, false);
         for (var j = 0; j < shapes.length; j++) {
             var shape = shapes[j];
@@ -152,21 +154,23 @@ export function loadSVG(url){
             mesh.receiveShadow = true;
             group.add(mesh);				
         }
+        console.log('shapes loaded');    
          //-- repositioning 
         group.scale.y *= - 1;
         group.castShadow = true;
         var box = new THREE.BoxHelper(group, 0xffff00);
         box.geometry.computeBoundingBox();
-
         var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
         var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
         var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
-
         var l = Math.max(dimX, dimY);
         l = 590 / l;
         group.scale.x *= l;
         group.scale.y *= l;
         box.update();
+
+        console.log('Breed: ', dimX*l, ' , Hoog: ', dimY*l);
+
         box.geometry.computeBoundingBox();
         var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
         var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;

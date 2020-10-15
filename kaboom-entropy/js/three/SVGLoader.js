@@ -83,7 +83,7 @@ SVGLoader.prototype = Object.assign(Object.create(Loader.prototype), {
 			switch (node.nodeName) {
 
 				case 'svg':
-					console.log(node.getAttribute("width"));
+				//	console.log(node.getAttribute("width"));
 
 					var svgwidth = parseFloatWithUnits(node.getAttribute("width"));
 					var svgheight = parseFloatWithUnits(node.getAttribute("height"));
@@ -95,11 +95,7 @@ SVGLoader.prototype = Object.assign(Object.create(Loader.prototype), {
 					else {
 						var boxcoord = vb.split(" ");
 					}
-
-					console.log(boxcoord);
-
-
-
+				//	console.log(boxcoord);
 
 					break;
 
