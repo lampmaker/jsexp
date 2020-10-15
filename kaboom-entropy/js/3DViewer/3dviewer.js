@@ -27,8 +27,8 @@ export function init() {
     canvas = canvasQ.get(0);
     Renderer = new THREE.WebGLRenderer({ canvas: canvas, preserveDrawingBuffer: true, antialias: true, precision: 'highp' });
     Scene = new THREE.Scene();
-    Renderer.shadowMapEnabled = true;
-    Renderer.shadowMapType = THREE.PCFSoftShadowMap;
+    Renderer.shadowMap.enabled = true;
+    Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     Renderer.toneMapping = THREE.Uncharted2ToneMapping;
     Renderer.toneMapingExposure = 1;
     Renderer.toneMappingWhitePoint = .9;
@@ -44,7 +44,7 @@ export function init() {
     controls.screenSpacePanning = true;
     resize(canvasWidth, canvasHeight);    //set everything right
     // init lights  ----------------------------------------------------------------------------------------------------
-    var L1 = 0x707070;
+    var L1 = 0x909090;
     light0 = new THREE.AmbientLight(L1);
     Scene.add(light0);
 
@@ -53,15 +53,13 @@ export function init() {
 
     light1.position.set(-500, 1000, 2000);
     light1.castShadow = true;
-    light1.shadowCameraVisible = true;
     light1.shadow.mapSize.width = 16384;  // default
     light1.shadow.mapSize.height = light1.shadow.mapSize.width; // default
     light1.shadow.radius = 10;
-
+    light1.shadowDarkness = 11;
     light1.shadow.camera.near = 5;       // default
     light1.shadow.camera.far = 3000;      // default
     light1.shadow.camera.fov = 80;
-    light1.shadowDarkness = 11;
     light1.target.position.set(0, 0, 0);
     Scene.add(light1);
 
@@ -117,18 +115,22 @@ function savetoFile(data, filename, type) {
 //=======================================================================================================
 export function export3D() {
     console.log('exporting')
-    var _binary = false;
+    var _binary = true;
     var Exportscene = new THREE.Scene();
 
     SVGmesh.scale.x *= 0.01;
     SVGmesh.scale.y *= 0.01;
     SVGmesh.scale.z *= 0.01;
-    Exportscene.add(light0);
+    //Exportscene.add(light0);
 
     Exportscene.add(SVGmesh);
     console.log("LOG: export3d");
 
-    var options = { binary: _binary, forceindices: true };
+    const options = {
+        binary: _binary,
+        forcePowerOfTwoTextures: false,
+        forceIndices: true
+    };
     var exporter = new GLTFExporter();
     exporter.parse(Exportscene, function (data) {
         console.log(data);
@@ -156,9 +158,8 @@ export function resetview(cx, cy, cz) {
 //=======================================================================================================
 export function loadSVG(url) {
     var loader = new SVGLoader();
-    var old = Scene.getObjectByName('svg');
+    var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
-    Scene.children
     console.log('OPENING SVG');
     loader.load(url, function (data) {
         var tpaths = data.paths;
@@ -184,7 +185,7 @@ export function loadSVG(url) {
         var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
         var basematerial = new THREE.MeshStandardMaterial({ color: 0xa00A0A });
         var materialside = new THREE.MeshStandardMaterial({ color: sidecolor });
-        material = new THREE.MultiMaterial([materialtop, materialside]);
+        material = [materialtop, materialside];
         console.log('load shapes');
         var shapes = path.toShapes(true, false);
 
