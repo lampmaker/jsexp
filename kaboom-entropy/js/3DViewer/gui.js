@@ -1,5 +1,5 @@
 
-import { init, resize, loadSVG, resetview, export3D } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
@@ -10,9 +10,14 @@ var loaded = false;
 guiData = {
     cwidth: 1024,
     cheight: 1024,
+    offsetX: 1,
+    offsetY: 0.5,
+    repeatX: 0.0035,
+    repeatY: 0.008,
+    rotation: 0.0,//Math.PI / 4, // positive is counter-clockwise
     maskfile: loadImage,
     maskfilename: "olifant",
-    resetview: resetcam,
+    resetview: false,
     _savejpg: saveasjpg,
     _export3D: export3D
 
@@ -26,25 +31,38 @@ function updatescreen() {
 }
 //=================================================================================================================
 function resetcam() {
-    resetview(0, 0, 700);
+    if (guiData.resetview) resetview(0, 0, 700);
+    freezeview(guiData.resetview);
 }
 //=================================================================================================================
-
+function _updateUvTransform() {
+    updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ]    
+}
 //=================================================================================================================
 $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
-        gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
-        gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
+        gui.add(guiData, 'cwidth', 0, 4096, 128).name('width').onFinishChange(updatescreen);
+        gui.add(guiData, 'cheight', 0, 4096, 128).name('height').onFinishChange(updatescreen);;
+        gui.add(guiData, 'offsetX', 0.0, 1.0).name('offset.x').onChange(_updateUvTransform);
+        gui.add(guiData, 'offsetY', 0.0, 1.0).name('offset.y').onChange(_updateUvTransform);
+        gui.add(guiData, 'repeatX', 0.001, 0.01).name('repeat.x').onChange(_updateUvTransform);
+        gui.add(guiData, 'repeatY', 0.001, 0.01).name('repeat.y').onChange(_updateUvTransform);
+        gui.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
+
         gui.add(guiData, 'maskfilename').name('File name');
+
         gui.add(guiData, 'maskfile').name('load from SVG');
-        gui.add(guiData, 'resetview').name('Reset view');
+        gui.add(guiData, 'resetview').name('Reset view').onChange(resetcam);
         gui.add(guiData, '_savejpg').name('save jpeg');
         gui.add(guiData, '_export3D').name('save as 3D');
     });
     init();
+    updatescreen();
+    _updateUvTransform();
+
 
 });
 

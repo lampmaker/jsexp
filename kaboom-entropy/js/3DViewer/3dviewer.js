@@ -16,7 +16,7 @@ var mMouseDown = false;
 var Renderer;
 var Scene;
 var Camera, controls, light0, light1;
-var SVGgeometry, SVGmesh, material;
+var SVGgeometry, SVGmesh, material, texture;
 //=======================================================================================================
 //=======================================================================================================
 
@@ -79,6 +79,21 @@ export function init() {
     Scene.add(tablemesh);
 
     // init object   ----------------------------------------------------------------------------------------------------
+    texture = new THREE.TextureLoader().load("img/plywood1.jpg");
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(0.0025, 0.005);
+    texture.center.x = 40;
+    texture.center.y = 0;
+    texture.mapping
+    //texture.offset=(0,0);
+    //var material= new THREE.MeshNormalMaterial();
+    var sidecolor = 0x606060;
+    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
+    var basematerial = new THREE.MeshLambertMaterial({ color: 0xa00A0A });
+    var materialside = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: sidecolor });
+    material = [materialtop, materialside];
+
     // init others  ----------------------------------------------------------------------------------------------------
     //var helper = new THREE.GridHelper(1000, 10);
     //helper.rotation.x = Math.PI / 2;
@@ -102,6 +117,19 @@ export function resize(width, height) {
 }
 //=======================================================================================================
 //=======================================================================================================
+export function updateUvTransform(ox, oy, rx, ry, rot) {
+    texture.offset.set(ox, oy);
+    texture.repeat.set(rx, ry);
+    texture.rotation = rot; // rotation is around [ 0.5, 0.5 ]    
+}
+//=======================================================================================================
+//=======================================================================================================
+
+
+
+
+
+
 function savetoFile(data, filename, type) {
     var link = document.createElement('a');
     link.style.display = 'none';
@@ -154,6 +182,9 @@ export function resetview(cx, cy, cz) {
 
     Camera.updateProjectionMatrix();
 }
+export function freezeview(t) {
+    controls.enabled = !t
+}
 //=======================================================================================================
 //=======================================================================================================
 export function loadSVG(url) {
@@ -171,20 +202,6 @@ export function loadSVG(url) {
                 path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-        var texture = new THREE.TextureLoader().load("img/plywood1.jpg");
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(0.0025, 0.005);
-        texture.center.x = 40;
-        texture.center.y = 0;
-        texture.mapping
-        //texture.offset=(0,0);
-        //var material= new THREE.MeshNormalMaterial();
-        var sidecolor = 0x202020;
-        var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
-        var basematerial = new THREE.MeshLambertMaterial({ color: 0xa00A0A });
-        var materialside = new THREE.MeshStandardMaterial({ color: sidecolor });
-        material = [materialtop, materialside];
         console.log('load shapes');
         var shapes = path.toShapes(true, false);
 
@@ -192,12 +209,12 @@ export function loadSVG(url) {
         var shape = shapes[0];
         SVGgeometry = new THREE.ExtrudeBufferGeometry(shape, {
             depth: 4,
-            bevelEnabled: false,
+            bevelEnabled: true,
             bevelThickness: 0.4,
-            bevelSize: 0.4,
+            bevelSize: 0.2,
             steps: 2,
             BevelSegments: 2,
-            curveSegments: 10
+            curveSegments: 12
         });
         SVGmesh = new THREE.Mesh(SVGgeometry, material);
         SVGmesh.name = 'SVG';
