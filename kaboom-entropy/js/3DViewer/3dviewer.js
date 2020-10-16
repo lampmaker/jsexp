@@ -166,45 +166,44 @@ export function loadSVG(url) {
         console.log('opened', data);
         console.log('paths:', tpaths);
         var path = new THREE.ShapePath();
-
         for (var i = 0; i < tpaths.length; i++) {
             for (var j = 0; j < tpaths[i].subPaths.length; j++) {
                 path.subPaths.push(tpaths[i].subPaths[j]);
             }
         }
-
         var texture = new THREE.TextureLoader().load("img/plywood1.jpg");
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(0.0025, 0.005);
         texture.center.x = 40;
         texture.center.y = 0;
+        texture.mapping
         //texture.offset=(0,0);
         //var material= new THREE.MeshNormalMaterial();
         var sidecolor = 0x202020;
         var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
-        var basematerial = new THREE.MeshStandardMaterial({ color: 0xa00A0A });
+        var basematerial = new THREE.MeshLambertMaterial({ color: 0xa00A0A });
         var materialside = new THREE.MeshStandardMaterial({ color: sidecolor });
         material = [materialtop, materialside];
         console.log('load shapes');
         var shapes = path.toShapes(true, false);
 
-        for (var j = 0; j < shapes.length; j++) {
-            var shape = shapes[j];
-            SVGgeometry = new THREE.ExtrudeBufferGeometry(shape, {
-                depth: 0.004,
-                bevelEnabled: false,
-                bevelThickness: 0.4,
-                bevelSize: 0.4,
-                steps: 1,
-                BevelSegments: 2,
-                curveSegments: 3
-            });
-            SVGmesh = new THREE.Mesh(SVGgeometry, material);
-            SVGmesh.name = 'SVG';
-            SVGmesh.castShadow = true;
-            SVGmesh.receiveShadow = true;
-        }
+        //for (var j = 0; j < shapes.length; j++) {
+        var shape = shapes[0];
+        SVGgeometry = new THREE.ExtrudeBufferGeometry(shape, {
+            depth: 4,
+            bevelEnabled: false,
+            bevelThickness: 0.4,
+            bevelSize: 0.4,
+            steps: 2,
+            BevelSegments: 2,
+            curveSegments: 10
+        });
+        SVGmesh = new THREE.Mesh(SVGgeometry, material);
+        SVGmesh.name = 'SVG';
+        SVGmesh.castShadow = true;
+        SVGmesh.receiveShadow = true;
+        //}
         console.log('shapes loaded');
         //-- repositioning 
         SVGmesh.scale.y *= - 1;
@@ -218,7 +217,7 @@ export function loadSVG(url) {
         l = 590 / l;
         SVGmesh.scale.x *= l;
         SVGmesh.scale.y *= l;
-        SVGmesh.scale.z *= 1000;
+        SVGmesh.scale.z *= 1;
         box.update();
 
         console.log('Breed: ', dimX * l, ' , Hoog: ', dimY * l);
@@ -233,10 +232,6 @@ export function loadSVG(url) {
         box.update();
         box.geometry.computeBoundingBox();
         Scene.add(SVGmesh);
-
-
-
-
     });
 }
 

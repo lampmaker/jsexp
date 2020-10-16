@@ -1,7 +1,7 @@
 
-import { init,resize,loadSVG,resetview,export3D } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, export3D } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
-
+import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
 var gui, guiData, x, y;
 var loaded = false;
@@ -12,9 +12,9 @@ guiData = {
     cheight: 1024,
     maskfile: loadImage,
     maskfilename: "olifant",
-    resetview:resetcam,
-    _savejpg:saveasjpg,
-    _export3D:export3D
+    resetview: resetcam,
+    _savejpg: saveasjpg,
+    _export3D: export3D
 
 };
 //=================================================================================================================
@@ -25,16 +25,14 @@ function updatescreen() {
     if (!loaded) return;
 }
 //=================================================================================================================
-function resetcam(){
-resetview(0,0,700);
+function resetcam() {
+    resetview(0, 0, 700);
 }
 //=================================================================================================================
-function saveasjpg(){
 
-}
 //=================================================================================================================
 $(function () {
-       $.getJSON('/js/3Dviewer/presets.json', function (json) {
+    $.getJSON('/js/3Dviewer/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
@@ -59,14 +57,12 @@ function loadImage() {
     if (guiData.maskfilename.split('.')[1] == null) {
         url = s1.concat(guiData.maskfilename, '.svg')
         loadSVG(url);
-    }    
+    }
 }
 //========================================================================================================
 
 //=================================================================================================================
 //=================================================================================================================
-
-
 
 
 function record() {
@@ -173,9 +169,63 @@ function imgtr() {
     myWindow.document.documentElement.innerHTML = svgdata;
 
 
-   // var loader = new SVGLoader();
-   // var data = loader.parse(svgdata);
+    // var loader = new SVGLoader();
+    // var data = loader.parse(svgdata);
     //makem3dfromsvg(data);
 
 
+}
+//======================================================================================================
+//======================================================================================================
+function savetoFile(data, filename, type) {
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link); // Firefox workaround, see #6594
+    var blob = new Blob([data], { type: type });
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+function saveasjpg() {
+    var x = 0, y = 0;
+    var heartShape = new THREE.Shape();
+    heartShape.moveTo(x + 0.05, y + 0.05);
+    heartShape.bezierCurveTo(x + 0.05, y + 0.05, x + 0.04, y, x, y);
+    heartShape.bezierCurveTo(x - 0.06, y, x - 0.06, y + 0.07, x - 0.06, y + 0.07);
+    heartShape.bezierCurveTo(x - 0.06, y + 0.11, x - 0.03, y + 0.154, x + 0.05, y + 0.19);
+    heartShape.bezierCurveTo(x + 0.12, y + 0.154, x + 0.16, y + 0.11, x + 0.16, y + 0.07);
+    heartShape.bezierCurveTo(x + 0.16, y + 0.07, x + 0.16, y, x + 0.10, y);
+    heartShape.bezierCurveTo(x + 0.07, y, x + 0.05, y + 0.05, x + 0.05, y + 0.05);
+
+    var geometry = new THREE.ExtrudeBufferGeometry(heartShape, {
+        depth: 0.1, bevelEnabled: false,
+        bevelThickness: 0.4,
+        bevelSize: 0.4,
+        steps: 2,
+        BevelSegments: 2,
+        curveSegments: 10
+    });
+
+    var material = new THREE.MeshLambertMaterial({ color: 0xa00A0A });
+    var mesh = new THREE.Mesh(geometry, material);
+
+    var scene = new THREE.Scene();
+    scene.add(mesh);
+
+    const options = {
+        binary: true,
+        forceIndices: true
+    };
+
+    var exporter = new GLTFExporter();
+
+    exporter.parse(scene, function (data) {
+        if (options.binary) {
+            savetoFile(data, 'test.glb', 'model/gltf-binary');
+        }
+        else {
+            savetoFile(JSON.stringify(data), 'test.gltf', 'text/plain');
+        }
+    },
+        options);
 }

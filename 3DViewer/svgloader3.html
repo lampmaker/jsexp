@@ -32,7 +32,7 @@
 		import { SVGLoader } from './js/SVGLoader.js';
 		import { GLTFExporter } from './js/GLTFExporter.js';
 
-		var renderer, stats, scene, camera, gui, guiData, material, texture, tablemesh,light0,light1
+		var renderer, stats, scene, camera, gui, guiData, material, texture, tablemesh, light0, light1
 
 		init();
 		animate();
@@ -62,9 +62,9 @@
 				binary: false
 			}
 			var exporter = new GLTFExporter();
-				//tablemesh.visible=false;
-				//light1.visible=false;
-				//light0.visible=false;				
+			//tablemesh.visible=false;
+			//light1.visible=false;
+			//light0.visible=false;				
 			// Parse the input and generate the glTF output
 			exporter.parse(scene, function (gltf) {
 				console.log(gltf);
@@ -85,10 +85,10 @@
 
 			//renderer.setSize(1024, 1024);
 			//renderer.setSize(2048,2048);
-			//renderer.toneMapping = THREE.Uncharted2ToneMapping;
-			//renderer.toneMapingExposure = 1;
-			//renderer.toneMappingWhitePoint = .9;
-			//container.appendChild(renderer.domElement);
+			renderer.toneMapping = THREE.Uncharted2ToneMapping;
+			renderer.toneMapingExposure = 1;
+			renderer.toneMappingWhitePoint = .9;
+			container.appendChild(renderer.domElement);
 
 			renderer.shadowMapEnabled = true;
 			renderer.shadowMapSoft = true;
@@ -205,10 +205,10 @@
 		function loadSVG(url) {
 			//
 			scene = new THREE.Scene();
-			scene.background = new THREE.Color(0xDDDDDD);
+			scene.background = new THREE.Color(0xffffff);
 			//
-		//	var ttexture = new THREE.TextureLoader().load("img/sbklx0p_4K_AO.jpg");
-		//	var tbump = new THREE.TextureLoader().load("img/sbklx0p_4K_Displacement.jpg");
+			//	var ttexture = new THREE.TextureLoader().load("img/sbklx0p_4K_AO.jpg");
+			//	var tbump = new THREE.TextureLoader().load("img/sbklx0p_4K_Displacement.jpg");
 			//ttexture.repeat.set(1, 1);
 			//tbump.repeat.set(1, 1);
 
@@ -225,17 +225,16 @@
 			tablemesh.position.z = -0.5;
 			tablemesh.receiveShadow = true;
 			//tablemesh.castShadow = true;
-		//	scene.add(tablemesh);
+			scene.add(tablemesh);
 
-			var L1 = 0x000000;
-
+			var L1 = 0x909090;
 
 			//var directionalLight = new THREE.DirectionalLight(0xfff, 500);
 			//scene.add(directionalLight);
 
 
-			light0 = new THREE.AmbientLight(0x000000);
-			//scene.add(light0);
+			light0 = new THREE.AmbientLight(L1);
+			scene.add(light0);
 
 			light1 = new THREE.SpotLight(0xFFFFFF - L1);
 			//const light1 = new THREE.DirectionalLight(0xFFFFFF, 1);
@@ -251,7 +250,7 @@
 			light1.shadow.camera.far = 3200;      // default
 			light1.shadow.camera.fov = 80;
 			light1.shadowDarkness = 11;
-			light1.target.position.set(0,0,0);
+			light1.target.position.set(0, 0, 0);
 			scene.add(light1);
 			//var spotLightHelper = new THREE.SpotLightHelper(light1);
 			//	scene.add(spotLightHelper);
@@ -309,7 +308,7 @@
 					var mesh = new THREE.Mesh(geometry, material);
 					mesh.castShadow = true;
 					mesh.receiveShadow = true;
-					group.add(mesh);				
+					group.add(mesh);
 				}
 				//-- repositioning 
 				group.scale.y *= - 1;
