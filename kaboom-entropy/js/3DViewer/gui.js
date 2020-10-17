@@ -43,7 +43,7 @@ $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
-        gui.remember(guiData);
+        //   gui.remember(guiData);
         gui.add(guiData, 'cwidth', 0, 4096, 128).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096, 128).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'offsetX', 0.0, 1.0).name('offset.x').onChange(_updateUvTransform);

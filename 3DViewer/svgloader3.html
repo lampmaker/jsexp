@@ -17,12 +17,8 @@
 
 <body>
 	<div id="container"></div>
-	<canvas id="myCanvas" class="viewer" style="width:2048px;height:2048px"></canvas>
+	<canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
 	<script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
-
-	<div id="info">
-		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - SVGLoader
-	</div>
 
 	<script type="module">
 		import * as THREE from '../js/three.module.js';
@@ -82,13 +78,10 @@
 			renderer.shadowMapType = THREE.PCFSoftShadowMap;
 			//renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(canvasQ.Width, canvasQ.Height);
-
-			//renderer.setSize(1024, 1024);
-			//renderer.setSize(2048,2048);
-			renderer.toneMapping = THREE.Uncharted2ToneMapping;
-			renderer.toneMapingExposure = 1;
-			renderer.toneMappingWhitePoint = .9;
-			container.appendChild(renderer.domElement);
+			//renderer.toneMapping = THREE.Uncharted2ToneMapping;
+			//renderer.toneMapingExposure = 1;
+			//	renderer.toneMappingWhitePoint = .9;
+			//container.appendChild(renderer.domElement);
 
 			renderer.shadowMapEnabled = true;
 			renderer.shadowMapSoft = true;
@@ -118,7 +111,7 @@
 				export3d: export3d,
 			};
 
-			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
 			camera.position.set(guiData.camX, guiData.camY, guiData.camZ);
 			//var controls = new OrbitControls(camera, renderer.domElement);
 			//controls.screenSpacePanning = true;
@@ -222,17 +215,12 @@
 			});
 			var table = new THREE.PlaneGeometry(1000, 1000);
 			tablemesh = new THREE.Mesh(table, tablematerial);
-			tablemesh.position.z = -0.5;
+			tablemesh.position.z = -1;
 			tablemesh.receiveShadow = true;
 			//tablemesh.castShadow = true;
 			scene.add(tablemesh);
 
 			var L1 = 0x909090;
-
-			//var directionalLight = new THREE.DirectionalLight(0xfff, 500);
-			//scene.add(directionalLight);
-
-
 			light0 = new THREE.AmbientLight(L1);
 			scene.add(light0);
 
@@ -293,8 +281,8 @@
 				//var material= new THREE.MeshNormalMaterial();
 				material = [
 					new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA }),
-					new THREE.MeshStandardMaterial({ map: texture, color: 0x202020 }),
-					new THREE.MeshStandardMaterial({ map: texture, color: 0x202020 }),
+					new THREE.MeshStandardMaterial({ map: texture, color: 0x606060 }),
+					new THREE.MeshStandardMaterial({ map: texture, color: 0x606060 }),
 				];
 				var shapes = path.toShapes(true, false);
 				for (var j = 0; j < shapes.length; j++) {

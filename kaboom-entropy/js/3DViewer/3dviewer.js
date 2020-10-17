@@ -16,7 +16,7 @@ var mMouseDown = false;
 var Renderer;
 var Scene;
 var Camera, controls, light0, light1;
-var SVGgeometry, SVGmesh, material, texture;
+var SVGdata, SVGgeometry, SVGmesh, material, texture;
 //=======================================================================================================
 //=======================================================================================================
 
@@ -25,43 +25,26 @@ export function init() {
     // init render ----------------------------------------------------------------------------------------------------
     canvasQ = $('#myCanvas');
     canvas = canvasQ.get(0);
-    Renderer = new THREE.WebGLRenderer({ canvas: canvas, preserveDrawingBuffer: true, antialias: true, precision: 'highp' });
-    Scene = new THREE.Scene();
-    Renderer.shadowMap.enabled = true;
-    Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    Renderer.toneMapping = THREE.Uncharted2ToneMapping;
-    Renderer.toneMapingExposure = 1;
-    Renderer.toneMappingWhitePoint = .9;
     canvasWidth = canvasQ.width();
     canvasHeight = canvasQ.height()
 
+    Renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, precision: 'highp' });
+    // Renderer.toneMapping = THREE.LinearToneMapping;
+    // Renderer.toneMapingExposure = 1;
+    //Renderer.toneMappingWhitePoint = .9;
+    Renderer.shadowMap.enabled = true;
+    Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    Renderer.shadowMapSoft = true;
+    Scene = new THREE.Scene();
+    Scene.background = new THREE.Color(0xffffff);
+
     //container.appendChild(renderer.domElement);   -- what i this? 
     // init camera ----------------------------------------------------------------------------------------------------
-    Camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 100, 10000);
+    Camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
     Camera.position.set(0, 0, 700);
-
     controls = new OrbitControls(Camera, Renderer.domElement);
     controls.screenSpacePanning = true;
     resize(canvasWidth, canvasHeight);    //set everything right
-    // init lights  ----------------------------------------------------------------------------------------------------
-    var L1 = 0x909090;
-    light0 = new THREE.AmbientLight(L1);
-    Scene.add(light0);
-
-    light1 = new THREE.SpotLight(0xFFFFFF - L1);
-    //const light1 = new THREE.DirectionalLight(0xFFFFFF, 1);
-
-    light1.position.set(-500, 1000, 2000);
-    light1.castShadow = true;
-    light1.shadow.mapSize.width = 16384;  // default
-    light1.shadow.mapSize.height = light1.shadow.mapSize.width; // default
-    light1.shadow.radius = 10;
-    light1.shadowDarkness = 11;
-    light1.shadow.camera.near = 5;       // default
-    light1.shadow.camera.far = 3000;      // default
-    light1.shadow.camera.fov = 80;
-    light1.target.position.set(0, 0, 0);
-    Scene.add(light1);
 
     // init background  ----------------------------------------------------------------------------------------------------
     var tablematerial = new THREE.MeshLambertMaterial({
@@ -73,10 +56,33 @@ export function init() {
     });
     var table = new THREE.PlaneGeometry(canvasWidth, canvasHeight);
     var tablemesh = new THREE.Mesh(table, tablematerial);
-    tablemesh.position.z = -1;
+    tablemesh.position.z = -2;
     tablemesh.receiveShadow = true;
     tablemesh.castShadow = false;
     Scene.add(tablemesh);
+    // init lights  ----------------------------------------------------------------------------------------------------
+    var L1 = 0.5;
+    //L1 = 0xFFFFFF;
+    light0 = new THREE.AmbientLight(0xFFFFFF, L1);
+    Scene.add(light0);
+
+    light1 = new THREE.SpotLight(0xFFFFFF, 1);
+    //const light1 = new THREE.DirectionalLight(0xFFFFFF, 1);
+
+    light1.position.set(-500, 1000, 2000);
+    light1.castShadow = true;
+    light1.shadowCameraVisible = true;
+    light1.shadow.mapSize.width = 16384;  // default
+    light1.shadow.mapSize.height = light1.shadow.mapSize.width; // default
+    light1.shadow.radius = 10;
+
+    light1.shadow.camera.near = 0.5;       // default
+    light1.shadow.camera.far = 3200;      // default
+    light1.shadow.camera.fov = 80;
+    light1.shadowDarkness = 11;
+    light1.target.position.set(0, 0, 0);
+    Scene.add(light1);
+
 
     // init object   ----------------------------------------------------------------------------------------------------
     texture = new THREE.TextureLoader().load("img/plywood1.jpg");
@@ -89,10 +95,9 @@ export function init() {
     //texture.offset=(0,0);
     //var material= new THREE.MeshNormalMaterial();
     var sidecolor = 0x606060;
-    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
-    var basematerial = new THREE.MeshLambertMaterial({ color: 0xa00A0A });
+    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xCCAAAA });
     var materialside = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: sidecolor });
-    material = [materialtop, materialside];
+    material = [materialtop, materialside, materialside];
 
     // init others  ----------------------------------------------------------------------------------------------------
     //var helper = new THREE.GridHelper(1000, 10);
@@ -129,50 +134,6 @@ export function updateUvTransform(ox, oy, rx, ry, rot) {
 
 
 
-
-function savetoFile(data, filename, type) {
-    var link = document.createElement('a');
-    link.style.display = 'none';
-    document.body.appendChild(link); // Firefox workaround, see #6594
-    var blob = new Blob([data], { type: type });
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-}
-//=======================================================================================================
-//=======================================================================================================
-export function export3D() {
-    console.log('exporting')
-    var _binary = true;
-    var Exportscene = new THREE.Scene();
-
-    SVGmesh.scale.x *= 0.01;
-    SVGmesh.scale.y *= 0.01;
-    SVGmesh.scale.z *= 0.01;
-    //Exportscene.add(light0);
-
-    Exportscene.add(SVGmesh);
-    console.log("LOG: export3d");
-
-    const options = {
-        binary: _binary,
-        forcePowerOfTwoTextures: false,
-        forceIndices: true
-    };
-    var exporter = new GLTFExporter();
-    exporter.parse(Exportscene, function (data) {
-        console.log(data);
-        if (_binary) {
-            savetoFile(data, 'test.glb', 'model/gltf-binary');
-        }
-        else {
-            savetoFile(JSON.stringify(data), 'test.gltf', 'text/plain');
-        }
-    },
-        options);
-}
-
-
 //=======================================================================================================
 //=======================================================================================================
 
@@ -194,6 +155,7 @@ export function loadSVG(url) {
     console.log('OPENING SVG');
     loader.load(url, function (data) {
         var tpaths = data.paths;
+        SVGdata = tpaths;
         console.log('opened', data);
         console.log('paths:', tpaths);
         var path = new THREE.ShapePath();
@@ -212,9 +174,9 @@ export function loadSVG(url) {
             bevelEnabled: true,
             bevelThickness: 0.4,
             bevelSize: 0.2,
-            steps: 2,
-            BevelSegments: 2,
-            curveSegments: 12
+            //steps: 2,
+            //BevelSegments: 2,
+            //curveSegments: 12
         });
         SVGmesh = new THREE.Mesh(SVGgeometry, material);
         SVGmesh.name = 'SVG';
@@ -225,6 +187,7 @@ export function loadSVG(url) {
         //-- repositioning 
         SVGmesh.scale.y *= - 1;
         SVGmesh.castShadow = true;
+        SVGmesh.receiveShadow = true
         var box = new THREE.BoxHelper(SVGmesh, 0xffff00);
         box.geometry.computeBoundingBox();
         var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
@@ -265,3 +228,88 @@ function render() {
 
 //=======================================================================================================
 //=======================================================================================================
+
+
+function savetoFile(data, filename, type) {
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link); // Firefox workaround, see #6594
+    var blob = new Blob([data], { type: type });
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+//=======================================================================================================
+//=======================================================================================================
+export function export3D() {
+    console.log('exporting')
+    var _binary = true;
+    var Exportscene = new THREE.Scene();
+
+    // convert to ShapePath ---------------------------------------------------------------------------
+    var path = new THREE.ShapePath();
+    for (var i = 0; i < SVGdata.length; i++) {
+        for (var j = 0; j < SVGdata[i].subPaths.length; j++) {
+            path.subPaths.push(SVGdata[i].subPaths[j]);
+        }
+    }
+    // convert to Shapes ---------------------------------------------------------------------------
+    console.log('load shapes');
+    var shape = path.toShapes(true, false)[0];
+    console.log(shape);
+    var geometry = new THREE.ExtrudeBufferGeometry(shape, {
+        depth: 0.04,
+        bevelEnabled: false,
+        bevelThickness: 0.004,
+        bevelSize: 0.002,
+        steps: 2,
+        BevelSegments: 21,
+        curveSegments: 20
+    });
+    var mat = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
+
+    var mesh = new THREE.Mesh(geometry, mat);
+    //-- repositioning 
+    mesh.scale.y *= - 1;
+    mesh.castShadow = true;
+    var box = new THREE.BoxHelper(mesh, 0xffff00);
+    box.geometry.computeBoundingBox();
+    var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
+    var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
+    var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
+    var l = Math.max(dimX, dimY);
+    l = 0.590 / l;
+    mesh.scale.x *= l;
+    mesh.scale.y *= l;
+    mesh.scale.z = 1;  // don't scale Z!
+
+
+    box.geometry.computeBoundingBox();
+    var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
+    var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
+    var centerZ = (box.geometry.boundingBox.max.z + box.geometry.boundingBox.min.z) / 2;
+    mesh.position.x = -centerX;
+    mesh.position.y = -centerY;
+    mesh.position.z += 1;
+    box.update();
+    box.geometry.computeBoundingBox();
+    Exportscene.add(mesh);
+
+    const options = {
+        binary: _binary,
+        forcePowerOfTwoTextures: false,
+        forceIndices: true
+    };
+    var exporter = new GLTFExporter();
+    exporter.parse(Exportscene, function (data) {
+        console.log(data);
+        if (_binary) {
+            savetoFile(data, 'test.glb', 'model/gltf-binary');
+        }
+        else {
+            savetoFile(JSON.stringify(data), 'test.gltf', 'text/plain');
+        }
+    },
+        options);
+}
+
