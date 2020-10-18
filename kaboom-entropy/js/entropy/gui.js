@@ -491,7 +491,15 @@ function makem3dfromsvg(data) {
     addGrouptoScene(group)
 }
 
-
+function savetoFile(data, filename, type) {
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link); // Firefox workaround, see #6594
+    var blob = new Blob([data], { type: type });
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
 function imgtr() {
     var canvasx = cnvs();
 
@@ -508,10 +516,10 @@ function imgtr() {
     var svgdata = ImageTracer.imagedataToSVG(imageData, 'Default');
     var myWindow = window.open("", "MsgWindow");
     myWindow.document.documentElement.innerHTML = svgdata;
+    savetoFile(svgdata, 'test.svg', 'image/svg+xml')
 
-
-   // var loader = new SVGLoader();
-   // var data = loader.parse(svgdata);
+    // var loader = new SVGLoader();
+    // var data = loader.parse(svgdata);
     //makem3dfromsvg(data);
 
 
