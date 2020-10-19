@@ -147,6 +147,19 @@ export function freezeview(t) {
     controls.enabled = !t
 }
 //=======================================================================================================
+function getsizeandpos(geo){
+    geo.computeBoundingBox();
+    var dimX = (geo.boundingBox.max.x - geo.boundingBox.min.x);
+    var dimY = (geo.boundingBox.max.y - geo.boundingBox.min.y);
+    var dimZ = (geo.boundingBox.max.z - geo.boundingBox.min.z);
+    var centerX = (geo.boundingBox.max.x + geo.boundingBox.min.x) / 2;
+    var centerY = (geo.boundingBox.max.y + geo.boundingBox.min.y) / 2;
+    var centerZ = (geo.boundingBox.max.z + geo.boundingBox.min.z) / 2;
+    var res=new Array();
+    res= [dimX,dimY,dimZ,centerX,centerY,centerZ]    ;
+    console.log('size:',res);
+    return res;
+}
 //=======================================================================================================
 export function loadSVG(url) {
     var loader = new SVGLoader();
@@ -178,39 +191,24 @@ export function loadSVG(url) {
             //BevelSegments: 2,
             //curveSegments: 12
         });
+
+               
+        var dims =getsizeandpos(SVGgeometry);
+        SVGgeometry.translate(-dims[3], -dims[4], dims[5] + 5);
+        var l = 590 / Math.max(dims[0], dims[1]);        
+        SVGgeometry.scale(l, l, 1);
+        dims=getsizeandpos(SVGgeometry);
         SVGmesh = new THREE.Mesh(SVGgeometry, material);
-        SVGmesh.name = 'SVG';
+        SVGmesh.scale.y *= - 1;
+        SVGmesh.castShadow = true;
+        SVGmesh.receiveShadow = true
+                SVGmesh.name = 'SVG';
         SVGmesh.castShadow = true;
         SVGmesh.receiveShadow = true;
         //}
         console.log('shapes loaded');
         //-- repositioning 
-        SVGmesh.scale.y *= - 1;
-        SVGmesh.castShadow = true;
-        SVGmesh.receiveShadow = true
-        var box = new THREE.BoxHelper(SVGmesh, 0xffff00);
-        box.geometry.computeBoundingBox();
-        var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
-        var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
-        var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
-        var l = Math.max(dimX, dimY);
-        l = 590 / l;
-        SVGmesh.scale.x *= l;
-        SVGmesh.scale.y *= l;
-        SVGmesh.scale.z *= 1;
-        box.update();
-
-        console.log('Breed: ', dimX * l, ' , Hoog: ', dimY * l);
-
-        box.geometry.computeBoundingBox();
-        var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
-        var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
-        var centerZ = (box.geometry.boundingBox.max.z + box.geometry.boundingBox.min.z) / 2;
-        SVGmesh.position.x = -centerX;
-        SVGmesh.position.y = -centerY;
-        SVGmesh.position.z += 1;
-        box.update();
-        box.geometry.computeBoundingBox();
+        
         Scene.add(SVGmesh);
     });
 }
@@ -258,56 +256,40 @@ export function export3D() {
     var shape = path.toShapes(true, false)[0];
     console.log(shape);
     var geometry = new THREE.ExtrudeBufferGeometry(shape, {
-        depth: 0.04,
+        depth: 0.04, //= 4cm !!
         bevelEnabled: false,
-        bevelThickness: 0.004,
-        bevelSize: 0.002,
-        steps: 2,
-        BevelSegments: 21,
-        curveSegments: 20
+        steps: 1,        
+        curveSegments: 2
     });
+  
+    var dims =getsizeandpos(geometry);
+    geometry.translate(-dims[3], -dims[4], dims[5] + 5);
+    var l = 0.590 / Math.max(dims[0], dims[1]);        
+    geometry.scale(l, l, 1);
+    dims=getsizeandpos(geometry);
     var mat = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
+    //var mat = new THREE.MeshBasicMaterial({  color: 0xffAAAA });
 
-    var mesh = new THREE.Mesh(geometry, mat);
+    var mesh = new THREE.Mesh(geometry,mat);//, mat);
     //-- repositioning 
     mesh.scale.y *= - 1;
     mesh.castShadow = true;
-    var box = new THREE.BoxHelper(mesh, 0xffff00);
-    box.geometry.computeBoundingBox();
-    var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
-    var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
-    var dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
-    var l = Math.max(dimX, dimY);
-    l = 0.590 / l;
-    mesh.scale.x *= l;
-    mesh.scale.y *= l;
-    mesh.scale.z = 1;  // don't scale Z!
-
-
-    box.geometry.computeBoundingBox();
-    var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
-    var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
-    var centerZ = (box.geometry.boundingBox.max.z + box.geometry.boundingBox.min.z) / 2;
-    mesh.position.x = -centerX;
-    mesh.position.y = -centerY;
-    mesh.position.z += 1;
-    box.update();
-    box.geometry.computeBoundingBox();
+    
     Exportscene.add(mesh);
 
     const options = {
         binary: _binary,
-        forcePowerOfTwoTextures: false,
+        forcePowerOfTwoTextures: true,
         forceIndices: true
     };
     var exporter = new GLTFExporter();
     exporter.parse(Exportscene, function (data) {
         console.log(data);
         if (_binary) {
-            savetoFile(data, 'test.glb', 'model/gltf-binary');
+            savetoFile(data, 'testje.glb', 'model/gltf-binary');
         }
         else {
-            savetoFile(JSON.stringify(data), 'test.gltf', 'text/plain');
+            savetoFile(JSON.stringify(data), 'testje.gltf', 'text/plain');
         }
     },
         options);
