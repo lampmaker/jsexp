@@ -1,5 +1,5 @@
 
-import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform,updatecolor } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
@@ -15,6 +15,7 @@ guiData = {
     repeatX: 0.0035,
     repeatY: 0.008,
     rotation: 0.0,//Math.PI / 4, // positive is counter-clockwise
+    color:'#FFFFFF',
     maskfile: loadImage,
     maskfilename: "olifant",
     resetview: false,
@@ -28,6 +29,9 @@ function updatescreen() {
     //  console.log('mupdate screen')
     resize(guiData.cwidth, guiData.cheight, false, guiData.scale)
     if (!loaded) return;
+}
+function _updatecolor(){
+ updatecolor(guiData.color);
 }
 //=================================================================================================================
 function resetcam() {
@@ -51,7 +55,7 @@ $(function () {
         gui.add(guiData, 'repeatX', 0.001, 0.01).name('repeat.x').onChange(_updateUvTransform);
         gui.add(guiData, 'repeatY', 0.001, 0.01).name('repeat.y').onChange(_updateUvTransform);
         gui.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
-
+        gui.addColor(guiData, 'color', ).name('color').onFinishChange(_updatecolor);
         gui.add(guiData, 'maskfilename').name('File name');
 
         gui.add(guiData, 'maskfile').name('load from SVG');

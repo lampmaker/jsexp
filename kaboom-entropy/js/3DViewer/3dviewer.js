@@ -161,45 +161,72 @@ function getsizeandpos(geo){
     return res;
 }
 //=======================================================================================================
+
+
+//var loader = new FileLoader(scope.manager);
+//		loader.setPath(scope.path);
+//		loader.load(url, function (text) {
+function assignUVs(geometry) {
+    geometry.faceVertexUvs[0] = [];
+    geometry.faces.forEach(function(face) {
+        var components = ['x', 'y', 'z'].sort(function(a, b) {
+            return Math.abs(face.normal[a]) > Math.abs(face.normal[b]);
+        });
+        var v1 = geometry.vertices[face.a];
+        var v2 = geometry.vertices[face.b];
+        var v3 = geometry.vertices[face.c];
+        geometry.faceVertexUvs[0].push([
+            new THREE.Vector2(v1[components[0]], v1[components[1]]),
+            new THREE.Vector2(v2[components[0]], v2[components[1]]),
+            new THREE.Vector2(v3[components[0]], v3[components[1]])
+        ]);
+    });
+    geometry.uvsNeedUpdate = true;
+    console.log('assignUVS');
+}
+
+
 export function loadSVG(url) {
-    var loader = new SVGLoader();
+    var loader = new SVGLoader();    
     var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
     console.log('OPENING SVG');
     loader.load(url, function (data) {
-        var tpaths = data.paths;
-        SVGdata = tpaths;
-        console.log('opened', data);
-        console.log('paths:', tpaths);
+        SVGdata = data.paths;                
         var path = new THREE.ShapePath();
-        for (var i = 0; i < tpaths.length; i++) {
-            for (var j = 0; j < tpaths[i].subPaths.length; j++) {
-                path.subPaths.push(tpaths[i].subPaths[j]);
+        for (var i = 0; i < SVGdata.length; i++) {
+            for (var j = 0; j < SVGdata[i].subPaths.length; j++) {
+                path.subPaths.push(SVGdata[i].subPaths[j]);
             }
         }
-        console.log('load shapes');
+        console.log('path', path);        
+        
         var shapes = path.toShapes(true, false);
-
+        console.log('shape',shapes) ;
+        
         //for (var j = 0; j < shapes.length; j++) {
-        var shape = shapes[0];
-        SVGgeometry = new THREE.ExtrudeBufferGeometry(shape, {
+        
+        SVGgeometry = new THREE.ExtrudeGeometry(shapes[0], {
             depth: 4,
             bevelEnabled: true,
             bevelThickness: 0.4,
             bevelSize: 0.2,
-            //steps: 2,
-            //BevelSegments: 2,
-            //curveSegments: 12
+            steps: 2,
+            BevelSegments: 2,
+            curveSegments: 4
         });
-
+        console.log('geometry',SVGgeometry) ;
+        assignUVs(SVGgeometry);
                
         var dims =getsizeandpos(SVGgeometry);
-        SVGgeometry.translate(-dims[3], -dims[4], dims[5] + 5);
+        SVGgeometry.translate(-dims[3], -dims[4],0.5);
         var l = 590 / Math.max(dims[0], dims[1]);        
         SVGgeometry.scale(l, l, 1);
         dims=getsizeandpos(SVGgeometry);
+
+
         SVGmesh = new THREE.Mesh(SVGgeometry, material);
-        SVGmesh.scale.y *= - 1;
+        SVGmesh.scale.y *=  -1;
         SVGmesh.castShadow = true;
         SVGmesh.receiveShadow = true
                 SVGmesh.name = 'SVG';
@@ -209,7 +236,7 @@ export function loadSVG(url) {
         console.log('shapes loaded');
         //-- repositioning 
         
-        Scene.add(SVGmesh);
+       Scene.add(SVGmesh);
     });
 }
 
@@ -223,7 +250,11 @@ function animate() {
 function render() {
     Renderer.render(Scene, Camera);
 }
-
+export function updatecolor(c){
+    material[0].color=new THREE.Color(c);;
+    requestAnimationFrame(animate);
+    render();
+}
 //=======================================================================================================
 //=======================================================================================================
 
@@ -252,16 +283,21 @@ export function export3D() {
         }
     }
     // convert to Shapes ---------------------------------------------------------------------------
-    console.log('load shapes');
-    var shape = path.toShapes(true, false)[0];
-    console.log(shape);
-    var geometry = new THREE.ExtrudeBufferGeometry(shape, {
-        depth: 0.04, //= 4cm !!
+    console.log('path', path);  
+    var shapes= path.toShapes(true, false); // original    
+    console.log('shape',shapes) ;
+    var geometry = new THREE.ExtrudeGeometry(shapes[0], {
+        depth: 0.04,
         bevelEnabled: false,
-        steps: 1,        
+        bevelThickness: 0.4,
+        bevelSize: 0.2,
+        steps: 2,
+        BevelSegments: 2,
         curveSegments: 2
     });
-  
+    console.log('geometry',geometry) ;
+    assignUVs(geometry);
+
     var dims =getsizeandpos(geometry);
     geometry.translate(-dims[3], -dims[4], dims[5] + 5);
     var l = 0.590 / Math.max(dims[0], dims[1]);        
@@ -294,4 +330,6 @@ export function export3D() {
     },
         options);
 }
+
+
 
