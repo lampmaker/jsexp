@@ -16,9 +16,16 @@ var mMouseDown = false;
 var Renderer;
 var Scene;
 var Camera, controls, light0, light1;
-var SVGdata, SVGgeometry, SVGmesh, material, texture;
+var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture;
+
+// geometry through gui
+var csegments, bevel, flat, csimplify;
 //=======================================================================================================
 //=======================================================================================================
+
+
+
+
 
 
 export function init() {
@@ -129,7 +136,12 @@ export function updateUvTransform(ox, oy, rx, ry, rot) {
 }
 //=======================================================================================================
 //=======================================================================================================
-
+export function updateGeometry(c, b, f, s) {
+    csegments = c;
+    bevel = b;
+    flat = f;
+    csimplify = s;
+}
 
 
 
@@ -147,17 +159,18 @@ export function freezeview(t) {
     controls.enabled = !t
 }
 //=======================================================================================================
-function getsizeandpos(geo){
-    geo.computeBoundingBox();
-    var dimX = (geo.boundingBox.max.x - geo.boundingBox.min.x);
-    var dimY = (geo.boundingBox.max.y - geo.boundingBox.min.y);
-    var dimZ = (geo.boundingBox.max.z - geo.boundingBox.min.z);
-    var centerX = (geo.boundingBox.max.x + geo.boundingBox.min.x) / 2;
-    var centerY = (geo.boundingBox.max.y + geo.boundingBox.min.y) / 2;
-    var centerZ = (geo.boundingBox.max.z + geo.boundingBox.min.z) / 2;
-    var res=new Array();
-    res= [dimX,dimY,dimZ,centerX,centerY,centerZ]    ;
-    console.log('size:',res);
+function getsizeandpos(geo) {
+    var bbox = new THREE.Box3;
+    bbox.setFromObject(geo);
+    var dimX = (bbox.max.x - bbox.min.x);
+    var dimY = (bbox.max.y - bbox.min.y);
+    var dimZ = (bbox.max.z - bbox.min.z);
+    var centerX = (bbox.max.x + bbox.min.x) / 2;
+    var centerY = (bbox.max.y + bbox.min.y) / 2;
+    var centerZ = (bbox.max.z + bbox.min.z) / 2;
+    var res = new Array();
+    res = [dimX, dimY, dimZ, centerX, centerY, centerZ];
+    console.log('size:', res);
     return res;
 }
 //=======================================================================================================
@@ -168,8 +181,8 @@ function getsizeandpos(geo){
 //		loader.load(url, function (text) {
 function assignUVs(geometry) {
     geometry.faceVertexUvs[0] = [];
-    geometry.faces.forEach(function(face) {
-        var components = ['x', 'y', 'z'].sort(function(a, b) {
+    geometry.faces.forEach(function (face) {
+        var components = ['x', 'y', 'z'].sort(function (a, b) {
             return Math.abs(face.normal[a]) > Math.abs(face.normal[b]);
         });
         var v1 = geometry.vertices[face.a];
@@ -187,56 +200,74 @@ function assignUVs(geometry) {
 
 
 export function loadSVG(url) {
-    var loader = new SVGLoader();    
+    var loader = new SVGLoader();
     var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
     console.log('OPENING SVG');
     loader.load(url, function (data) {
-        SVGdata = data.paths;                
+        SVGdata = data.paths;
         var path = new THREE.ShapePath();
         for (var i = 0; i < SVGdata.length; i++) {
             for (var j = 0; j < SVGdata[i].subPaths.length; j++) {
-                path.subPaths.push(SVGdata[i].subPaths[j]);
+                if (csimplify > 0) {
+                    var points = SVGdata[i].subPaths[j].getPoints();
+                    var spoints = simplify(points, points, csimplify)
+                    if (j == 0) {
+                        console.log(points);
+                        console.log(spoints);
+                    }
+                    var sb = new THREE.Path(spoints);
+                    path.subPaths.push(sb);
+                }
+                else {
+                    path.subPaths.push(SVGdata[i].subPaths[j]);
+                }
             }
         }
-        console.log('path', path);        
-        
+        console.log('path', path);
         var shapes = path.toShapes(true, false);
-        console.log('shape',shapes) ;
-        
+        console.log('shape', shapes);
+        SVGgroup = new THREE.Group();
+        SVGgroup.name = 'SVG';
         //for (var j = 0; j < shapes.length; j++) {
-        
-        SVGgeometry = new THREE.ExtrudeGeometry(shapes[0], {
-            depth: 4,
-            bevelEnabled: true,
-            bevelThickness: 0.4,
-            bevelSize: 0.2,
-            steps: 2,
-            BevelSegments: 2,
-            curveSegments: 4
-        });
-        console.log('geometry',SVGgeometry) ;
-        assignUVs(SVGgeometry);
-               
-        var dims =getsizeandpos(SVGgeometry);
-        SVGgeometry.translate(-dims[3], -dims[4],0.5);
-        var l = 590 / Math.max(dims[0], dims[1]);        
-        SVGgeometry.scale(l, l, 1);
-        dims=getsizeandpos(SVGgeometry);
+
+        for (var i = 0; i < shapes.length; i++) {
+            SVGgeometry = new THREE.ExtrudeGeometry(shapes[i], {
+                depth: 4,
+                bevelEnabled: bevel,
+                bevelThickness: 0.4,
+                bevelSize: 0.2,
+                steps: 2,
+                BevelSegments: 2,
+                curveSegments: csegments
+            });
+            console.log('geometry', SVGgeometry);
+            SVGmesh = new THREE.Mesh(SVGgeometry, material);
+            SVGmesh.scale.y *= -1;
+            SVGmesh.castShadow = true;
+            SVGmesh.receiveShadow = true
+            SVGmesh.castShadow = true;
+            SVGmesh.receiveShadow = true;
+            //}
+            console.log('shapes loaded');
+            //-- repositioning 
+            SVGgroup.add(SVGmesh);
+        }
+        if (flat) {
+            SVGgroup.rotateX(90 * Math.PI / 180);
+        }
+        var dims = getsizeandpos(SVGgroup);
+        SVGgroup.translateX(-dims[3]);
+        SVGgroup.translateY(-dims[4]);
+        SVGgroup.translateZ(-dims[5]);
+        var l = 590 / Math.max(dims[0], dims[1]);
+        l = 1;
+        //  group.scale(l, l, 1);
 
 
-        SVGmesh = new THREE.Mesh(SVGgeometry, material);
-        SVGmesh.scale.y *=  -1;
-        SVGmesh.castShadow = true;
-        SVGmesh.receiveShadow = true
-                SVGmesh.name = 'SVG';
-        SVGmesh.castShadow = true;
-        SVGmesh.receiveShadow = true;
-        //}
-        console.log('shapes loaded');
-        //-- repositioning 
-        
-       Scene.add(SVGmesh);
+        dims = getsizeandpos(SVGgroup);
+        Scene.add(SVGgroup);
+
     });
 }
 
@@ -250,8 +281,8 @@ function animate() {
 function render() {
     Renderer.render(Scene, Camera);
 }
-export function updatecolor(c){
-    material[0].color=new THREE.Color(c);;
+export function updatecolor(c) {
+    material[0].color = new THREE.Color(c);;
     requestAnimationFrame(animate);
     render();
 }
@@ -275,48 +306,18 @@ export function export3D() {
     var _binary = true;
     var Exportscene = new THREE.Scene();
 
-    // convert to ShapePath ---------------------------------------------------------------------------
-    var path = new THREE.ShapePath();
-    for (var i = 0; i < SVGdata.length; i++) {
-        for (var j = 0; j < SVGdata[i].subPaths.length; j++) {
-            path.subPaths.push(SVGdata[i].subPaths[j]);
-        }
-    }
-    // convert to Shapes ---------------------------------------------------------------------------
-    console.log('path', path);  
-    var shapes= path.toShapes(true, false); // original    
-    console.log('shape',shapes) ;
-    var geometry = new THREE.ExtrudeGeometry(shapes[0], {
-        depth: 0.04,
-        bevelEnabled: false,
-        bevelThickness: 0.4,
-        bevelSize: 0.2,
-        steps: 2,
-        BevelSegments: 2,
-        curveSegments: 2
-    });
-    console.log('geometry',geometry) ;
-    assignUVs(geometry);
-
-    var dims =getsizeandpos(geometry);
-    geometry.translate(-dims[3], -dims[4], dims[5] + 5);
-    var l = 0.590 / Math.max(dims[0], dims[1]);        
-    geometry.scale(l, l, 1);
-    dims=getsizeandpos(geometry);
-    var mat = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xffAAAA });
-    //var mat = new THREE.MeshBasicMaterial({  color: 0xffAAAA });
-
-    var mesh = new THREE.Mesh(geometry,mat);//, mat);
-    //-- repositioning 
-    mesh.scale.y *= - 1;
-    mesh.castShadow = true;
-    
-    Exportscene.add(mesh);
-
+    Exportscene.add(SVGgroup);
+    ////  Exportscene.add(light1);
+    //  Exportscene.add(light0);
     const options = {
         binary: _binary,
-        forcePowerOfTwoTextures: true,
-        forceIndices: true
+        forceIndices: true,
+        animations: false,
+        onlyVisible: false,
+        embedImages: true,
+        truncateDrawRange: false,
+        trs: false,
+        forcePowerOfTwoTextures: true
     };
     var exporter = new GLTFExporter();
     exporter.parse(Exportscene, function (data) {
@@ -333,3 +334,47 @@ export function export3D() {
 
 
 
+//https://observablehq.com/@nidu/curve-simplification-with-three-js
+
+function v2dto3d(point) {
+    return new THREE.Vector3(point.x, point.y, 0);
+}
+
+
+
+function simplify(curve, points, threshold) {
+
+    if (curve.length <= 2) return curve;
+
+    if (curve.length != points.length) {
+        throw `curve.length=${curve.length} not equals to points.length=${points.length}`;
+    }
+    function simplifySegment(iLeft, iRight) {
+        if (iRight - iLeft <= 1) return;
+        const ray = new THREE.Ray(
+            v2dto3d(points[iLeft]),
+            v2dto3d(points[iRight]).clone().sub(v2dto3d(points[iLeft])).normalize()
+        );
+
+        let maxDistSq = 0;
+        let maxIndex = iLeft;
+        for (let i = iLeft + 1; i < iRight; i++) {
+            const distSq = ray.distanceSqToPoint(v2dto3d(points[i]));
+            if (distSq > thresholdSq && distSq > maxDistSq) {
+                maxDistSq = distSq;
+                maxIndex = i;
+            }
+        }
+
+        if (maxIndex != iLeft) {
+            simplifySegment(iLeft, maxIndex);
+            result.push(curve[maxIndex]);
+            simplifySegment(maxIndex, iRight);
+        }
+    }
+    const thresholdSq = threshold * threshold;
+    const result = [curve[0]];
+    simplifySegment(0, curve.length - 1);
+    result.push(curve[curve.length - 1]);
+    return result;
+}

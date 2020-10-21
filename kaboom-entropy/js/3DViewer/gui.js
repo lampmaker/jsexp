@@ -1,5 +1,5 @@
 
-import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform,updatecolor } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
@@ -15,7 +15,11 @@ guiData = {
     repeatX: 0.0035,
     repeatY: 0.008,
     rotation: 0.0,//Math.PI / 4, // positive is counter-clockwise
-    color:'#FFFFFF',
+    curvesegments: 2,
+    color: '#FFFFFF',
+    bevel: true,
+    flat: false,
+    simplify: 0.0,
     maskfile: loadImage,
     maskfilename: "olifant",
     resetview: false,
@@ -30,8 +34,8 @@ function updatescreen() {
     resize(guiData.cwidth, guiData.cheight, false, guiData.scale)
     if (!loaded) return;
 }
-function _updatecolor(){
- updatecolor(guiData.color);
+function _updatecolor() {
+    updatecolor(guiData.color);
 }
 //=================================================================================================================
 function resetcam() {
@@ -40,7 +44,8 @@ function resetcam() {
 }
 //=================================================================================================================
 function _updateUvTransform() {
-    updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ]    
+    updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ] 
+    updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify);
 }
 //=================================================================================================================
 $(function () {
@@ -50,15 +55,21 @@ $(function () {
         //   gui.remember(guiData);
         gui.add(guiData, 'cwidth', 0, 4096, 128).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096, 128).name('height').onFinishChange(updatescreen);;
-        gui.add(guiData, 'offsetX', 0.0, 1.0).name('offset.x').onChange(_updateUvTransform);
-        gui.add(guiData, 'offsetY', 0.0, 1.0).name('offset.y').onChange(_updateUvTransform);
-        gui.add(guiData, 'repeatX', 0.001, 0.01).name('repeat.x').onChange(_updateUvTransform);
-        gui.add(guiData, 'repeatY', 0.001, 0.01).name('repeat.y').onChange(_updateUvTransform);
-        gui.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
-        gui.addColor(guiData, 'color', ).name('color').onFinishChange(_updatecolor);
         gui.add(guiData, 'maskfilename').name('File name');
-
         gui.add(guiData, 'maskfile').name('load from SVG');
+        var g0 = gui.addFolder('texture');
+        g0.add(guiData, 'offsetX', 0.0, 1.0).name('offset.x').onChange(_updateUvTransform);
+        g0.add(guiData, 'offsetY', 0.0, 1.0).name('offset.y').onChange(_updateUvTransform);
+        g0.add(guiData, 'repeatX', 0.001, 0.01).name('repeat.x').onChange(_updateUvTransform);
+        g0.add(guiData, 'repeatY', 0.001, 0.01).name('repeat.y').onChange(_updateUvTransform);
+        g0.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
+        g0.addColor(guiData, 'color',).name('color').onFinishChange(_updatecolor);
+
+        var g1 = gui.addFolder('Geometry')
+        g1.add(guiData, 'curvesegments', 1, 20, 1).name('curve segments').onChange(_updateUvTransform);
+        g1.add(guiData, 'simplify', 0.0, 5.0, 0.01).name('simplify').onChange(_updateUvTransform);
+        g1.add(guiData, 'bevel', true).name('curve Bevel').onChange(_updateUvTransform);
+        g1.add(guiData, 'flat').onChange(_updateUvTransform)
         gui.add(guiData, 'resetview').name('Reset view').onChange(resetcam);
         gui.add(guiData, '_savejpg').name('save jpeg');
         gui.add(guiData, '_export3D').name('save as 3D');
