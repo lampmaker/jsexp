@@ -16,7 +16,8 @@ guiData = {
     repeatY: 0.008,
     rotation: 0.0,//Math.PI / 4, // positive is counter-clockwise
     curvesegments: 2,
-    color: '#FFFFFF',
+    scale:0.0,
+    color: '#CCAAAA',
     bevel: true,
     flat: false,
     simplify: 0.0,
@@ -45,14 +46,14 @@ function resetcam() {
 //=================================================================================================================
 function _updateUvTransform() {
     updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ] 
-    updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify);
+    updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify,guiData.scale);
 }
 //=================================================================================================================
 $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
-        //   gui.remember(guiData);
+          gui.remember(guiData);
         gui.add(guiData, 'cwidth', 0, 4096, 128).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096, 128).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'maskfilename').name('File name');
@@ -70,6 +71,8 @@ $(function () {
         g1.add(guiData, 'simplify', 0.0, 5.0, 0.01).name('simplify').onChange(_updateUvTransform);
         g1.add(guiData, 'bevel', true).name('curve Bevel').onChange(_updateUvTransform);
         g1.add(guiData, 'flat').onChange(_updateUvTransform)
+        g1.add(guiData,'scale',0,1000).name('Scale to width (mm)').onChange(_updateUvTransform);
+
         gui.add(guiData, 'resetview').name('Reset view').onChange(resetcam);
         gui.add(guiData, '_savejpg').name('save jpeg');
         gui.add(guiData, '_export3D').name('save as 3D');
@@ -77,6 +80,8 @@ $(function () {
     init();
     updatescreen();
     _updateUvTransform();
+    _updatecolor();
+    resetcam();
 
 
 });
@@ -89,7 +94,7 @@ function loadImage() {
     if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url);
     if (guiData.maskfilename.split('.')[1] == null) {
         url = s1.concat(guiData.maskfilename, '.svg')
-        loadSVG(url);
+        loadSVG(url,guiData.maskfilename);
     }
 }
 //========================================================================================================

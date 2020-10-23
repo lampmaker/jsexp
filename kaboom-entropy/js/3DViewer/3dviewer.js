@@ -17,9 +17,9 @@ var Renderer;
 var Scene;
 var Camera, controls, light0, light1;
 var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture;
-
+var filename;
 // geometry through gui
-var csegments, bevel, flat, csimplify;
+var csegments, bevel, flat, csimplify,cscale;
 //=======================================================================================================
 //=======================================================================================================
 
@@ -102,8 +102,11 @@ export function init() {
     //texture.offset=(0,0);
     //var material= new THREE.MeshNormalMaterial();
     var sidecolor = 0x606060;
-    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xCCAAAA });
+
+    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xCCAAAA });    
     var materialside = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: sidecolor });
+
+
     material = [materialtop, materialside, materialside];
 
     // init others  ----------------------------------------------------------------------------------------------------
@@ -133,14 +136,24 @@ export function updateUvTransform(ox, oy, rx, ry, rot) {
     texture.offset.set(ox, oy);
     texture.repeat.set(rx, ry);
     texture.rotation = rot; // rotation is around [ 0.5, 0.5 ]    
+
+
+
+
+
+
+
+
+
 }
 //=======================================================================================================
 //=======================================================================================================
-export function updateGeometry(c, b, f, s) {
+export function updateGeometry(c, b, f, s,sc) {
     csegments = c;
     bevel = b;
     flat = f;
     csimplify = s;
+    cscale=sc;
 }
 
 
@@ -174,32 +187,8 @@ function getsizeandpos(geo) {
     return res;
 }
 //=======================================================================================================
-
-
-//var loader = new FileLoader(scope.manager);
-//		loader.setPath(scope.path);
-//		loader.load(url, function (text) {
-function assignUVs(geometry) {
-    geometry.faceVertexUvs[0] = [];
-    geometry.faces.forEach(function (face) {
-        var components = ['x', 'y', 'z'].sort(function (a, b) {
-            return Math.abs(face.normal[a]) > Math.abs(face.normal[b]);
-        });
-        var v1 = geometry.vertices[face.a];
-        var v2 = geometry.vertices[face.b];
-        var v3 = geometry.vertices[face.c];
-        geometry.faceVertexUvs[0].push([
-            new THREE.Vector2(v1[components[0]], v1[components[1]]),
-            new THREE.Vector2(v2[components[0]], v2[components[1]]),
-            new THREE.Vector2(v3[components[0]], v3[components[1]])
-        ]);
-    });
-    geometry.uvsNeedUpdate = true;
-    console.log('assignUVS');
-}
-
-
-export function loadSVG(url) {
+export function loadSVG(url,fn) {
+    filename=fn;
     var loader = new SVGLoader();
     var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
@@ -241,6 +230,14 @@ export function loadSVG(url) {
                 BevelSegments: 2,
                 curveSegments: csegments
             });
+            var h=1; var w=1;
+            var uvs = SVGgeometry.faceVertexUvs[ 0 ];
+            uvs[ 0 ][ 0 ].set( 0, h );
+            uvs[ 0 ][ 1 ].set( 0, 0 );
+            uvs[ 0 ][ 2 ].set( w, h );
+            uvs[ 1 ][ 0 ].set( 0, 0 );
+            uvs[ 1 ][ 1 ].set( w, 0 );
+            uvs[ 1 ][ 2 ].set( w, h );
             console.log('geometry', SVGgeometry);
             SVGmesh = new THREE.Mesh(SVGgeometry, material);
             SVGmesh.scale.y *= -1;
@@ -253,19 +250,19 @@ export function loadSVG(url) {
             //-- repositioning 
             SVGgroup.add(SVGmesh);
         }
+        var dims = getsizeandpos(SVGgroup);
+        if (cscale!=0) {
+            var l = cscale / Math.max(dims[0], dims[1]);        
+            SVGgroup.scale.set(l, l, 1);
+        }
         if (flat) {
             SVGgroup.rotateX(90 * Math.PI / 180);
         }
-        var dims = getsizeandpos(SVGgroup);
+        dims = getsizeandpos(SVGgroup);
         SVGgroup.translateX(-dims[3]);
         SVGgroup.translateY(-dims[4]);
-        SVGgroup.translateZ(-dims[5]);
-        var l = 590 / Math.max(dims[0], dims[1]);
-        l = 1;
-        //  group.scale(l, l, 1);
-
-
-        dims = getsizeandpos(SVGgroup);
+        SVGgroup.translateZ(-dims[5]+4);
+        
         Scene.add(SVGgroup);
 
     });
@@ -306,6 +303,31 @@ export function export3D() {
     var _binary = true;
     var Exportscene = new THREE.Scene();
 
+
+/*
+
+    var sidecolor = 0x101010;
+    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture });
+    var materialside = new THREE.MeshStandardMaterial({  color: sidecolor });
+    var mat = [materialtop, materialside, materialtop];
+
+  
+    SVGgroup.traverse(function(element){
+            element.material=mat;
+    })
+*/
+
+   var s=1/1000;
+   SVGgroup.scale.set(SVGgroup.scale.x*s,SVGgroup.scale.y*s,SVGgroup.scale.z*s);
+
+
+    var dims = getsizeandpos(SVGgroup);
+    SVGgroup.translateX(-dims[3]);
+    SVGgroup.translateY(-dims[4]);
+    SVGgroup.translateZ(-dims[5]+4);
+
+
+
     Exportscene.add(SVGgroup);
     ////  Exportscene.add(light1);
     //  Exportscene.add(light0);
@@ -319,14 +341,15 @@ export function export3D() {
         trs: false,
         forcePowerOfTwoTextures: true
     };
+
     var exporter = new GLTFExporter();
     exporter.parse(Exportscene, function (data) {
         console.log(data);
         if (_binary) {
-            savetoFile(data, 'testje.glb', 'model/gltf-binary');
+            savetoFile(data, filename+'.glb', 'model/gltf-binary');
         }
         else {
-            savetoFile(JSON.stringify(data), 'testje.gltf', 'text/plain');
+            savetoFile(JSON.stringify(data), filename+'.gltf', 'text/plain');
         }
     },
         options);

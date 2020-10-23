@@ -1,1 +1,36 @@
-{}
+{
+    "preset": "Default",
+    "remembered": {
+      "Default": {
+        "0": {
+          "cwidth": 2048,
+          "cheight": 2048,
+          "maskfilename": "olifant",
+          "offsetX": 1,
+          "offsetY": 0.5,
+          "repeatX": 0.0035,
+          "repeatY": 0.008,
+          "rotation": 0,
+          "color": "#CCAAAA",
+          "curvesegments": 10,
+          "simplify": 0,
+          "bevel": true,
+          "flat": false,
+          "resetview": false
+        }
+      }
+    },
+    "closed": false,
+    "folders": {
+      "texture": {
+        "preset": "Default",
+        "closed": true,
+        "folders": {}
+      },
+      "Geometry": {
+        "preset": "Default",
+        "closed": false,
+        "folders": {}
+      }
+    }
+  }
