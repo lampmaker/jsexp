@@ -15,6 +15,16 @@ var midiconnected = false;
 var stream, mediaRecorder, recordedChunks = [];
 
 
+var mididata = {
+    knobs: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    sliders: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    buttons: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+}
+const midimap = {
+    knobs: [14, 15, 16, 17, 18, 19, 29, 21, 22],
+    buttons: [23, 24, 25, 276, 27, 28, 29, 30],
+    sliders: [3, 4, 5, 6, 7, 8, 9, 10, 11]
+}
 
 var gspeed, gf, gk, gfx, gfy, gfxd, gfyd, gkx, gky, gkxd, gkyd, recbtn;
 //=================================================================================================================
@@ -60,6 +70,14 @@ guiData = {
 };
 //=================================================================================================================
 
+function scalemidi(i) {
+    var s = 1;
+    if (mididata.buttons[i] != 0) s = -1;
+    return s * mididata.sliders[i]
+}
+
+
+
 function mupdateparameters() {
 
     var shapemode = 0;
@@ -80,9 +98,14 @@ function mupdateparameters() {
             break;
     }
 
+    var _feed = guiData.gfeed + scalemidi(0) * 0.01;
+    var _kill = guiData.gkill + scalemidi(1) * 0.01;
+
+
+    console.log(_feed, _kill);
     var df = [guiData.gfx, guiData.gfxd, guiData.gfy, guiData.gfyd];
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
-    updateparameters(guiData.gfeed, guiData.gkill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.image_low, guiData.image_high);
+    updateparameters(_feed, _kill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.image_low, guiData.image_high);
 
 }
 //=================================================================================================================
@@ -114,6 +137,58 @@ function updatescreen() {
     if (!loaded) return;
 }
 //=================================================================================================================
+/*
+
+176, x
+    Button  Slider  Knob     
+1   23      3       14              
+2   24      4       15
+3   25      5       16
+4   26      6       17
+5   27      7       18
+6   28      8       19
+7   29      9       20
+8   30      10      21
+V   31      11      22    
+
+Slidr AB        176,9
+Knob A          192
+button a1       176,67
+button a2       176,64
+button 3        176,1
+button 4        176,2
+
+repeat              176,49
+back                176,47
+forward             176,48
+stop                176,46
+play         176,45    
+record              176,44
+*/
+
+
+function mapmidi(m) {
+    var value = m[2] / 127;;
+    var control = m[1];
+    for (var i = 0; i < 8; i++) {
+        if (midimap.knobs[i] == control) {
+            mididata.knobs[i] = value;
+            return true;
+        }
+
+        if (midimap.sliders[i] == control) {
+            mididata.sliders[i] = value;
+            return true;
+        }
+        if (midimap.buttons[i] == control) {
+            mididata.buttons[i] = value;
+            return true;
+        }
+    }
+    return false;
+}
+
+
 
 function parsemidi(m) {
     var value;
@@ -136,37 +211,14 @@ function parsemidi(m) {
         case 2: // button
             clean();
             break;
-        case 3:   // slider 1
-            gf.setRatio(value);
-            break;
-        case 4:   // slider 2
-            gk.setRatio(value)
-            break;
-        case 5:   // slider 3
-            gfx.setRatio(value);
-            break;
-        case 6:   // slider 4
-            gfy.setRatio(value);
-            break;
-        case 7:   // slider 5
-            gkx.setRatio(value);
-            break;
-        case 8:   // slider 
-            gky.setRatio(value);
-            break;
-        case 9:   // slider 7
-            break;
-        case 10:   // slider 8
-            break;
-        case 11:   // slider V
-            gspeed.setRatio(value);
-            break;
-        case 14: // knbob 1
-            break;
-
         default:
+            if (mapmidi(m)) mupdateparameters();
             break;
     }
+
+
+
+
 
 
 }
@@ -182,7 +234,7 @@ function onMIDISuccess(midiAccess) {
     }
 }
 function getMIDIMessage(midiMessage) {
-    console.log(midiMessage.data);
+    //  console.log(midiMessage.data);
     parsemidi(midiMessage.data);
 }
 function onMIDIFailure() {

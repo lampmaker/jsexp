@@ -8,16 +8,16 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            "url": "http://localhost:5500/index.html",
+            "url": "http://localhost:9222/index.html",
             "webRoot": "${workspaceFolder}"
         },
         {
             "type": "chrome",
             "request": "attach",
             "name": "debug",
-            "url": "http://localhost:5500/index.html",
+            "url": "http://localhost:9222/index.html",
             "webRoot": "${workspaceFolder}",
-            "port":9222
+            "port": 9222
         }
     ]
 }
