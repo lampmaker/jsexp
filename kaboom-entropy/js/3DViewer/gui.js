@@ -1,5 +1,5 @@
 
-import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry ,updatebackgroundpos,updatebackground, updatelight} from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
@@ -25,7 +25,17 @@ guiData = {
     maskfilename: "olifant",
     resetview: false,
     _savejpg: saveasjpg,
-    _export3D: export3D
+    _export3D: export3D,
+    bgfilename:"wall1",
+    objectposx:0.0,
+    objectposy:0.0,
+    objectrot:0,
+    lightx:-500,
+    lighty:1000,
+    lightz:2000,
+    lightf:2,
+    spot:'#FFFFFF',
+    ambient:'#FFFFFF',
 
 };
 //=================================================================================================================
@@ -48,6 +58,16 @@ function _updateUvTransform() {
     updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ] 
     updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify,guiData.scale);
 }
+function _updatebackgroundpos(){
+    updatebackgroundpos(guiData.objectposx,guiData.objectposy,guiData.objecrot)
+}
+function _updatebackground(){
+    updatebackground(guiData.bgfilename)
+}
+function _updatelight(){
+    updatelight(guiData.lightx,guiData.lighty,guiData.lightz,guiData.lightf,guiData.spot,guiData.ambient);
+}
+
 //=================================================================================================================
 $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
@@ -73,14 +93,30 @@ $(function () {
         g1.add(guiData, 'flat').onChange(_updateUvTransform)
         g1.add(guiData,'scale',0,1000).name('Scale to width (mm)').onChange(_updateUvTransform);
 
+        var g2=gui.addFolder('Background')
+        g2.add(guiData,'bgfilename').name('Background texture').onFinishChange(_updatebackground);
+        g2.add(guiData, 'objectposx', -500, 500).name('offset.x').onChange(_updatebackgroundpos);
+        g2.add(guiData, 'objectposy', -500, 500).name('offset.y').onChange(_updatebackgroundpos);
+        g2.add(guiData, 'objectrot', -180, 180).name('Rotation').onChange(_updatebackgroundpos);
+        var g3=g2.addFolder('Light')
+        g3.add(guiData, 'lightx', -1000, 1000).name('x').onChange(_updatelight);
+        g3.add(guiData, 'lighty', -1000, 1000).name('y').onChange(_updatelight);
+        g3.add(guiData, 'lightz', 500, 4000).name('Z').onChange(_updatelight);
+        g3.add(guiData, 'lightf', 0,10).name('focus').onChange(_updatelight);
+        g3.addColor(guiData,'spot').onChange(_updatelight);;
+        g3.addColor(guiData,'ambient').onChange(_updatelight);;
+
         gui.add(guiData, 'resetview').name('Reset view').onChange(resetcam);
         gui.add(guiData, '_savejpg').name('save jpeg');
         gui.add(guiData, '_export3D').name('save as 3D');
     });
-    init();
-    updatescreen();
+    init();    
     _updateUvTransform();
     _updatecolor();
+    _updatelight();
+    _updatebackground();
+    _updatebackgroundpos();
+    updatescreen();
     resetcam();
 
 

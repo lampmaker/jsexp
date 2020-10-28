@@ -16,7 +16,7 @@ var mMouseDown = false;
 var Renderer;
 var Scene;
 var Camera, controls, light0, light1;
-var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture;
+var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture, tablematerial;
 var filename;
 // geometry through gui
 var csegments, bevel, flat, csimplify,cscale;
@@ -40,7 +40,7 @@ export function init() {
     // Renderer.toneMapingExposure = 1;
     //Renderer.toneMappingWhitePoint = .9;
     Renderer.shadowMap.enabled = true;
-    Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+   // Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     Renderer.shadowMapSoft = true;
     Scene = new THREE.Scene();
     Scene.background = new THREE.Color(0xffffff);
@@ -54,15 +54,22 @@ export function init() {
     resize(canvasWidth, canvasHeight);    //set everything right
 
     // init background  ----------------------------------------------------------------------------------------------------
-    var tablematerial = new THREE.MeshLambertMaterial({
-        color: 0xFFFFFF,
+
+    var BGtexture = new THREE.TextureLoader().load("background/wall1.jpg");
+    BGtexture.repeat.set(1,1);
+    //texture.center.x = 40;
+    //texture.center.y = 0;
+
+    tablematerial = new THREE.MeshLambertMaterial({
+       // color: 0xFFFFFF,
         //ide: THREE.DoubleSide,
-        //map: ttexture,
+    // map: BGtexture,
         //	bump: tbump,
         depthWrite: false,
     });
-    var table = new THREE.PlaneGeometry(canvasWidth, canvasHeight);
+    var table = new THREE.PlaneGeometry(700,700);
     var tablemesh = new THREE.Mesh(table, tablematerial);
+    tablemesh.name="background";
     tablemesh.position.z = -2;
     tablemesh.receiveShadow = true;
     tablemesh.castShadow = false;
@@ -70,7 +77,7 @@ export function init() {
     // init lights  ----------------------------------------------------------------------------------------------------
     var L1 = 0.5;
     //L1 = 0xFFFFFF;
-    light0 = new THREE.AmbientLight(0xFFFFFF, L1);
+    light0 = new THREE.AmbientLight(0xFFFFFF, 1);
     Scene.add(light0);
 
     light1 = new THREE.SpotLight(0xFFFFFF, 1);
@@ -81,7 +88,7 @@ export function init() {
     light1.shadowCameraVisible = true;
     light1.shadow.mapSize.width = 16384;  // default
     light1.shadow.mapSize.height = light1.shadow.mapSize.width; // default
-    light1.shadow.radius = 10;
+    light1.shadow.radius = 2;
 
     light1.shadow.camera.near = 0.5;       // default
     light1.shadow.camera.far = 3200;      // default
@@ -98,7 +105,7 @@ export function init() {
     texture.repeat.set(0.0025, 0.005);
     texture.center.x = 40;
     texture.center.y = 0;
-    texture.mapping
+    //texture.mapping
     //texture.offset=(0,0);
     //var material= new THREE.MeshNormalMaterial();
     var sidecolor = 0x606060;
@@ -137,14 +144,6 @@ export function updateUvTransform(ox, oy, rx, ry, rot) {
     texture.repeat.set(rx, ry);
     texture.rotation = rot; // rotation is around [ 0.5, 0.5 ]    
 
-
-
-
-
-
-
-
-
 }
 //=======================================================================================================
 //=======================================================================================================
@@ -157,7 +156,37 @@ export function updateGeometry(c, b, f, s,sc) {
 }
 
 
+export function updatebackgroundpos(x,y,r){    
+    var S=Scene.getObjectByName('SVG');
+      var dims = getsizeandpos(S);
+    S.translateX(x-dims[3]);
+    S.translateY(y-dims[4]);    
+    //S.rotation.z=0.02;//r*3.141592/180;
+}
 
+export function updatebackground(bgfile){
+    var fn= "background/" + bgfile;    
+    var S=Scene.getObjectByName('background');        
+    if (bgfile=='white'){   
+        S.material.map=null
+    }
+    else {
+        var BGtexture = new THREE.TextureLoader().load(fn);    
+        BGtexture.repeat.set(1,1);
+        S.material.map=BGtexture;
+    }
+    
+    S.material.needsUpdate=true;
+    S.needsUpdate=true;
+    //tablematerial.map=BGtexture;            
+}
+
+export function updatelight(x,y,z,f,spc,bgc){
+    light1.position.set(x,y,z);
+    light1.shadow.radius = f;
+    light1.color=new THREE.Color(spc)
+    light0.color=new THREE.Color(bgc)
+}
 
 //=======================================================================================================
 //=======================================================================================================
@@ -261,7 +290,7 @@ export function loadSVG(url,fn) {
         dims = getsizeandpos(SVGgroup);
         SVGgroup.translateX(-dims[3]);
         SVGgroup.translateY(-dims[4]);
-        SVGgroup.translateZ(-dims[5]+4);
+        SVGgroup.translateZ(-dims[5]+1);
         
         Scene.add(SVGgroup);
 
