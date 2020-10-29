@@ -36,7 +36,8 @@ guiData = {
     lightf:2,
     spot:'#FFFFFF',
     ambient:'#FFFFFF',
-    lighti:1.0
+    lighti:1.0,
+    flip:false
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -59,7 +60,7 @@ function _updateUvTransform() {
     updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify,guiData.scale);
 }
 function _updatebackgroundpos(){
-    updatebackgroundpos(guiData.objectposx,guiData.objectposy,guiData.objecrot)
+    updatebackgroundpos(guiData.objectposx,guiData.objectposy,guiData.objectrot,guiData.flip);
 }
 function _updatebackground(){
     updatebackground(guiData.bgfilename)
@@ -98,12 +99,14 @@ $(function () {
         g2.add(guiData, 'objectposx', -500, 500).name('offset.x').onChange(_updatebackgroundpos);
         g2.add(guiData, 'objectposy', -500, 500).name('offset.y').onChange(_updatebackgroundpos);
         g2.add(guiData, 'objectrot', -180, 180).name('Rotation').onChange(_updatebackgroundpos);
+        g2.add(guiData, 'flip').name('Flip').onChange(_updatebackgroundpos);
+
         var g3=g2.addFolder('Light')
         g3.add(guiData, 'lightx', -1000, 1000).name('x').onChange(_updatelight);
         g3.add(guiData, 'lighty', -1000, 1000).name('y').onChange(_updatelight);
         g3.add(guiData, 'lightz', 500, 4000).name('Z').onChange(_updatelight);
         g3.add(guiData, 'lightf', 0,10).name('focus').onChange(_updatelight);
-        g3.addColor(guiData,'spot').onChange(_updatelight);;
+        g3.addColor(guiData,'spot').onChange(_updatelight);
         g3.addColor(guiData,'ambient').onChange(_updatelight);;
         g3.add(guiData, 'lighti', 0,1,0.001).name('intensity').onChange(_updatelight);
 

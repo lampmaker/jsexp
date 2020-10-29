@@ -19,7 +19,7 @@ var Camera, controls, light0, light1;
 var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture, tablematerial;
 var filename;
 // geometry through gui
-var csegments, bevel, flat, csimplify,cscale;
+var csegments, bevel, flat, csimplify,cscale, cflip;
 //=======================================================================================================
 //=======================================================================================================
 
@@ -156,12 +156,14 @@ export function updateGeometry(c, b, f, s,sc) {
 }
 
 
-export function updatebackgroundpos(x,y,r){    
+export function updatebackgroundpos(x,y,r,f){    
     var S=Scene.getObjectByName('SVG');
-      var dims = getsizeandpos(S);
-    S.translateX(x-dims[3]);
-    S.translateY(y-dims[4]);    
-    //S.rotation.z=0.02;//r*3.141592/180;
+    S.position.set(x,y,S.position.z);
+    S.rotation.z=r*3.141592/180;
+    if(f!=cflip) {
+        cflip=f;
+        S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+    }
 }
 
 export function updatebackground(bgfile){
@@ -248,6 +250,7 @@ export function loadSVG(url,fn,whenready) {
         var shapes = path.toShapes(true, false);
         console.log('shape', shapes);
         SVGgroup = new THREE.Group();
+        var SVGsubgroup = new THREE.Group();
         SVGgroup.name = 'SVG';
         //for (var j = 0; j < shapes.length; j++) {
 
@@ -279,21 +282,21 @@ export function loadSVG(url,fn,whenready) {
             //}
             console.log('shapes loaded');
             //-- repositioning 
-            SVGgroup.add(SVGmesh);
+            SVGsubgroup.add(SVGmesh);
         }
-        var dims = getsizeandpos(SVGgroup);
+        var dims = getsizeandpos(SVGsubgroup);
         if (cscale!=0) {
             var l = cscale / Math.max(dims[0], dims[1]);        
-            SVGgroup.scale.set(l, l, 1);
+            SVGsubgroup.scale.set(l, l, 1);
         }
         if (flat) {
-            SVGgroup.rotateX(90 * Math.PI / 180);
+            SVGsubgroup.rotateX(90 * Math.PI / 180);
         }
-        dims = getsizeandpos(SVGgroup);
-        SVGgroup.translateX(-dims[3]);
-        SVGgroup.translateY(-dims[4]);
-        SVGgroup.translateZ(-dims[5]+1);
-        
+        dims = getsizeandpos(SVGsubgroup);
+        SVGsubgroup.translateX(-dims[3]);
+        SVGsubgroup.translateY(-dims[4]);
+        SVGsubgroup.translateZ(-dims[5]+1);
+        SVGgroup.add(SVGsubgroup);
         Scene.add(SVGgroup);
         whenready();
     });
@@ -351,14 +354,14 @@ export function export3D() {
    var s=1/1000;
    SVGgroup.scale.set(SVGgroup.scale.x*s,SVGgroup.scale.y*s,SVGgroup.scale.z*s);
 
-
+/*
     var dims = getsizeandpos(SVGgroup);
     SVGgroup.translateX(-dims[3]);
     SVGgroup.translateY(-dims[4]);
     SVGgroup.translateZ(-dims[5]+4);
 
 
-
+*/
     Exportscene.add(SVGgroup);
     ////  Exportscene.add(light1);
     //  Exportscene.add(light0);
