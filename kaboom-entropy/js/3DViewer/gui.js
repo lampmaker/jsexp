@@ -36,7 +36,7 @@ guiData = {
     lightf:2,
     spot:'#FFFFFF',
     ambient:'#FFFFFF',
-
+    lighti:1.0
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -65,7 +65,7 @@ function _updatebackground(){
     updatebackground(guiData.bgfilename)
 }
 function _updatelight(){
-    updatelight(guiData.lightx,guiData.lighty,guiData.lightz,guiData.lightf,guiData.spot,guiData.ambient);
+    updatelight(guiData.lightx,guiData.lighty,guiData.lightz,guiData.lightf,guiData.spot,guiData.ambient,guiData.lighti);
 }
 
 //=================================================================================================================
@@ -105,9 +105,10 @@ $(function () {
         g3.add(guiData, 'lightf', 0,10).name('focus').onChange(_updatelight);
         g3.addColor(guiData,'spot').onChange(_updatelight);;
         g3.addColor(guiData,'ambient').onChange(_updatelight);;
+        g3.add(guiData, 'lighti', 0,1,0.001).name('intensity').onChange(_updatelight);
 
         gui.add(guiData, 'resetview').name('Reset view').onChange(resetcam);
-        gui.add(guiData, '_savejpg').name('save jpeg');
+    //    gui.add(guiData, '_savejpg').name('save jpeg');
         gui.add(guiData, '_export3D').name('save as 3D');
     });
     init();    
@@ -127,11 +128,15 @@ $(function () {
 function loadImage() {
     var s1 = '/models/';
     var url = s1.concat(guiData.maskfilename);
-    if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url);
     if (guiData.maskfilename.split('.')[1] == null) {
-        url = s1.concat(guiData.maskfilename, '.svg')
-        loadSVG(url,guiData.maskfilename);
+        url = s1.concat(guiData.maskfilename, '.svg')    
     }
+    loadSVG(url,guiData.maskfilename,function(){
+        _updateUvTransform();
+        _updatecolor();        
+        _updatebackgroundpos();
+    });
+    
 }
 //========================================================================================================
 
@@ -259,6 +264,7 @@ function savetoFile(data, filename, type) {
     link.href = URL.createObjectURL(blob);
     link.download = filename;
     link.click();
+
 }
 function saveasjpg() {
     var x = 0, y = 0;

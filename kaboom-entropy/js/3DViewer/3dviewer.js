@@ -181,11 +181,13 @@ export function updatebackground(bgfile){
     //tablematerial.map=BGtexture;            
 }
 
-export function updatelight(x,y,z,f,spc,bgc){
+export function updatelight(x,y,z,f,spc,bgc,int){
     light1.position.set(x,y,z);
     light1.shadow.radius = f;
     light1.color=new THREE.Color(spc)
     light0.color=new THREE.Color(bgc)
+    light0.intensity=int;
+    light1.intensity=int;
 }
 
 //=======================================================================================================
@@ -216,7 +218,7 @@ function getsizeandpos(geo) {
     return res;
 }
 //=======================================================================================================
-export function loadSVG(url,fn) {
+export function loadSVG(url,fn,whenready) {
     filename=fn;
     var loader = new SVGLoader();
     var old = Scene.getObjectByName('SVG');
@@ -293,7 +295,7 @@ export function loadSVG(url,fn) {
         SVGgroup.translateZ(-dims[5]+1);
         
         Scene.add(SVGgroup);
-
+        whenready();
     });
 }
 
