@@ -45,7 +45,7 @@ guiData = {
     gkyd: 0.0,
     da:0.2097,
     db:0.105,
-    shape: "round",
+    shape: "rect",
     maskedit: "paint",
     maskmode: 0,
     masksize: 100.0,
@@ -84,7 +84,17 @@ function scalemidi(i) {
 function mupdateparameters() {
 
     var shapemode = 0;
-    if (guiData.shape == "round") shapemode = 1
+    switch  (guiData.shape){
+        case "round":
+            shapemode=1;
+            break;
+        case "test":
+            shapemode=10;
+            break;
+            default:
+                shapemode=0;
+        break;
+    }
 
     var editmode = 0;  // paint
     switch (guiData.maskedit) {
@@ -277,7 +287,7 @@ $(function () {
         g1.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         g1.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var maskgui = g0.addFolder('Mask');
-        maskgui.add(guiData, 'shape', ['rect', 'round']).name('Shape').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'shape', ['rect', 'round','test']).name('Shape').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskmode', 0, 10).step(1).name(' Mask mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;

@@ -13,8 +13,7 @@ uniform float maskkill;
 uniform float mda;
 uniform float mdb;
 
-uniform int shape;
-
+uniform int mode;
 uniform vec2 brush;
 uniform float brmode;
 uniform int maskmode;
@@ -211,12 +210,23 @@ void main()
   }
 
   /*MOD1*/  // mod inserted here
+  vec2 dst;
+  if (mode==10){
+      if (uv.r>uv.g) {
+        dst=vec2(1.0,0.0) ;
+        }
+      else {
+        dst=vec2(0.0,1.0);
+      }
 
-  float du =  (Da * lapl.r) - (uv.r * uv.g * uv.g) + f * (1.0 - uv.r);
-  float dv =  (Db * lapl.g) + (uv.r * uv.g * uv.g) - (f + k) * uv.g;
-  vec2 dst = uv + d * vec2(du, dv);
+  }
+  else {
+    float du =  (Da * lapl.r) - (uv.r * uv.g * uv.g) + f * (1.0 - uv.r);
+    float dv =  (Db * lapl.g) + (uv.r * uv.g * uv.g) - (f + k) * uv.g;
+    dst = uv + d * vec2(du, dv);
+  }
   
-  if (shape==1){  //circle
+  if (mode==1){  //circle
     if ((R > 0.49))
     {
       dst.r = 1.0;
@@ -224,6 +234,9 @@ void main()
       //dv=0.00;
     }
   }
+
+
+
 
 /*MOD2*/  // mod will be inserted here. 
 

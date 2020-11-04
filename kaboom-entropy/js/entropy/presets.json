@@ -33,6 +33,18 @@
         "gkill": 0.055
       }
     },
+    "Puzzel stap 1": {
+      "0": {
+        "gfeed": 0.104,
+        "gkill": 0.0558
+      }
+    },
+    "Puzzel stap 2": {
+      "0": {
+        "gfeed": 0.064,
+        "gkill": 0.0634
+      }
+    },
     "Bubbles (rho)": {
       "0": {
         "gfeed": 0.098,
