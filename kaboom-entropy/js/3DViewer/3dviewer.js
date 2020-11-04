@@ -290,7 +290,7 @@ export function loadSVG(url,fn,whenready) {
             SVGsubgroup.scale.set(l, l, 1);
         }
         if (flat) {
-            SVGsubgroup.rotateX(90 * Math.PI / 180);
+            SVGsubgroup.rotateX(-90 * Math.PI / 180);
         }
         dims = getsizeandpos(SVGsubgroup);
         SVGsubgroup.translateX(-dims[3]);

@@ -10,6 +10,8 @@ uniform float feed;
 uniform float kill;
 uniform float maskfeed;
 uniform float maskkill;
+uniform float mda;
+uniform float mdb;
 
 uniform int shape;
 
@@ -136,24 +138,22 @@ vec2  laplace() {
 7  8  9             0   1  0
 */
 
-  //vec3 weight=vec3(-4.0 , 1.0 , 0.0);// center, edge, corner
-  vec3 weight=vec3(-4.0 , 1.0 , 0.5);// center, edge, corner
-  
-  vec2 uv1 = texture2D(tSource, vUv + vec2(-step_x  , step_y)).rg;
+  vec3 weight=vec3(-4.0 , 1.0 , 0.0);// center, edge, 
+  //vec3 weight=vec3(-6.0 , 1.0 , 0.5);// center, edge, corner  
+  vec2 uv5 = texture2D(tSource, vUv + vec2(0.0      , 0.0)).rg;  
   vec2 uv2 = texture2D(tSource, vUv + vec2(0.0      , step_y)).rg;
-  vec2 uv3 = texture2D(tSource, vUv + vec2( step_x  , step_y)).rg;
-  
   vec2 uv4 = texture2D(tSource, vUv + vec2(-step_x  , 0.0)).rg;
-  vec2 uv5 = texture2D(tSource, vUv + vec2(0.0      , 0.0)).rg;
   vec2 uv6 = texture2D(tSource, vUv + vec2( step_x  , 0.0)).rg;
-  vec2 uv7 = texture2D(tSource, vUv + vec2(-step_x  , -step_y)).rg;
   vec2 uv8 = texture2D(tSource, vUv + vec2(0.0      , -step_y)).rg;
-  vec2 uv9 = texture2D(tSource, vUv + vec2( step_x  , -step_y)).rg;
-
   vec2 L = uv5 * weight.r;
   L = L + ( uv2 + uv4 + uv6 + uv8 ) * weight.g;
- // L = L + (uv1+uv3+uv7+uv9) * weight.b;
-
+  /*
+  vec2 uv1 = texture2D(tSource, vUv + vec2(-step_x  , step_y)).rg;
+  vec2 uv3 = texture2D(tSource, vUv + vec2( step_x  , step_y)).rg; 
+  vec2 uv7 = texture2D(tSource, vUv + vec2(-step_x  , -step_y)).rg;
+  vec2 uv9 = texture2D(tSource, vUv + vec2( step_x  , -step_y)).rg;
+  L = L + ( uv1 + uv3 + uv7 + uv9 ) * weight.b;
+*/
   return  L;
 }
 //=====================================================================================================================
@@ -183,8 +183,8 @@ void main()
   float yd = abs(vUv.y - 0.5)*2.0;                                                 // distance from center
 
   // main parameters variables ---------------------------------------------------------------------------------------------------
-  float Da = 0.2097;  // diffusion rate A
-  float Db= 0.105;  // diffusion rate B 
+  float Da = mda;//0.2097;  // diffusion rate A
+  float Db= mdb;//0.105;  // diffusion rate B 
   float f=feed;
   float k=kill;
   float d=delta;
@@ -260,6 +260,6 @@ void main()
   if ( (maskmode == 5 ) && ( buv.g == 0.0 )) { dst.r=0.0;    dst.g=0.8;   }
   if ( (maskmode == 6 ) && ( buv.g == 0.0 )) { dst.r=0.8;    dst.g=0.8;   }
 
-  gl_FragColor = vec4(dst.r, dst.g, 1.0, 0.0);
+  gl_FragColor = vec4(dst.r, dst.g, dst.g, 0.0);
 }
 //=====================================================================================================================

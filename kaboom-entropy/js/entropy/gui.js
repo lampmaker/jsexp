@@ -43,6 +43,8 @@ guiData = {
     gkxd: 0.0,
     gky: 0.0,
     gkyd: 0.0,
+    da:0.2097,
+    db:0.105,
     shape: "round",
     maskedit: "paint",
     maskmode: 0,
@@ -58,6 +60,7 @@ guiData = {
     c1: "#0000AA",
     c2: "#000000",
     c3: "#000000",
+    mc:true,
     c1pos: 0.1,
     c2pos: 0.2,
     c3pos: 0.4,
@@ -105,7 +108,7 @@ function mupdateparameters() {
     console.log(_feed, _kill);
     var df = [guiData.gfx, guiData.gfxd, guiData.gfy, guiData.gfyd];
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
-    updateparameters(_feed, _kill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.image_low, guiData.image_high);
+    updateparameters(_feed, _kill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.image_low, guiData.image_high,guiData.da,guiData.db);
 
 }
 //=================================================================================================================
@@ -128,7 +131,7 @@ function updatecolors() {
     var c1 = hexToRgb(guiData.c1, guiData.c1pos);
     var c2 = hexToRgb(guiData.c2, guiData.c2pos);
     var c3 = hexToRgb(guiData.c3, guiData.c3pos);
-    updateUniformsColors2(c1, c2, c3);
+    updateUniformsColors2(c1, c2, c3,guiData.mc);
 }
 //=================================================================================================================
 function updatescreen() {
@@ -261,6 +264,8 @@ $(function () {
         gk = gui.add(guiData, 'gkill', 0.04, .070).name('kill').step(.0002).onChange(mupdateparameters);
         var g0 = gui.addFolder('Menu');
         var g1 = g0.addFolder('Advanced');
+        g1.add(guiData, 'da', 0.0, 0.5).name('Da').onChange(mupdateparameters);
+        g1.add(guiData, 'db', 0.0, 0.5).name('Db').onChange(mupdateparameters);
         gfx = g1.add(guiData, 'gfx', -100, 100).name('feed-dx').onChange(mupdateparameters);
         gfxd = g1.add(guiData, 'gfxd', -100, 100).name('feed-dx-center').onChange(mupdateparameters);
         gfy = g1.add(guiData, 'gfy', -100, 100).name('feed-dy').onChange(mupdateparameters);
@@ -283,6 +288,7 @@ $(function () {
         maskgui.add(guiData, 'image_low', -1, 1).name('image-brightness').step(.001).onChange(mupdateparameters);
         maskgui.add(guiData, 'image_high', 0.1, 10).name('image-contrast').step(.001).onChange(mupdateparameters);
         var f1 = g0.addFolder('Colors');
+        f1.add(guiData, 'mc').name("change").onChange(updatecolors);
         f1.addColor(guiData, 'c1').name("Color 1").onChange(updatecolors);
         f1.add(guiData, 'c1pos', 0.00, 1.0).name('position').onChange(updatecolors);
         f1.addColor(guiData, 'c2').name("Color 2").onChange(updatecolors);

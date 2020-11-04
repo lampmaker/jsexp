@@ -33,7 +33,7 @@ var speedscale = 1;
 
 var mMinusOnes = new THREE.Vector2(-1, -1);
 var thinning = 0;
-
+var modcolors=true;
 var shader_scrf, shader_stdf, shader_stdv, shader_brush, shader_stdf_original, shader_thinning, shader_average;
 
 var shaderloadingmanager = new THREE.LoadingManager();
@@ -65,6 +65,8 @@ export function loadshaders() {
         feed: { type: "f", value: .1 },
         kill: { type: "f", value: .055 },
         maskfeed: { type: "f", value: .1 },
+        mda: { type: "f", value: 0.2097 },
+        mdb: { type: "f", value: 0.105 },        
         maskkill: { type: "f", value: .055 },
         l0feed: { type: "f", value: .1 },
         l0kill: { type: "f", value: .055 },
@@ -230,10 +232,12 @@ function renderSystem() {
     render_to_texture(mGSMaterial, mTempTexture, mRDTexture);
 }
 //==================================================================================================================================
-function renderScreen() {
+function renderScreen(sm) {
     //    render_to_texture(mScreenMaterial, mRDTexture, null);
-    mScreenQuad.material = mScreenMaterial;
-    mUniforms.tSource.value = mRDTexture.texture;
+    if (sm)  {  
+        mScreenQuad.material = mScreenMaterial;
+        mUniforms.tSource.value = mRDTexture.texture;
+    }
     mRenderer.setRenderTarget(null);
     mRenderer.render(mScene, mCamera);
 
@@ -260,7 +264,7 @@ var render = function (time) {
         mUniforms.brush.value = mMinusOnes;
     }
 
-    renderScreen();
+    renderScreen(modcolors);
 
     if (thinning > 0) {
         render_to_texture(mScreenMaterial, mRDTexture, mThinningTexture);
@@ -318,7 +322,7 @@ export function addGrouptoScene(g) {
 }
 
 //==================================================================================================================================
-export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, imgl, imgh) {
+export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, imgl, imgh,da,db) {
     mUniforms.df.value = df;
     mUniforms.dk.value = dk;
     mUniforms.feed.value = f;
@@ -331,10 +335,13 @@ export function updateparameters(f, k, m, s, e, b, bs, df, dk, mf, mk, imgl, img
     mUniforms.masksize.value = bs;
     mUniforms.imgscale.value = new THREE.Vector2(imgl, imgh);
     speedscale = s;
+    mUniforms.mda.value=da;
+    mUniforms.mdb.value=db;
 }
 
 //==================================================================================================================================
-export function updateUniformsColors2(c0, c1, c2) {
+export function updateUniformsColors2(c0, c1, c2,m) {
+    modcolors=m;
     mColors[0].value = new THREE.Vector4(c0[0], c0[1], c0[2], c0[3]);
     mColors[1].value = new THREE.Vector4(c1[0], c1[1], c1[2], c1[3]);
     mColors[2].value = new THREE.Vector4(c2[0], c2[1], c2[2], c2[3]);
@@ -413,7 +420,7 @@ export function snapshot() {
     //window.open(dataURL, "name-" + Math.random());
 
     requestAnimationFrame(render);
-    renderScreen();
+    renderScreen(modcolors);
     return mRenderer.domElement.toDataURL();
 }
 
