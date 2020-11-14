@@ -52,12 +52,13 @@ void main()
         c = (c && (NumTransitions==2));
         if (toggle==1){
             c = (c && (!(points[2] && points[4] && points [6])));
-            c = (c && (!(points[4] && points[6] && points [8])));
+            c = (c && (!(points[4] && points[6] && points [8])));            
         }
-        else {
+        if (toggle==0) {
             c = (c && (!(points[2] && points[4] && points [8])));
             c = (c && (!(points[2] && points[6] && points [8])));
-        }        
+        }   
+        
         if (c) points[1]=false;        
     }
     

@@ -1,5 +1,5 @@
 {
-  "preset": "Default",
+  "preset": "wall20",
   "remembered": {
     "Default": {
       "0": {
@@ -116,13 +116,106 @@
         "ambient": "#bcbcbc",
         "resetview": false
       }
+    },
+    "wall18": {
+      "0": {
+        "cwidth": 2048,
+        "cheight": 2048,
+        "maskfilename": "eland",
+        "offsetX": 0.040879017013232516,
+        "offsetY": 0.5,
+        "repeatX": 0.001572069943289225,
+        "repeatY": 0.008,
+        "rotation": 0,
+        "color": "#f0e0e0",
+        "curvesegments": 10,
+        "simplify": 0,
+        "bevel": true,
+        "flat": false,
+        "scale": 297.9678638941399,
+        "bgfilename": "wall18.jpg",
+        "objectposx": -69.34124944960212,
+        "objectposy": 89.4197407716864,
+        "objectrot": 0,
+        "flip": false,
+        "lightx": -709.1952648571087,
+        "lighty": 600.4233509036726,
+        "lightz": 1131.2711246332638,
+        "lightf": 9.149984341527972,
+        "spot": "#ffffff",
+        "ambient": "#bcbcbc",
+        "lighti": 0.781,
+        "resetview": false
+      }
+    },
+    "wall17": {
+      "0": {
+        "cwidth": 2048,
+        "cheight": 2048,
+        "maskfilename": "unicorn",
+        "offsetX": 0.5550567107750473,
+        "offsetY": 0.5,
+        "repeatX": 0.0016401228733459359,
+        "repeatY": 0.008,
+        "rotation": 0,
+        "color": "#ffffff",
+        "curvesegments": 10,
+        "simplify": 0,
+        "bevel": true,
+        "flat": false,
+        "scale": 229.91493383742912,
+        "bgfilename": "wall17.jpg",
+        "objectposx": -141.54064272211718,
+        "objectposy": 130.671077504726,
+        "objectrot": 0,
+        "flip": false,
+        "lightx": 1000,
+        "lighty": 1000,
+        "lightz": 928.5543465263661,
+        "lightf": 10,
+        "spot": "#ffffff",
+        "ambient": "#6b6b6b",
+        "lighti": 1,
+        "resetview": false
+      }
+    },
+    "wall20": {
+      "0": {
+        "cwidth": 2048,
+        "cheight": 2048,
+        "maskfilename": "beagle",
+        "offsetX": 0.29040642722117205,
+        "offsetY": 0.07868620037807184,
+        "repeatX": 0.0020484404536862005,
+        "repeatY": 0.00286507561436673,
+        "rotation": 0,
+        "color": "#f0e0e0",
+        "curvesegments": 10,
+        "simplify": 0,
+        "bevel": true,
+        "flat": false,
+        "scale": 366.0207939508507,
+        "bgfilename": "wall20.jpg",
+        "objectposx": 145.79395085066164,
+        "objectposy": -133.9792060491493,
+        "objectrot": 0,
+        "flip": true,
+        "lightx": -494.9180915939256,
+        "lighty": 392.80162621068985,
+        "lightz": 607.1385866315916,
+        "lightf": 9.149984341527972,
+        "spot": "#ffffff",
+        "ambient": "#919191",
+        "lighti": 0.98,
+        "resetview": true
+      }
     }
   },
   "closed": false,
   "folders": {
     "texture": {
       "preset": "Default",
-      "closed": true,
+      "closed": false,
       "folders": {}
     },
     "Geometry": {

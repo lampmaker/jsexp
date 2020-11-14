@@ -43,8 +43,8 @@ guiData = {
     gkxd: 0.0,
     gky: 0.0,
     gkyd: 0.0,
-    da:0.2097,
-    db:0.105,
+    da: 0.2097,
+    db: 0.105,
     shape: "rect",
     maskedit: "paint",
     maskmode: 0,
@@ -60,7 +60,7 @@ guiData = {
     c1: "#0000AA",
     c2: "#000000",
     c3: "#000000",
-    mc:true,
+    mc: true,
     c1pos: 0.1,
     c2pos: 0.2,
     c3pos: 0.4,
@@ -84,16 +84,16 @@ function scalemidi(i) {
 function mupdateparameters() {
 
     var shapemode = 0;
-    switch  (guiData.shape){
+    switch (guiData.shape) {
         case "round":
-            shapemode=1;
+            shapemode = 1;
             break;
         case "test":
-            shapemode=10;
+            shapemode = 10;
             break;
-            default:
-                shapemode=0;
-        break;
+        default:
+            shapemode = 0;
+            break;
     }
 
     var editmode = 0;  // paint
@@ -118,7 +118,7 @@ function mupdateparameters() {
     console.log(_feed, _kill);
     var df = [guiData.gfx, guiData.gfxd, guiData.gfy, guiData.gfyd];
     var dk = [guiData.gkx, guiData.gkxd, guiData.gky, guiData.gkyd];
-    updateparameters(_feed, _kill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.image_low, guiData.image_high,guiData.da,guiData.db);
+    updateparameters(_feed, _kill, shapemode, guiData.speed, editmode, guiData.maskmode, guiData.masksize, df, dk, guiData.maskfeed, guiData.maskkill, guiData.image_low, guiData.image_high, guiData.da, guiData.db);
 
 }
 //=================================================================================================================
@@ -141,7 +141,7 @@ function updatecolors() {
     var c1 = hexToRgb(guiData.c1, guiData.c1pos);
     var c2 = hexToRgb(guiData.c2, guiData.c2pos);
     var c3 = hexToRgb(guiData.c3, guiData.c3pos);
-    updateUniformsColors2(c1, c2, c3,guiData.mc);
+    updateUniformsColors2(c1, c2, c3, guiData.mc);
 }
 //=================================================================================================================
 function updatescreen() {
@@ -287,7 +287,7 @@ $(function () {
         g1.add(guiData, 'mod1').name('Mod1(x,y,xd,yd,Da,Db,k,f,d)').onFinishChange(mupdatemodifications);
         g1.add(guiData, 'mod2').name('Mod2 (dst.r,dst.g)').onFinishChange(mupdatemodifications);
         var maskgui = g0.addFolder('Mask');
-        maskgui.add(guiData, 'shape', ['rect', 'round','test']).name('Shape').onChange(mupdateparameters);;
+        maskgui.add(guiData, 'shape', ['rect', 'round', 'test']).name('Shape').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskedit', ['Paint', 'View', 'Edit', 'Off']).name('Edit mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'maskmode', 0, 10).step(1).name(' Mask mode').onChange(mupdateparameters);;
         maskgui.add(guiData, 'masksize', 0, 1000.0).name('mask size').onFinishChange(mupdateparameters);;
@@ -568,27 +568,25 @@ function savetoFile(data, filename, type) {
     link.download = filename;
     link.click();
 }
-function imgtr() {
-    var canvasx = cnvs();
 
+//========================================================================================
+function getimagedata() {
+    var canvasx = cnvs();
     var offscreenCanvas = document.createElement("canvas");
     offscreenCanvas.width = canvasx.width;
     offscreenCanvas.height = canvasx.height;
     var ctx = offscreenCanvas.getContext("2d");
-
     ctx.drawImage(canvasx, 0, 0);
-    var imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-
-    // console.log(imageData);
-    //  console.log(svgdata);
-    var svgdata = ImageTracer.imagedataToSVG(imageData, 'Default');
+    return ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+}
+//========================================================================================
+function imgtr() {
+    var svgdata = ImageTracer.imagedataToSVG(getimagedata(), 'Default');
     var myWindow = window.open("", "MsgWindow");
     myWindow.document.documentElement.innerHTML = svgdata;
     savetoFile(svgdata, 'test.svg', 'image/svg+xml')
-
     // var loader = new SVGLoader();
     // var data = loader.parse(svgdata);
     //makem3dfromsvg(data);
-
-
 }
+//========================================================================================

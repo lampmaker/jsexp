@@ -14,6 +14,8 @@
   "remembered": {
     "Default": {
       "0": {
+        "da": 0.2097,
+        "db": 0.105,
         "cwidth": 1024,
         "cheight": 1024,
         "gfeed": 0.1,
@@ -30,19 +32,29 @@
     "Negative bubbles (sigma)": {
       "0": {
         "gfeed": 0.1,
-        "gkill": 0.055
+        "gkill": 0.0564
       }
     },
     "Puzzel stap 1": {
       "0": {
+        "maskmode": 2,
         "gfeed": 0.104,
-        "gkill": 0.0558
+        "gkill": 0.0564
       }
     },
     "Puzzel stap 2": {
       "0": {
         "gfeed": 0.064,
-        "gkill": 0.0634
+        "gkill": 0.0634,
+        "maskmode": 8,
+        "maskfeed": 0.1,
+        "maskkill": 0.07
+      }
+    },
+    "Puzzel stap 3": {
+      "0": {
+        "da": 0.21045079516919765,
+        "db": 0.105
       }
     },
     "Bubbles (rho)": {

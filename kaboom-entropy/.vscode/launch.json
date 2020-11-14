@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch localhost in Microsoft Edge",
+            "type": "edge",
+            "request": "launch",
+            "url": "http://localhost/index.html",
+            "webRoot": "${workspaceFolder}/wwwroot"
+        },
+        {
+            "name": "Launch index.html in Microsoft Edge",
+            "type": "edge",
+            "request": "launch",
+            "file": "${workspaceFolder}/index.html"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
