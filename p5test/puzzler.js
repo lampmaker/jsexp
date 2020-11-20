@@ -30,16 +30,22 @@ function inpath(x, y, shapepath) {
 
 function add_random(count, size_w, size_h, path) {
 
-    for (var n = 0; n < count; n++) {
+    var n = 0
+    while (n < count) {
         var x = Math.random() * size_w;
         var y = Math.random() * size_h
         if (path == null) {
             seeds[seeds.length] = { x, y };
+            point(seeds[n].x, seeds[n].y);
+            n++
         }
         else {
-            if (inpath(x, y, border)) seeds[seeds.length] = { x, y };
+            if (inpath(x, y, border)) {
+                seeds[seeds.length] = { x, y };
+                point(seeds[n].x, seeds[n].y);
+                n++
+            }
         }
-
     }
 }
 
