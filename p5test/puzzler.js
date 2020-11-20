@@ -1,11 +1,18 @@
+import * as THREE from '/three.module.js';
+import { SVGLoader } from '/SVGLoader.js';
 //======================================================================================================
 // VORONOI STUFF
 //======================================================================================================
 var seeds;
+var border;
+function add_random(count, size_w, size_h, path) {
 
-function add_random(count, size_w, size_h) {
     for (var n = 0; n < count; n++) {
         seeds[seeds.length] = { x: Math.random() * size_w, y: Math.random() * size_h };
+        if (path != null) {
+
+        }
+
     }
 }
 
@@ -20,7 +27,7 @@ function Vertex(x, y) {
 
 function voronoi_setup() {
     seeds = new Array();
-    add_random(90, width, height);
+    add_random(90, width, height, null);
 
 }
 
@@ -57,6 +64,64 @@ function voronoi_render() {
 
 }
 
+function inpath(x, y, shapepath) {
+    for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
+        var points = SVGdata[0].subPaths[j].getPoints();
+        for (var k = 0; k < points.length; k++) {
+            if (points[k].x < minx) minx = points[k].x;
+            if (points[k].y < miny) miny = points[k].y;
+            if (points[k].x > maxx) maxx = points[k].x;
+            if (points[k].y > maxy) maxy = points[k].y;
+        }
+    }
+}
+
+
+function showpath(P) {
+    var points = P.getPoints();
+    for (var k = 1; k < points.length; k++) {
+        var x1 = (points[k - 1].x);
+        var y1 = (points[k - 1].y);
+        var x2 = (points[k].x);
+        var y2 = (points[k].y);
+        line(x1, y1, x2, y2);
+        // console.log(x1, y1, x2, y2);
+    }
+}
+
+function loadsvg(mx, my) {
+    var minx = 100000000, maxx = -100000000, miny = 100000000, maxy = -100000000;
+    var loader = new SVGLoader();
+    var scale;
+    loader.load('beer.svg', function (data) {
+        var SVGdata = data.paths;
+        // for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
+        var points = SVGdata[0].subPaths[0].getPoints();
+        for (var k = 0; k < points.length; k++) {
+            if (points[k].x < minx) minx = points[k].x;
+            if (points[k].y < miny) miny = points[k].y;
+            if (points[k].x > maxx) maxx = points[k].x;
+            if (points[k].y > maxy) maxy = points[k].y;
+        }
+        // }
+        var cwidth = maxx - minx;
+        var cheight = maxy - miny;
+        var x0 = (minx + maxx) / 2
+        var y0 = (miny + maxy) / 2;
+        scale = Math.min(mx / cwidth, my / cheight);
+        console.log(cwidth, cheight, x0, y0, scale);
+        //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
+        var points = SVGdata[0].subPaths[0].getPoints();
+        for (var k = 0; k < points.length; k++) {
+            var x1 = (points[k].x - x0) * scale + mx / 2;
+            var y1 = (points[k].y - y0) * scale + my / 2;
+            border.lineTo(x1, y1);
+        }
+        var points = border.getPoints();
+        showpath(border)
+        //  }
+    })
+}
 
 
 
@@ -110,16 +175,25 @@ function example2_setup() {
 //======================================================================================================
 
 export function preload() {
-    mySvg = loadImage("beer.svg");
+    //  mySvg = loadImage("beer.svg");
 }
 
 export function setup() {
-    example2_setup();
+    // example2_setup();
     createCanvas(1000, 1000);
-    background(200);
+    background(220);
     stroke('#000000');
+    border = new THREE.Path;
+    loadsvg(1000, 1000);
+
     voronoi_setup();
     voronoi_render();
+
+
+    //imageMode(CENTER);
+    //mySvg.resize(1000, 0);
+
+    //image(mySvg, width / 2, height / 2);
 }
 
 export function draw() {

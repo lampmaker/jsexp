@@ -95,15 +95,15 @@ See corresponding .js files for more information
                         )
                     }
                 }
-
-
-                // Straight render
-                var svgDocument = document.getElementById("svgSurface");
-                for (var poly = 0; poly < polys.length; poly++) {
+                /*
+            	
+                    // Straight render
+                    var svgDocument = document.getElementById("svgSurface");
+                  for(var poly = 0; poly < polys.length; poly++) {
                     var shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     var d = "";
-                    for (var v = 0; v < polys[poly].length; v++) {
-                        d += (v == 0 ? "M" : " L") + " " + polys[poly][v].x.toString(10) + " " + polys[poly][v].y.toString(10);
+                    for(var v = 0; v < polys[poly].length; v++) {
+                            d += (v == 0 ? "M" : " L") + " " + polys[poly][v].x.toString(10) + " " + polys[poly][v].y.toString(10);
                     }
                     d += " Z";
                     shape.setAttributeNS(null, "d", d);
@@ -111,9 +111,9 @@ See corresponding .js files for more information
                     shape.setAttributeNS(null, "stroke", "blue");
                     shape.setAttributeNS(null, "stroke-width", "3");
                     alert(d);
-                    svgDocument.appendChild(shape);
-                }
-
+                    svgDocument.appendChild(shape);	
+                  }
+                */
 
                 // Shrink polygons
                 for (var poly = 0; poly < polys.length; poly++) {
