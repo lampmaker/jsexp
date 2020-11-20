@@ -1,17 +1,42 @@
 // geometry through gui
+import { SVGLoader } from '/js/three/SVGLoader.js';
+import * as THREE from '/js/three/three.module.js';
+var csimplify, cfilename, svgDocument;
+var canvasWidth, canvasHeight;
+//========================================================================================================
+//========================================================================================================
 
-var csimplify;
-//========================================================================================================
-//========================================================================================================
+export function init(size_w, size_h) {
+    var canvasQ = $('#myCanvas');
+    canvasWidth = canvasQ.width();
+    canvasHeight = canvasQ.height();
+    canvasQ.width(size_w);
+    canvasQ.height(size_h);
+    /*
+        svgDocument = document.getElementById("svgSurface");
+        svgDocument.style.width = size_w;
+        svgDocument.style.height = size_h;
+        while (svgDocument.childNodes.length) {
+            svgDocument.removeChild(svgDocument.childNodes[0]);
+        }
+        var shape = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        shape.setAttributeNS(null, "x", 0);
+        shape.setAttributeNS(null, "y", 0);
+        shape.setAttributeNS(null, "width", size_w);
+        shape.setAttributeNS(null, "height", size_h);
+        shape.setAttributeNS(null, "fill", "white");
+        svgDocument.appendChild(shape);
+    */
+}
+
 
 export function loadSVG(url, fn) {
-    filename = fn;
+    cfilename = fn;
     var loader = new SVGLoader();
-    var old = Scene.getObjectByName('SVG');
-    Scene.remove(old);
+
     console.log('OPENING SVG');
     loader.load(url, function (data) {
-        SVGdata = data.paths;
+        var SVGdata = data.paths;
         var path = new THREE.ShapePath();
         for (var i = 0; i < SVGdata.length; i++) {
             for (var j = 0; j < SVGdata[i].subPaths.length; j++) {
@@ -33,6 +58,7 @@ export function loadSVG(url, fn) {
         console.log('path', path);
         var shapes = path.toShapes(true, false);
         console.log('shape', shapes);
+        //svgDocument.appendChild(data);
     });
 }
 //========================================================================================================

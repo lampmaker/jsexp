@@ -14,9 +14,7 @@
     <script type="text/javascript" src="js/jquery/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="js/jquery/jquery-ui-1.8.16.custom.min.js"></script>
     <script type="text/javascript" src="js/three/three.min.js"></script>
-
     <script type="module" src="js/puzzler/gui.js"></script>
-
 </head>
 
 
@@ -25,7 +23,13 @@
         <h1> Kaboomlaser <a href='index.html'>Entropy</a> <a href='3dviewer.html'>3D viewer</a> Puzzler</h1>
 
     </header>
-    <canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
+
+    <div id="simulation">
+        <!--<svg id="svgSurface" class="viewer" xmlns="http://www.w3.org/2000/svg" version="1.1"   style="width:1024px;height:1024px">        </svg>
+        -->
+        <canvas id="myCanvas" class="viewer" style="width:1024px;height:1024px"></canvas>
+
+    </div>
 </body>
 
 </html>

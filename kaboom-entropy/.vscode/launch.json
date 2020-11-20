@@ -12,6 +12,13 @@
             "webRoot": "${workspaceFolder}/wwwroot"
         },
         {
+            "name": "Voronoi",
+            "type": "edge",
+            "request": "launch",
+            "url": "http://localhost/voronoi-master/index.html",
+            "webRoot": "${workspaceFolder}/wwwroot"
+        },
+        {
             "name": "Launch index.html in Microsoft Edge",
             "type": "edge",
             "request": "launch",

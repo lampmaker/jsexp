@@ -1,7 +1,7 @@
 
 //import { getImgdata, imagedataToSVG, imagedataToTracedata } from '/js/imagetracer_V1.2.6.js';
 import { GUI } from '/js/three/dat.gui.module.js'
-import { loadSVG } from 'puzzler.js';
+import { loadSVG, init } from '/js/puzzler/puzzler.js';
 
 //window.clean = clean;
 //window.snapshot = snapshot;         // expose functions from module
@@ -131,6 +131,11 @@ function parsemidi(m) {
     }
 
 }
+
+//=================================================================================================================
+function updatescreen() {
+    init(guiData.cwidth, guiData.cheight);
+}
 //=================================================================================================================
 function onMIDISuccess(midiAccess) {
     console.log(midiAccess);
@@ -160,12 +165,13 @@ $(function () {
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
         //gui.add(guiData, 't').name('Description');
-        gui.add(guiData, 'cwidth', 0, 4096).name('width');//.onFinishChange(updatescreen);
-        gui.add(guiData, 'cheight', 0, 4096).name('height');//.onFinishChange(updatescreen);;
-        var maskgui = gui.addFolder('Mask');
-        maskgui.add(guiData, 'maskfilename').name('File name');
-        maskgui.add(guiData, 'maskfile').name('load from SVG');
+        gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
+        gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
+        //var maskgui = gui.addFolder('Mask');
+        gui.add(guiData, 'maskfilename').name('File name');
+        gui.add(guiData, 'maskfile').name('load from SVG');
     });
+    updatescreen();
 });
 
 //========================================================================================================
@@ -173,7 +179,7 @@ $(function () {
 function loadImage() {
     var s1 = '/img/';
     var url = s1.concat(guiData.maskfilename);
-    if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url);
+    if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url, guiData.maskfilename);
     if (guiData.maskfilename.split('.')[1] == null) {
         url = s1.concat(guiData.maskfilename, '.svg')
         loadSVG(url, guiData.maskfilename);
