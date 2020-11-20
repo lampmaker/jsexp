@@ -5,14 +5,16 @@ import { SVGLoader } from '/SVGLoader.js';
 //======================================================================================================
 var seeds;
 var border;
-
+//======================================================================================================
 function Vertex(x, y) {
     this.x = x;
     this.y = y;
 }
 
 
-
+//======================================================================================================
+// true if pint x,y is in shapepath
+//======================================================================================================
 function inpath(x, y, shapepath) {
     var vs = shapepath.getPoints();
     var inside = false;
@@ -28,41 +30,98 @@ function inpath(x, y, shapepath) {
     return inside;
 }
 
-function add_random(count, size_w, size_h, path) {
+function dist(p1, p2) {
+    return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+}
+//================================================================================================
+// calculate average between points.   Need to lower in order to distribute more evenly
+//================================================================================================
 
+function even_spread_totaldistance(S) {
+    var TD = 0;
+    var mi = 10000000000000;
+    for (var i = 0; i < S.length; i++) {
+        var mind = 10000000000;
+        for (var j = 0; j < S.length; j++) {
+            if (j != i) {
+                var D = dist(S[i], S[j]);
+                if (D < mind) mind = D;
+            }
+        }
+        TD = TD + mind;
+        if (mind < mi) mi = mind;
+    }
+    return { avg: TD / S.length, min: mi };
+}
+
+// moves every point a fraction away from the closest neighbor
+function moveaway(S, fraction, a) {
+    for (var i = 0; i < S.length; i++) {
+        var closestindex = 0;
+        var closestdistance = 100000000;
+        for (var j = 0; j < S.length; j++) {
+            if (j != i) {
+                var D = dist(S[i], S[j]);
+                if (D < closestdistance) {
+                    closestdistance = D;
+                    closestindex = j
+                }
+            }
+        }
+        if (closestdistance < a * 0.9) {
+            var dx = (S[closestindex].x - S[i].x);
+            var dy = (S[closestindex].y - S[i].y);
+            S[i].x = S[i].x - dx * fraction;
+            S[i].y = S[i].y - dy * fraction;
+        }
+
+    }
+}
+
+
+function evenly_spread(S) {
+    for (var i = 0; i < 30; i++) {
+        for (var j = 0; j < S.length; j++) {
+            point(S[j].x, S[j].y);
+        }
+        var avgdist = even_spread_totaldistance(S);
+        console.log(avgdist);
+        moveaway(S, 0.2, avgdist.avg);
+    }
+}
+
+
+//======================================================================================================
+//======================================================================================================
+function add_random(count, size_w, size_h, path) {
     var n = 0
     while (n < count) {
         var x = Math.random() * size_w;
         var y = Math.random() * size_h
         if (path == null) {
             seeds[seeds.length] = { x, y };
-            point(seeds[n].x, seeds[n].y);
             n++
         }
         else {
             if (inpath(x, y, border)) {
                 seeds[seeds.length] = { x, y };
-                point(seeds[n].x, seeds[n].y);
                 n++
             }
         }
     }
 }
-
-function sleep(milliseconds) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-        currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
-}
-
+//======================================================================================================
+//======================================================================================================
 function voronoi_setup() {
     seeds = new Array();
     add_random(150, width, height, border);
+    var TD = even_spread_totaldistance(seeds);
+    console.log(TD);
+    evenly_spread(seeds);
 
 }
-
+//======================================================================================================
+//======================================================================================================
 function voronoi_render() {
     var size_factor = 0.05;
     var edge_factor = 0.05;
@@ -95,8 +154,8 @@ function voronoi_render() {
     }
 
 }
-
-
+//======================================================================================================
+//======================================================================================================
 function showpath(P) {
     var points = P.getPoints();
     for (var k = 1; k < points.length; k++) {
@@ -108,7 +167,8 @@ function showpath(P) {
         // console.log(x1, y1, x2, y2);
     }
 }
-
+//======================================================================================================
+//======================================================================================================
 function loadsvg(mx, my) {
     var minx = 100000000, maxx = -100000000, miny = 100000000, maxy = -100000000;
     var loader = new SVGLoader();
