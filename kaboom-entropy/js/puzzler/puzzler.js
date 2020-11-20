@@ -1,17 +1,30 @@
-// geometry through gui
-import { SVGLoader } from '/js/three/SVGLoader.js';
 import * as THREE from '/js/three/three.module.js';
+import { SVGLoader } from '/js/three/SVGLoader.js';
+// geometry through gui
 var csimplify, cfilename, svgDocument;
 var canvasWidth, canvasHeight;
 //========================================================================================================
+
 //========================================================================================================
 
+function setup() {
+    createCanvas(1024, 1024);
+}
+window.setup = setup;
+
 export function init(size_w, size_h) {
-    var canvasQ = $('#myCanvas');
-    canvasWidth = canvasQ.width();
-    canvasHeight = canvasQ.height();
-    canvasQ.width(size_w);
-    canvasQ.height(size_h);
+    resizeCanvas(size_w, size_h);
+
+
+    /*
+    
+    
+        var canvasQ = $('#myCanvas');
+        canvasWidth = canvasQ.width();
+        canvasHeight = canvasQ.height();
+        canvasQ.width(size_w);
+        canvasQ.height(size_h);
+        */
     /*
         svgDocument = document.getElementById("svgSurface");
         svgDocument.style.width = size_w;
@@ -33,7 +46,6 @@ export function init(size_w, size_h) {
 export function loadSVG(url, fn) {
     cfilename = fn;
     var loader = new SVGLoader();
-
     console.log('OPENING SVG');
     loader.load(url, function (data) {
         var SVGdata = data.paths;
