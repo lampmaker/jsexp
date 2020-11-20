@@ -1,0 +1,33 @@
+{
+  "name": "voro-gen",
+  "version": "1.0.0",
+  "description": "Parametric Voronoi generator with real time editing and SVG export",
+  "main": "main.js",
+  "scripts": {
+    "build": "cp node_modules\\web-js-utils\\index.js ./src/web-js-utils.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebSVG/voronoi.git"
+  },
+  "keywords": [
+    "voronoi",
+    "svg"
+  ],
+  "author": "wassfila",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/WebSVG/voronoi/issues"
+  },
+  "homepage": "https://github.com/WebSVG/voronoi#readme",
+  "dependencies": {
+    "bootstrap": "^4.4.1",
+    "file-saver": "^2.0.2",
+    "jquery": "^3.5.0",
+    "matter-js": "^0.14.2",
+    "popper": "^1.0.1",
+    "scale-grid": "^1.1.0",
+    "web-js-utils": "^2.1.0",
+    "bl": ">=4.0.3"
+  }
+}
