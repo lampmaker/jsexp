@@ -4,7 +4,8 @@ import { SVGLoader } from '/SVGLoader.js';
 // VORONOI STUFF
 //======================================================================================================
 var seeds;
-var border;
+var border, borderpoints;
+var borderloaded = false;
 //======================================================================================================
 function Vertex(x, y) {
     this.x = x;
@@ -37,7 +38,7 @@ function dist(p1, p2) {
 // calculate average between points.   Need to lower in order to distribute more evenly
 //================================================================================================
 
-function even_spread_totaldistance(S) {
+function even_spread_totaldistance(S, p) {
     var TD = 0;
     var mi = 10000000000000;
     for (var i = 0; i < S.length; i++) {
@@ -48,6 +49,10 @@ function even_spread_totaldistance(S) {
                 if (D < mind) mind = D;
             }
         }
+        for (var j = 0; j < p.length; j++) {
+            var D = dist(S[i], p[j]) * 3;
+            if (D < mind) mind = D;
+        }
         TD = TD + mind;
         if (mind < mi) mi = mind;
     }
@@ -55,38 +60,44 @@ function even_spread_totaldistance(S) {
 }
 
 // moves every point a fraction away from the closest neighbor
-function moveaway(S, fraction, a) {
+function moveaway(S, p, fraction, a) {
     for (var i = 0; i < S.length; i++) {
-        var closestindex = 0;
         var closestdistance = 100000000;
+        var dx, dy
         for (var j = 0; j < S.length; j++) {
             if (j != i) {
                 var D = dist(S[i], S[j]);
                 if (D < closestdistance) {
                     closestdistance = D;
-                    closestindex = j
+                    dx = (S[j].x - S[i].x);
+                    dy = (S[j].y - S[i].y);
                 }
             }
         }
-        if (closestdistance < a * 0.9) {
-            var dx = (S[closestindex].x - S[i].x);
-            var dy = (S[closestindex].y - S[i].y);
+        for (var j = 0; j < p.length; j++) {
+            var D = dist(S[i], p[j]) * 3;
+            if (D < closestdistance) {
+                closestdistance = D;
+                dx = (p[j].x - S[i].x);
+                dy = (p[j].y - S[i].y);
+            }
+        }
+        if (closestdistance < a * 0.99) {
             S[i].x = S[i].x - dx * fraction;
             S[i].y = S[i].y - dy * fraction;
         }
-
     }
 }
 
 
-function evenly_spread(S) {
-    for (var i = 0; i < 30; i++) {
+function evenly_spread(S, p) {
+    for (var i = 0; i < 1; i++) {
         for (var j = 0; j < S.length; j++) {
             point(S[j].x, S[j].y);
         }
-        var avgdist = even_spread_totaldistance(S);
+        var avgdist = even_spread_totaldistance(S, p);
         console.log(avgdist);
-        moveaway(S, 0.2, avgdist.avg);
+        moveaway(S, p, 0.05, avgdist.avg);
     }
 }
 
@@ -103,7 +114,7 @@ function add_random(count, size_w, size_h, path) {
             n++
         }
         else {
-            if (inpath(x, y, border)) {
+            if (inpath(x, y, path)) {
                 seeds[seeds.length] = { x, y };
                 n++
             }
@@ -114,10 +125,10 @@ function add_random(count, size_w, size_h, path) {
 //======================================================================================================
 function voronoi_setup() {
     seeds = new Array();
-    add_random(150, width, height, border);
+    add_random(100, width, height, border);
     var TD = even_spread_totaldistance(seeds);
     console.log(TD);
-    evenly_spread(seeds);
+
 
 }
 //======================================================================================================
@@ -197,10 +208,10 @@ function loadsvg(mx, my) {
             var y1 = (points[k].y - y0) * scale + my / 2;
             border.lineTo(x1, y1);
         }
-        var points = border.getPoints();
-        showpath(border)
+        //   borderpoints = border.getPoints();
+        borderloaded = true;
+        borderpoints = border.getPoints();
         voronoi_setup();
-        voronoi_render();
         //  }
     })
 }
@@ -267,16 +278,20 @@ export function setup() {
     stroke('#000000');
     border = new THREE.Path;
     loadsvg(1000, 1000);
-
-
-
     //imageMode(CENTER);
     //mySvg.resize(1000, 0);
 
     //image(mySvg, width / 2, height / 2);
+
 }
 
 export function draw() {
+    if (borderloaded) {
+        background(220);
+        showpath(border)
+        evenly_spread(seeds, borderpoints);
+        voronoi_render();
+    }
 
 }
 
