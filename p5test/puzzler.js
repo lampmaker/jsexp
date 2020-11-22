@@ -16,8 +16,7 @@ function Vertex(x, y) {
 //======================================================================================================
 // true if pint x,y is in shapepath
 //======================================================================================================
-function inpath(x, y, shapepath) {
-    var vs = shapepath.getPoints();
+function inpath(x, y, vs) {
     var inside = false;
     for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
         var xi = vs[i].x,
@@ -30,14 +29,62 @@ function inpath(x, y, shapepath) {
     }
     return inside;
 }
-
+//
 function dist(p1, p2) {
     return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
+
 //================================================================================================
+function intersect_point(point1, point2, point3, point4) {
+    var ua = ((point4.x - point3.x) * (point1.y - point3.y) - (point4.y - point3.y) * (point1.x - point3.x)) /
+        ((point4.y - point3.y) * (point2.x - point1.x) - (point4.x - point3.x) * (point2.y - point1.y));
+
+    var ub = ((point2.x - point1.x) * (point1.y - point3.y) -
+        (point2.y - point1.y) * (point1.x - point3.x)) /
+        ((point4.y - point3.y) * (point2.x - point1.x) -
+            (point4.y - point3.x) * (point2.y - point1.y));
+    var x = point1.x + ua * (point2.x - point1.x);
+    var y = point1.y + ua * (point2.y - point1.y);
+    return [x, y, ua, ub]
+}
+
+//================================================================================================
+// trim lines outside of shape.  P contains array of poly, b contains border
+//================================================================================================
+function trimlines(P, b) {
+    for (var c = 0; c < P.length; c++) {
+        var cell = P[c]
+        var ec = false;
+        for (var lines = 0; lines < cell.length; lines++) {
+            var p1 = cell[lines];
+            if (!inpath(p1.x, p1.y, b)) {
+                var p2 = cell[(lines + 1) % cell.length]
+                var q1, q2;
+                var i = 0;
+                var isc = [0, 0, -1, -1];
+                while (!((isc[2] > 0) && (isc[2] < 1) && (isc[3] > 0) && (isc[3] < 1)) && (i < b.length)) {   // FIND POINTS WHERE UA IS BETWEEN 0 AND 1
+                    var q1 = b[i]
+                    var q2 = b[((i + 1) % b.length)];
+                    isc = intersect_point(q1, q2, p1, p2);
+                    i++;
+                }
+
+                p1.x = isc[0]; p1.y = isc[1];
+
+                ec = true;
+            }
+        }
+    }
+}
+
+
+
+
+
+//================================================================================================
+// VORONOI - Distributepoints evenly within shape
 // calculate average between points.   Need to lower in order to distribute more evenly
 //================================================================================================
-
 function even_spread_totaldistance(S, p) {
     var TD = 0;
     var mi = 10000000000000;
@@ -58,13 +105,12 @@ function even_spread_totaldistance(S, p) {
     }
     return { avg: TD / S.length, min: mi };
 }
-
 // moves every point a fraction away from the closest neighbor
 function moveaway(S, p, fraction, a) {
     for (var i = 0; i < S.length; i++) {
         var closestdistance = 100000000;
         var dx, dy
-        for (var j = 0; j < S.length; j++) {
+        for (var j = 0; j < S.length; j++) {        // compare to other seeds
             if (j != i) {
                 var D = dist(S[i], S[j]);
                 if (D < closestdistance) {
@@ -74,7 +120,7 @@ function moveaway(S, p, fraction, a) {
                 }
             }
         }
-        for (var j = 0; j < p.length; j++) {
+        for (var j = 0; j < p.length; j++) {    // compare with border
             var D = dist(S[i], p[j]) * 3;
             if (D < closestdistance) {
                 closestdistance = D;
@@ -88,21 +134,21 @@ function moveaway(S, p, fraction, a) {
         }
     }
 }
-
-
+// main function, spreads all teh points within shape
 function evenly_spread(S, p) {
     for (var i = 0; i < 1; i++) {
         for (var j = 0; j < S.length; j++) {
             point(S[j].x, S[j].y);
         }
         var avgdist = even_spread_totaldistance(S, p);
-        console.log(avgdist);
+        //    console.log(avgdist);
         moveaway(S, p, 0.05, avgdist.avg);
     }
 }
 
-
 //======================================================================================================
+//VORONOI
+//adds[count] random points within range[size_w, size_h] and within shape defined by[path]
 //======================================================================================================
 function add_random(count, size_w, size_h, path) {
     var n = 0
@@ -114,7 +160,7 @@ function add_random(count, size_w, size_h, path) {
             n++
         }
         else {
-            if (inpath(x, y, path)) {
+            if (inpath(x, y, path.getPoints())) {
                 seeds[seeds.length] = { x, y };
                 n++
             }
@@ -122,22 +168,18 @@ function add_random(count, size_w, size_h, path) {
     }
 }
 //======================================================================================================
+//VORONOI
+//Iniitializes voronoi with 100 points
 //======================================================================================================
 function voronoi_setup() {
     seeds = new Array();
     add_random(100, width, height, border);
-    var TD = even_spread_totaldistance(seeds);
-    console.log(TD);
-
-
 }
 //======================================================================================================
+//VORONOI
+// Renders voronoi shape
 //======================================================================================================
-function voronoi_render() {
-    var size_factor = 0.05;
-    var edge_factor = 0.05;
-    var join_factor = 0.1;
-
+function voronoi_render(b) {
     var bbox = { xl: 0, xr: width, yt: 0, yb: height };
     var voronoi = new Voronoi();
     var result = voronoi.compute(seeds, bbox);
@@ -157,15 +199,15 @@ function voronoi_render() {
             )
         }
     }
-
+    if (b != null) trimlines(polys, b);
     for (var poly = 0; poly < polys.length; poly++) {
         for (var v = 1; v < polys[poly].length; v++) {
             line(polys[poly][v - 1].x, polys[poly][v - 1].y, polys[poly][v].x, polys[poly][v].y)
         }
     }
-
 }
 //======================================================================================================
+// draw the path defined by P
 //======================================================================================================
 function showpath(P) {
     var points = P.getPoints();
@@ -179,6 +221,7 @@ function showpath(P) {
     }
 }
 //======================================================================================================
+// loads SVG with dimensions mx,my
 //======================================================================================================
 function loadsvg(mx, my) {
     var minx = 100000000, maxx = -100000000, miny = 100000000, maxy = -100000000;
@@ -290,7 +333,7 @@ export function draw() {
         background(220);
         showpath(border)
         evenly_spread(seeds, borderpoints);
-        voronoi_render();
+        voronoi_render(borderpoints);
     }
 
 }
