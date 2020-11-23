@@ -49,8 +49,16 @@ function intersect_point(point1, point2, point3, point4) {
         (point2.y - point1.y) * (point1.x - point3.x)) /
         ((point4.y - point3.y) * (point2.x - point1.x) -
             (point4.y - point3.x) * (point2.y - point1.y));
+
     var x = point1.x + ua * (point2.x - point1.x);
     var y = point1.y + ua * (point2.y - point1.y);
+    
+    if (isNaN(ua)|| isNaN(ub)) {
+      //  console.log("NaN:",point1,point2,point3,point4, ua, ub);
+      //  return null;
+      return [0,0,1000,1000];
+    }
+
     return [x, y, ua, ub]
 }
 
@@ -67,31 +75,35 @@ function trimlines(l, b) {
     if ( !p1_inside && !p2_inside) return null;  // both lines are outside
     var p1=new Vertex(l.x1,l.y1);
     var p2=new Vertex(l.x2,l.y2);
+    if (!p1_inside) {
+        var tmp=p1;
+        p1=p2;
+        p2=tmp;
+    }
+    // p1 is now always inside
     var i = 0;
-    var min=0;
+    var min=10;
     var isc;
+    var fisc;
     for (var i=0; i<b.length ; i++ ){   
            var q1 = b[i]
-           var q2 = b[((i + 1) % b.length)];
+           var q2 = b[(i + 1) % b.length];
            isc = intersect_point(p1, p2, q1, q2);
-           if ((isc[2]>0 && isc[2]<1 && isc[3]>0 && isc[3]<1)) {
-               if (isc[2]>min){ 
-                   min=isc[2] // find closest one
+           if ((isc[2]>=0) && (isc[2]<=1) && (isc[3]>=0) && (isc[3]<=1)) {
+               if (isc[3]<min){ 
+                   min=isc[3] // find closest one
+                   fisc=isc;
            }      
         }
     }
     if (min<1){
-        circle(isc[0],isc[1],10)
-        if (p1_inside){
-        //    l.x2=l.x1;//l.x1+isc[2]*(l.x2-l.x1);
-        //    l.y2=l.y1;//l.y1+isc[2]*(l.y2-l.y1);
-        } else
-        {
-         //   l.x1=l.x2;//+isc[2]*(l.x1-l.x2);
-         //   l.y1=l.y2;//+isc[2]*(l.y1-l.y2);
-        }
+        //circle(fisc[0],fisc[1],10)       
+        var l2=new Vline(p1.x,p1.y, fisc[0],fisc[1]);        
+        return l2;
+        
     }
-    return l;
+    
+    return null
 }
 
 
@@ -222,10 +234,10 @@ function voronoi_render(b) {
             
             if (add){                
                 var l=new Vline(p.x,p.y,q.x,q.y);
-            //    if (b != null) l=trimlines(l, b);
+                if (b != null) l=trimlines(l, b);
                 if (l!= null){
                     polys[polys.length]=l;
-                    line(p.x,p.y,q.x,q.y);
+                    line(l.x1,l.y1,l.x2,l.y2);
                 }
             }
         }
@@ -266,7 +278,8 @@ function showpath(P) {
         var y1 = (points[k - 1].y);
         var x2 = (points[k].x);
         var y2 = (points[k].y);
-        line(x1, y1, x2, y2);
+        //line(x1, y1, x2, y2);
+        point(x1,y1);
         // console.log(x1, y1, x2, y2);
     }
 }
@@ -300,7 +313,12 @@ function loadsvg(mx, my) {
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
             var y1 = (points[k].y - y0) * scale + my / 2;
+            if (k==0){
+            border.moveTo(x1,y1)
+            }
+            else{
              border.lineTo(x1, y1);
+            }
         }
         //   borderpoints = border.getPoints();
         borderloaded = true;
