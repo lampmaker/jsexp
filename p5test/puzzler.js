@@ -11,6 +11,12 @@ function Vertex(x, y) {
     this.x = x;
     this.y = y;
 }
+function Vline(x1,y1,x2,y2){
+    this.x1=x1;
+    this.y1=y1;
+    this.x2=x2;
+    this.y2=y2;
+}
 
 
 //======================================================================================================
@@ -48,16 +54,18 @@ function intersect_point(point1, point2, point3, point4) {
     return [x, y, ua, ub]
 }
 
+
+
+
 //================================================================================================
-// trim lines outside of shape.  P contains array of poly, b contains border
+// trim lines outside of shape.  P contains line (4 points), b contains border
 //================================================================================================
-function trimlines(P, b) {
-    for (var c = 0; c < P.length; c++) {
-        var cell = P[c]
-        var ec = false;
-        for (var lines = 0; lines < cell.length; lines++) {
-            var p1 = cell[lines];
-            if (!inpath(p1.x, p1.y, b)) {
+function trimlines(l, b) {
+    var p1=inpath(l.x1,l.y1,b);
+    var p2=inpath(l.x2,l.y2,b);
+    if ( p1 && p2) return l;  //  both lines are inside
+    if ( !p1 && !p2) return null;  // both lines are outside
+/*
                 var p2 = cell[(lines + 1) % cell.length]
                 var q1, q2;
                 var i = 0;
@@ -68,13 +76,8 @@ function trimlines(P, b) {
                     isc = intersect_point(q1, q2, p1, p2);
                     i++;
                 }
-
-                p1.x = isc[0]; p1.y = isc[1];
-
-                ec = true;
-            }
-        }
-    }
+*/
+return l;
 }
 
 
@@ -167,6 +170,8 @@ function add_random(count, size_w, size_h, path) {
         }
     }
 }
+
+
 //======================================================================================================
 //VORONOI
 //Iniitializes voronoi with 100 points
@@ -185,6 +190,34 @@ function voronoi_render(b) {
     var result = voronoi.compute(seeds, bbox);
     var polys = new Array();
 
+
+    for (var cell = 0; cell < result.cells.length; cell++) {       
+        for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
+            var p=result.cells[cell].halfedges[edge].getStartpoint();            
+            var q=result.cells[cell].halfedges[edge].getEndpoint();
+            if (q==null || p==null) {
+                console.log("error", cell, edge)
+            }
+            var add=true;  // only add lines that do not exist yet
+            var i=0;
+            while( (add==true) && (i<polys.length)){
+                if((polys[i].x1==p.x)&&(polys[i].y1==p.y)&&(polys[i].x2==q.x)&&(polys[i].y2==q.y)) add=false;
+                i++;
+            }            
+            
+            if (add){                
+                var l=new Vline(p.x,p.y,q.x,q.y);
+                if (b != null) l=trimlines(l, b);
+                if (l!= null){
+                    polys[polys.length]=l;
+                    line(p.x,p.y,q.x,q.y);
+                }
+            }
+        }
+    }
+
+/*
+
     // Convert to polygon array
     for (var cell = 0; cell < result.cells.length; cell++) {
         polys[cell] = new Array();
@@ -199,12 +232,14 @@ function voronoi_render(b) {
             )
         }
     }
-    if (b != null) trimlines(polys, b);
+
     for (var poly = 0; poly < polys.length; poly++) {
         for (var v = 1; v < polys[poly].length; v++) {
             line(polys[poly][v - 1].x, polys[poly][v - 1].y, polys[poly][v].x, polys[poly][v].y)
         }
     }
+    */
+    
 }
 //======================================================================================================
 // draw the path defined by P
