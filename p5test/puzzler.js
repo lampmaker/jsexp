@@ -61,23 +61,37 @@ function intersect_point(point1, point2, point3, point4) {
 // trim lines outside of shape.  P contains line (4 points), b contains border
 //================================================================================================
 function trimlines(l, b) {
-    var p1=inpath(l.x1,l.y1,b);
-    var p2=inpath(l.x2,l.y2,b);
-    if ( p1 && p2) return l;  //  both lines are inside
-    if ( !p1 && !p2) return null;  // both lines are outside
-/*
-                var p2 = cell[(lines + 1) % cell.length]
-                var q1, q2;
-                var i = 0;
-                var isc = [0, 0, -1, -1];
-                while (!((isc[2] > 0) && (isc[2] < 1) && (isc[3] > 0) && (isc[3] < 1)) && (i < b.length)) {   // FIND POINTS WHERE UA IS BETWEEN 0 AND 1
-                    var q1 = b[i]
-                    var q2 = b[((i + 1) % b.length)];
-                    isc = intersect_point(q1, q2, p1, p2);
-                    i++;
-                }
-*/
-return l;
+    var p1_inside=inpath(l.x1,l.y1,b);
+    var p2_inside=inpath(l.x2,l.y2,b);
+    if ( p1_inside && p2_inside) return l;  //  both lines are inside
+    if ( !p1_inside && !p2_inside) return null;  // both lines are outside
+    var p1=new Vertex(l.x1,l.y1);
+    var p2=new Vertex(l.x2,l.y2);
+    var i = 0;
+    var min=0;
+    var isc;
+    for (var i=0; i<b.length ; i++ ){   
+           var q1 = b[i]
+           var q2 = b[((i + 1) % b.length)];
+           isc = intersect_point(p1, p2, q1, q2);
+           if ((isc[2]>0 && isc[2]<1 && isc[3]>0 && isc[3]<1)) {
+               if (isc[2]>min){ 
+                   min=isc[2] // find closest one
+           }      
+        }
+    }
+    if (min<1){
+        circle(isc[0],isc[1],10)
+        if (p1_inside){
+        //    l.x2=l.x1;//l.x1+isc[2]*(l.x2-l.x1);
+        //    l.y2=l.y1;//l.y1+isc[2]*(l.y2-l.y1);
+        } else
+        {
+         //   l.x1=l.x2;//+isc[2]*(l.x1-l.x2);
+         //   l.y1=l.y2;//+isc[2]*(l.y1-l.y2);
+        }
+    }
+    return l;
 }
 
 
@@ -202,12 +216,13 @@ function voronoi_render(b) {
             var i=0;
             while( (add==true) && (i<polys.length)){
                 if((polys[i].x1==p.x)&&(polys[i].y1==p.y)&&(polys[i].x2==q.x)&&(polys[i].y2==q.y)) add=false;
+                if((polys[i].x1==q.x)&&(polys[i].y1==q.y)&&(polys[i].x2==p.x)&&(polys[i].y2==p.y)) add=false;
                 i++;
             }            
             
             if (add){                
                 var l=new Vline(p.x,p.y,q.x,q.y);
-                if (b != null) l=trimlines(l, b);
+            //    if (b != null) l=trimlines(l, b);
                 if (l!= null){
                     polys[polys.length]=l;
                     line(p.x,p.y,q.x,q.y);
@@ -281,14 +296,15 @@ function loadsvg(mx, my) {
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
         var points = SVGdata[0].subPaths[0].getPoints();
+        
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
             var y1 = (points[k].y - y0) * scale + my / 2;
-            border.lineTo(x1, y1);
+             border.lineTo(x1, y1);
         }
         //   borderpoints = border.getPoints();
         borderloaded = true;
-        borderpoints = border.getPoints();
+        borderpoints = border.getPoints(3);
         voronoi_setup();
         //  }
     })
