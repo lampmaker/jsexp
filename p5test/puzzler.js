@@ -52,12 +52,8 @@ function intersect_point(point1, point2, point3, point4) {
 
     var x = point1.x + ua * (point2.x - point1.x);
     var y = point1.y + ua * (point2.y - point1.y);
-    
-    if (isNaN(ua)|| isNaN(ub)) {
-      //  console.log("NaN:",point1,point2,point3,point4, ua, ub);
-      //  return null;
-      return [0,0,1000,1000];
-    }
+  
+  
 
     return [x, y, ua, ub]
 }
@@ -68,6 +64,9 @@ function intersect_point(point1, point2, point3, point4) {
 //================================================================================================
 // trim lines outside of shape.  P contains line (4 points), b contains border
 //================================================================================================
+
+//  niet stabiel - putnen vallen weg, lijne schieten door en de geselecteerde punten zijn niet altijd in de range. 
+
 function trimlines(l, b) {
     var p1_inside=inpath(l.x1,l.y1,b);
     var p2_inside=inpath(l.x2,l.y2,b);
@@ -85,22 +84,33 @@ function trimlines(l, b) {
     var min=10;
     var isc;
     var fisc;
-    for (var i=0; i<b.length ; i++ ){   
+    var v1,v2;
+    for (var i=0; i<b.length-1 ; i++ ){   
            var q1 = b[i]
-           var q2 = b[(i + 1) % b.length];
+           var q2 = b[(i + 1)];
+
+            if (q1.x==q2.x){
+                console.log("same:",q1,q2,i)
+            }
+
            isc = intersect_point(p1, p2, q1, q2);
-           if ((isc[2]>=0) && (isc[2]<=1) && (isc[3]>=0) && (isc[3]<=1)) {
+         
+           if ((isc[2]>=0) && (isc[2]<=1) && (isc[3]>=0) && (isc[3]<=1)) {   // is dit voldoende?   0-1  betekent krusing tussen de daadwerkelijke punten in? 
                if (isc[3]<min){ 
                    min=isc[3] // find closest one
-                   fisc=isc;
+                   fisc=isc;           
+                   v1=q1;v2=q2;  
            }      
         }
     }
     if (min<1){
         //circle(fisc[0],fisc[1],10)       
+        stroke('#ff0000');
+        line(v1.x,v1.y,v2.x,v2.y);
+        //circle(p1.x+(p2.x-p1.x)*fisc[2],p1.y+(p2.y-p1.y)*fisc[2],10);;      
+        stroke('#000000')
         var l2=new Vline(p1.x,p1.y, fisc[0],fisc[1]);        
-        return l2;
-        
+        return l2;        
     }
     
     return null
@@ -157,7 +167,7 @@ function moveaway(S, p, fraction, a) {
                 dy = (p[j].y - S[i].y);
             }
         }
-        if (closestdistance < a * 0.99) {
+        if (closestdistance < a * 0.999) {
             S[i].x = S[i].x - dx * fraction;
             S[i].y = S[i].y - dy * fraction;
         }
@@ -171,7 +181,7 @@ function evenly_spread(S, p) {
         }
         var avgdist = even_spread_totaldistance(S, p);
         //    console.log(avgdist);
-        moveaway(S, p, 0.05, avgdist.avg);
+        moveaway(S, p, 0.02, avgdist.avg);
     }
 }
 
@@ -204,7 +214,7 @@ function add_random(count, size_w, size_h, path) {
 //======================================================================================================
 function voronoi_setup() {
     seeds = new Array();
-    add_random(100, width, height, border);
+    add_random(50, width, height, border);
 }
 //======================================================================================================
 //VORONOI
@@ -323,6 +333,9 @@ function loadsvg(mx, my) {
         //   borderpoints = border.getPoints();
         borderloaded = true;
         borderpoints = border.getPoints(3);
+        
+        
+
         voronoi_setup();
         //  }
     })
