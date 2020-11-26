@@ -1300,6 +1300,8 @@ GLTFExporter.prototype = {
 
 			if (originalNormal !== undefined) geometry.setAttribute('normal', originalNormal);
 
+			geometry.setAttribute('ar-placement', 'wall');
+
 			// Skip if no exportable attributes found
 			if (Object.keys(attributes).length === 0) {
 
@@ -1408,24 +1410,24 @@ GLTFExporter.prototype = {
 
 			var isMultiMaterial = Array.isArray(mesh.material);
 			if (isMultiMaterial && geometry.groups.length === 0) return null;
-			
-// BEGIN MK TEST INDEX
+
+			// BEGIN MK TEST INDEX
 
 			var forceIndices = options.forceIndices;
-            if (!forceIndices && geometry.index === null && isMultiMaterial) {
-                console.warn('THREE.GLTFExporter: Creating index for non-indexed multi-material mesh.');
-                forceIndices = true;
-            }
-            var didForceIndices = false;
-            if (geometry.index === null && forceIndices) {
-                var indices = [];
-                for (var i = 0, il = geometry.attributes.position.count; i < il; i++) {
-                    indices[i] = i;
-                }
-                geometry.setIndex(indices);
-                didForceIndices = true;
-            }
-//  END MK TEST INDEX
+			if (!forceIndices && geometry.index === null && isMultiMaterial) {
+				console.warn('THREE.GLTFExporter: Creating index for non-indexed multi-material mesh.');
+				forceIndices = true;
+			}
+			var didForceIndices = false;
+			if (geometry.index === null && forceIndices) {
+				var indices = [];
+				for (var i = 0, il = geometry.attributes.position.count; i < il; i++) {
+					indices[i] = i;
+				}
+				geometry.setIndex(indices);
+				didForceIndices = true;
+			}
+			//  END MK TEST INDEX
 
 
 
@@ -1465,11 +1467,11 @@ GLTFExporter.prototype = {
 
 				primitives.push(primitive);
 
-				
+
 			}
 			// MK MOD 
-            if (didForceIndices) {
-                geometry.setIndex(null);
+			if (didForceIndices) {
+				geometry.setIndex(null);
 			}
 			// END MK MOD
 

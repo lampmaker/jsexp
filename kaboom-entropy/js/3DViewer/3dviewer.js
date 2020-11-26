@@ -19,7 +19,7 @@ var Camera, controls, light0, light1;
 var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture, tablematerial;
 var filename;
 // geometry through gui
-var csegments, bevel, flat, csimplify,cscale, cflip;
+var csegments, bevel, flat, csimplify, cscale, cflip;
 //=======================================================================================================
 //=======================================================================================================
 
@@ -40,7 +40,7 @@ export function init() {
     // Renderer.toneMapingExposure = 1;
     //Renderer.toneMappingWhitePoint = .9;
     Renderer.shadowMap.enabled = true;
-   // Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     Renderer.shadowMapSoft = true;
     Scene = new THREE.Scene();
     Scene.background = new THREE.Color(0xffffff);
@@ -56,20 +56,20 @@ export function init() {
     // init background  ----------------------------------------------------------------------------------------------------
 
     var BGtexture = new THREE.TextureLoader().load("background/wall1.jpg");
-    BGtexture.repeat.set(1,1);
+    BGtexture.repeat.set(1, 1);
     //texture.center.x = 40;
     //texture.center.y = 0;
 
     tablematerial = new THREE.MeshLambertMaterial({
-       // color: 0xFFFFFF,
+        // color: 0xFFFFFF,
         //ide: THREE.DoubleSide,
-    // map: BGtexture,
+        // map: BGtexture,
         //	bump: tbump,
         depthWrite: false,
     });
-    var table = new THREE.PlaneGeometry(700,700);
+    var table = new THREE.PlaneGeometry(700, 700);
     var tablemesh = new THREE.Mesh(table, tablematerial);
-    tablemesh.name="background";
+    tablemesh.name = "background";
     tablemesh.position.z = -2;
     tablemesh.receiveShadow = true;
     tablemesh.castShadow = false;
@@ -110,7 +110,7 @@ export function init() {
     //var material= new THREE.MeshNormalMaterial();
     var sidecolor = 0x606060;
 
-    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xCCAAAA });    
+    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: 0xCCAAAA });
     var materialside = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture, color: sidecolor });
 
 
@@ -147,49 +147,49 @@ export function updateUvTransform(ox, oy, rx, ry, rot) {
 }
 //=======================================================================================================
 //=======================================================================================================
-export function updateGeometry(c, b, f, s,sc) {
+export function updateGeometry(c, b, f, s, sc) {
     csegments = c;
     bevel = b;
     flat = f;
     csimplify = s;
-    cscale=sc;
+    cscale = sc;
 }
 
 
-export function updatebackgroundpos(x,y,r,f){    
-    var S=Scene.getObjectByName('SVG');
-    S.position.set(x,y,S.position.z);
-    S.rotation.z=r*3.141592/180;
-    if(f!=cflip) {
-        cflip=f;
+export function updatebackgroundpos(x, y, r, f) {
+    var S = Scene.getObjectByName('SVG');
+    S.position.set(x, y, S.position.z);
+    S.rotation.z = r * 3.141592 / 180;
+    if (f != cflip) {
+        cflip = f;
         S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
     }
 }
 
-export function updatebackground(bgfile){
-    var fn= "background/" + bgfile;    
-    var S=Scene.getObjectByName('background');        
-    if (bgfile=='white'){   
-        S.material.map=null
+export function updatebackground(bgfile) {
+    var fn = "background/" + bgfile;
+    var S = Scene.getObjectByName('background');
+    if (bgfile == 'white') {
+        S.material.map = null
     }
     else {
-        var BGtexture = new THREE.TextureLoader().load(fn);    
-        BGtexture.repeat.set(1,1);
-        S.material.map=BGtexture;
+        var BGtexture = new THREE.TextureLoader().load(fn);
+        BGtexture.repeat.set(1, 1);
+        S.material.map = BGtexture;
     }
-    
-    S.material.needsUpdate=true;
-    S.needsUpdate=true;
+
+    S.material.needsUpdate = true;
+    S.needsUpdate = true;
     //tablematerial.map=BGtexture;            
 }
 
-export function updatelight(x,y,z,f,spc,bgc,int){
-    light1.position.set(x,y,z);
+export function updatelight(x, y, z, f, spc, bgc, int) {
+    light1.position.set(x, y, z);
     light1.shadow.radius = f;
-    light1.color=new THREE.Color(spc)
-    light0.color=new THREE.Color(bgc)
-    light0.intensity=int;
-    light1.intensity=int;
+    light1.color = new THREE.Color(spc)
+    light0.color = new THREE.Color(bgc)
+    light0.intensity = int;
+    light1.intensity = int;
 }
 
 //=======================================================================================================
@@ -220,8 +220,8 @@ function getsizeandpos(geo) {
     return res;
 }
 //=======================================================================================================
-export function loadSVG(url,fn,whenready) {
-    filename=fn;
+export function loadSVG(url, fn, whenready) {
+    filename = fn;
     var loader = new SVGLoader();
     var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
@@ -264,14 +264,14 @@ export function loadSVG(url,fn,whenready) {
                 BevelSegments: 2,
                 curveSegments: csegments
             });
-            var h=1; var w=1;
-            var uvs = SVGgeometry.faceVertexUvs[ 0 ];
-            uvs[ 0 ][ 0 ].set( 0, h );
-            uvs[ 0 ][ 1 ].set( 0, 0 );
-            uvs[ 0 ][ 2 ].set( w, h );
-            uvs[ 1 ][ 0 ].set( 0, 0 );
-            uvs[ 1 ][ 1 ].set( w, 0 );
-            uvs[ 1 ][ 2 ].set( w, h );
+            var h = 1; var w = 1;
+            var uvs = SVGgeometry.faceVertexUvs[0];
+            uvs[0][0].set(0, h);
+            uvs[0][1].set(0, 0);
+            uvs[0][2].set(w, h);
+            uvs[1][0].set(0, 0);
+            uvs[1][1].set(w, 0);
+            uvs[1][2].set(w, h);
             console.log('geometry', SVGgeometry);
             SVGmesh = new THREE.Mesh(SVGgeometry, material);
             SVGmesh.scale.y *= -1;
@@ -285,8 +285,8 @@ export function loadSVG(url,fn,whenready) {
             SVGsubgroup.add(SVGmesh);
         }
         var dims = getsizeandpos(SVGsubgroup);
-        if (cscale!=0) {
-            var l = cscale / Math.max(dims[0], dims[1]);        
+        if (cscale != 0) {
+            var l = cscale / Math.max(dims[0], dims[1]);
             SVGsubgroup.scale.set(l, l, 1);
         }
         if (flat) {
@@ -295,7 +295,7 @@ export function loadSVG(url,fn,whenready) {
         dims = getsizeandpos(SVGsubgroup);
         SVGsubgroup.translateX(-dims[3]);
         SVGsubgroup.translateY(-dims[4]);
-        SVGsubgroup.translateZ(-dims[5]+1);
+        SVGsubgroup.translateZ(-dims[5] + 1);
         SVGgroup.add(SVGsubgroup);
         Scene.add(SVGgroup);
         whenready();
@@ -338,30 +338,41 @@ export function export3D() {
     var Exportscene = new THREE.Scene();
 
 
-/*
+    /*
+    
+        var sidecolor = 0x101010;
+        var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture });
+        var materialside = new THREE.MeshStandardMaterial({  color: sidecolor });
+        var mat = [materialtop, materialside, materialtop];
+    
+      
+        SVGgroup.traverse(function(element){
+                element.material=mat;
+        })
+    */
 
-    var sidecolor = 0x101010;
-    var materialtop = new THREE.MeshStandardMaterial({ map: texture, bumpMap: texture });
-    var materialside = new THREE.MeshStandardMaterial({  color: sidecolor });
-    var mat = [materialtop, materialside, materialtop];
+    var s = 1 / 1000;
+    SVGgroup.scale.set(SVGgroup.scale.x * s, SVGgroup.scale.y * s, SVGgroup.scale.z * s);
 
-  
-    SVGgroup.traverse(function(element){
-            element.material=mat;
-    })
-*/
-
-   var s=1/1000;
-   SVGgroup.scale.set(SVGgroup.scale.x*s,SVGgroup.scale.y*s,SVGgroup.scale.z*s);
-
-/*
-    var dims = getsizeandpos(SVGgroup);
-    SVGgroup.translateX(-dims[3]);
-    SVGgroup.translateY(-dims[4]);
-    SVGgroup.translateZ(-dims[5]+4);
+    /*
+        var dims = getsizeandpos(SVGgroup);
+        SVGgroup.translateX(-dims[3]);
+        SVGgroup.translateY(-dims[4]);
+        SVGgroup.translateZ(-dims[5]+4);
+    
+    
+    */
 
 
-*/
+    /*
+    
+    https://github.com/google/model-viewer/pull/1714
+    m taking the simple approach for now, outlined helpfully in this comment: #687 (comment), where we now have an attribute ar-placement which can be either "wall" or the default "floor".
+     This also configures SceneViewer to use vertical placement. QuickLook is not configurable on the intent side as far as I'm aware.
+    
+    */
+
+
     Exportscene.add(SVGgroup);
     ////  Exportscene.add(light1);
     //  Exportscene.add(light0);
@@ -373,17 +384,20 @@ export function export3D() {
         embedImages: true,
         truncateDrawRange: false,
         trs: false,
-        forcePowerOfTwoTextures: true
+        forcePowerOfTwoTextures: true,
+        wallplacement: false
     };
+
+    // Exportscene.setAttribute('ar-placement', 'wall');
 
     var exporter = new GLTFExporter();
     exporter.parse(Exportscene, function (data) {
         console.log(data);
         if (_binary) {
-            savetoFile(data, filename+'.glb', 'model/gltf-binary');
+            savetoFile(data, filename + '.glb', 'model/gltf-binary');
         }
         else {
-            savetoFile(JSON.stringify(data), filename+'.gltf', 'text/plain');
+            savetoFile(JSON.stringify(data), filename + '.gltf', 'text/plain');
         }
     },
         options);
