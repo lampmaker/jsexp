@@ -135,39 +135,66 @@ function even_spread_totaldistance(S, p) {
     }
     return { avg: TD / S.length, min: mi };
 }
-//================================================================================================
-// VORONOI SEED - move point from closest neighbotr. redistribute
-//================================================================================================
-function moveaway(S, p, fraction, a) {
-    var ready = true
-    for (var i = 0; i < S.length; i++) {
-        var closestdistance = 100000000;
-        var dx, dy
-        for (var j = 0; j < S.length; j++) {        // compare to other seeds
-            if (j != i) {
-                var D = dist(S[i], S[j]);
-                if (D < closestdistance) {
-                    closestdistance = D;
-                    dx = (S[j].x - S[i].x);
-                    dy = (S[j].y - S[i].y);
-                }
-            }
-        }
-        for (var j = 0; j < p.length; j++) {    // compare with border
-            var D = dist(S[i], p[j]) * 3;
-            if (D < closestdistance) {
-                closestdistance = D;
-                dx = (p[j].x - S[i].x);
-                dy = (p[j].y - S[i].y);
-            }
-        }
-        if (closestdistance < a * 0.985) {
-            S[i].x = S[i].x - dx * fraction;
-            S[i].y = S[i].y - dy * fraction;
-            ready = false;
+
+
+
+// ==========================================================================================================
+
+// ==========================================================================================================
+function attractionvector(Si, S, p, a1, a2) {
+    var Fa = new Vertex(0, 0);
+    for (var j = 0; j < S.length; j++) {        // compare to other seeds        
+        var D = dist(Si, S[j]);
+        if (D > 0) {
+            var V = new Vertex((S[j].x - Si.x) / D, (S[j].y - Si.y) / D);
+            Fa.x = Fa.x - a1 * V.x / (D * D);
+            Fa.y = Fa.y - a1 * V.y / (D * D);
         }
     }
-    return ready;
+    var disttoedge = 10000;
+    var Fb = new Vertex(0, 0);
+    if (p != null) {
+        for (var j = 0; j < p.length - 1; j++) {    // compare with border
+            var ls = dist(p[j], p[j + 1]); // length of line segment
+            var D = dist(Si, p[j]);
+            if (D < disttoedge) disttoedge = D;
+            if (D < 10) { ls = ls * 100 };
+            if (D > 0) {
+                var V = new Vertex((p[j].x - Si.x) / D, (p[j].y - Si.y) / D);
+                Fb.x = Fb.x - ls * a2 * V.x / (D * D * D * D);
+                Fb.y = Fb.y - ls * a2 * V.y / (D * D * D * D);
+                // scale force with length of line segment. 
+            }
+        }
+    }
+    if (disttoedge < 5) {
+        Fa.x = 0; Fa.y = 0;
+    }
+    var F = new Vertex(Fa.x + Fb.x, Fa.y + Fb.y);
+    line(Si.x, Si.y, Si.x + F.x * 50, Si.y + F.y * 50) // vector
+    return F;
+}
+
+
+//================================================================================================
+// VORONOI SEED - move point from closest neighbotr. redistribute
+// a = distance with zero force
+// f = force
+//================================================================================================
+
+
+
+
+function moveaway(S, p, a1, a2, f, a) {
+    var ready = true
+    var t = 0;
+    for (var i = 0; i < S.length; i++) {
+        var V = attractionvector(S[i], S, p, a1, a2);
+        t = t + Math.sqrt((V.x * V.x) + (V.y * V.y));
+        S[i].x = S[i].x + V.x * f;
+        S[i].y = S[i].y + V.y * f;
+    }
+    return (t < a)
 }
 //================================================================================================
 // main function, spreads all th points within shape
@@ -179,8 +206,7 @@ function evenly_spread(S, p) {
         point(S[j].x, S[j].y);
     }
     var avgdist = even_spread_totaldistance(S, p);
-    ready = moveaway(S, p, .03, avgdist.avg);
-
+    ready = moveaway(S, p, 100, 4000, 10, .1);
     return ready;
 }
 //======================================================================================================
@@ -259,8 +285,8 @@ function showpath(P) {
         var y1 = (points[k - 1].y);
         var x2 = (points[k].x);
         var y2 = (points[k].y);
-        line(x1, y1, x2, y2);
-        //point(x1, y1);
+        //line(x1, y1, x2, y2);
+        point(x1, y1);
         // console.log(x1, y1, x2, y2);
     }
 }
@@ -304,8 +330,8 @@ function loadsvg(mx, my) {
         scale = Math.min(mx / cwidth, my / cheight);
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
-        var points = SVGdata[0].subPaths[0].getPoints(50);
-
+        var points = SVGdata[0].subPaths[0].getPoints(20);
+        points - subdivpath(points, 1);
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
             var y1 = (points[k].y - y0) * scale + my / 2;
