@@ -11,13 +11,6 @@ function Vertex(x, y) {
     this.x = x;
     this.y = y;
 }
-function Vline(x1, y1, x2, y2) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
-}
-
 //======================================================================================================
 // true if pint x,y is in shapepath
 //======================================================================================================
@@ -62,11 +55,11 @@ function trimlines(l, b) {
     var p2_inside = inpath(l[1], b);
     if (p1_inside && p2_inside) return l;  //  both lines are inside
     if (!p1_inside && !p2_inside) return null;  // both lines are outside
-    if (!p1_inside) {
+    if (!p1_inside) {  // make sure l[0] is always inside
         var tmp = l[0];
         l[0] = l[1];
         l[1] = tmp;
-    }    // l[0] is now always inside
+    }
     var i = 0;
     var min = 10;
     var isc;
@@ -81,7 +74,6 @@ function trimlines(l, b) {
         }
     }
     if (min < 1) {  // if not, no valid intersection was found.        
-
         l[1].x = fisc[0];
         l[1].y = fisc[1];
         return l;
@@ -89,6 +81,34 @@ function trimlines(l, b) {
     return null
 }
 
+
+//================================================================================================
+//subdivides a path by inserting points between two adjacent points that are more than 2*maxd apart
+// maxd=minimum distance between points.  Actual will vary between maxd and 2*maxd.
+//================================================================================================
+function subdivpath(P, maxd) {
+    var i = 0;
+    var ready = false;
+    while (!ready) {
+        var P1 = P[i];
+        var P2 = P[i + 1];
+        var D = dist(P1, P2);
+
+        if (D > 2 * maxd) {  //.. distance is too large, need to insert point(s)
+            var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
+            if (numinserts > 50) numinserts = 50;
+            var dx = (P2.x - P1.x) / (numinserts + 1);
+            var dy = (P2.y - P1.y) / (numinserts + 1);
+            for (var j = 1; j <= numinserts; j++) {
+                var newpoint = new Vertex(P1.x + dx * j, P1.y + dy * j);
+                P.splice(i + j, 0, newpoint);  // insert point
+            }
+        }
+        i++;
+        ready = (i >= (P.length - 1) || i > 20);
+    }
+    return P;
+}
 
 
 //================================================================================================
@@ -119,6 +139,7 @@ function even_spread_totaldistance(S, p) {
 // VORONOI SEED - move point from closest neighbotr. redistribute
 //================================================================================================
 function moveaway(S, p, fraction, a) {
+    var ready = true
     for (var i = 0; i < S.length; i++) {
         var closestdistance = 100000000;
         var dx, dy
@@ -140,25 +161,27 @@ function moveaway(S, p, fraction, a) {
                 dy = (p[j].y - S[i].y);
             }
         }
-        if (closestdistance < a * 0.999) {
+        if (closestdistance < a * 0.94) {
             S[i].x = S[i].x - dx * fraction;
             S[i].y = S[i].y - dy * fraction;
+            ready = false;
         }
     }
+    return ready;
 }
 //================================================================================================
 // main function, spreads all th points within shape
 // moves every point a fraction away from the closest neighbor
 //================================================================================================
 function evenly_spread(S, p) {
-    for (var i = 0; i < 1; i++) {
-        for (var j = 0; j < S.length; j++) {
-            point(S[j].x, S[j].y);
-        }
-        var avgdist = even_spread_totaldistance(S, p);
-        //    console.log(avgdist);
-        moveaway(S, p, 0.02, avgdist.avg);
+    var ready = true;
+    for (var j = 0; j < S.length; j++) {
+        point(S[j].x, S[j].y);
     }
+    var avgdist = even_spread_totaldistance(S, p);
+    ready = moveaway(S, p, 0.03, avgdist.avg);
+
+    return ready;
 }
 //======================================================================================================
 //VORONOI
@@ -211,7 +234,6 @@ function voronoi_render(b) {
                 if ((polys[i].x1 == q.x) && (polys[i].y1 == q.y) && (polys[i].x2 == p.x) && (polys[i].y2 == p.y)) add = false;
                 i++;
             }
-
             if (add) {
                 var l = new Array();
                 l[0] = new Vertex(p.x, p.y);
@@ -220,35 +242,11 @@ function voronoi_render(b) {
                 if (b != null) l = trimlines(l, b);
                 if (l != null) {
                     polys[polys.length] = l;
-                    line(l[0].x, l[0].y, l[1].x, l[1].y);
                 }
             }
         }
     }
-
-    /*
-    
-        // Convert to polygon array
-        for (var cell = 0; cell < result.cells.length; cell++) {
-            polys[cell] = new Array();
-            polys[cell][0] = new Vertex(
-                result.cells[cell].halfedges[0].getStartpoint().x,
-                result.cells[cell].halfedges[0].getStartpoint().y
-            )
-            for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
-                polys[cell][edge + 1] = new Vertex(
-                    result.cells[cell].halfedges[edge].getEndpoint().x,
-                    result.cells[cell].halfedges[edge].getEndpoint().y
-                )
-            }
-        }
-    
-        for (var poly = 0; poly < polys.length; poly++) {
-            for (var v = 1; v < polys[poly].length; v++) {
-                line(polys[poly][v - 1].x, polys[poly][v - 1].y, polys[poly][v].x, polys[poly][v].y)
-            }
-        }
-        */
+    return polys;
 
 }
 //======================================================================================================
@@ -264,6 +262,21 @@ function showpath(P) {
         line(x1, y1, x2, y2);
         //point(x1, y1);
         // console.log(x1, y1, x2, y2);
+    }
+}
+function drawlines(P, l) {
+    for (var i = 0; i < P.length; i++) {
+        for (var j = 0; j < P[i].length - 1; j++) {
+            if (l >= 1) {
+                line(P[i][j].x, P[i][j].y, P[i][j + 1].x, P[i][j + 1].y)
+            }
+            else {
+                point(P[i][j].x, P[i][j].y);
+            }
+            if (l > 1) {
+                circle(P[i][j].x, P[i][j].y, 3)
+            }
+        }
     }
 }
 //======================================================================================================
@@ -371,9 +384,15 @@ export function preload() {
 
 export function setup() {
     // example2_setup();
+    var test = Array();
+    test[0] = new Vertex(0, 0);
+    test[1] = new Vertex(100, 100);
+    test = subdivpath(test, 10);
+
+
     createCanvas(1000, 1000);
-    background(220);
-    stroke('#000000');
+    background(0);
+    stroke('#FFFFFF');
     border = new THREE.Path;
     loadsvg(1000, 1000);
     //imageMode(CENTER);
@@ -381,18 +400,33 @@ export function setup() {
 
     //image(mySvg, width / 2, height / 2);
 
+
+
 }
 
 export function draw() {
     if (borderloaded) {
-        background(220);
+        background(0);
+        stroke('#FFFFFF');
         showpath(border)
-        evenly_spread(seeds, borderpoints);
-        voronoi_render(borderpoints);
-    }
+        if (!evenly_spread(seeds, borderpoints)) {
+            stroke('#00FF00');
+            var lines = voronoi_render(borderpoints);
+            drawlines(lines, 1);
+        }
+        else {
+            console.log("READY optimizing")
+            stroke('#FFFFFF')
+            var lines = voronoi_render(borderpoints);
+            for (var i = 0; i < lines.length; i++) {
+                lines[i] = subdivpath(lines[i], 20);
+            }
+            drawlines(lines, 2);;
 
+        }
+    }
 }
 
 window.preload = preload
 window.setup = setup;
-window.draw = draw;
+window.draw = draw; 
