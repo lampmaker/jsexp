@@ -96,7 +96,7 @@ function subdivpath(P, maxd) {
 
         if (D > 2 * maxd) {  //.. distance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
-            if (numinserts > 50) numinserts = 50;
+            if (numinserts > 500) numinserts = 500;
             var dx = (P2.x - P1.x) / (numinserts + 1);
             var dy = (P2.y - P1.y) / (numinserts + 1);
             for (var j = 1; j <= numinserts; j++) {
@@ -105,7 +105,7 @@ function subdivpath(P, maxd) {
             }
         }
         i++;
-        ready = (i >= (P.length - 1) || i > 20);
+        ready = (i >= (P.length - 1) || i > 2000);
     }
     return P;
 }
@@ -161,7 +161,7 @@ function moveaway(S, p, fraction, a) {
                 dy = (p[j].y - S[i].y);
             }
         }
-        if (closestdistance < a * 0.94) {
+        if (closestdistance < a * 0.985) {
             S[i].x = S[i].x - dx * fraction;
             S[i].y = S[i].y - dy * fraction;
             ready = false;
@@ -179,7 +179,7 @@ function evenly_spread(S, p) {
         point(S[j].x, S[j].y);
     }
     var avgdist = even_spread_totaldistance(S, p);
-    ready = moveaway(S, p, 0.03, avgdist.avg);
+    ready = moveaway(S, p, .03, avgdist.avg);
 
     return ready;
 }
@@ -419,7 +419,7 @@ export function draw() {
             stroke('#FFFFFF')
             var lines = voronoi_render(borderpoints);
             for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], 20);
+                lines[i] = subdivpath(lines[i], 10);
             }
             drawlines(lines, 2);;
 
