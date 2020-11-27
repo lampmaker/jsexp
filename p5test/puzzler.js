@@ -11,11 +11,11 @@ function Vertex(x, y) {
     this.x = x;
     this.y = y;
 }
-function Vline(x1,y1,x2,y2){
-    this.x1=x1;
-    this.y1=y1;
-    this.x2=x2;
-    this.y2=y2;
+function Vline(x1, y1, x2, y2) {
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
 }
 
 
@@ -40,22 +40,19 @@ function dist(p1, p2) {
     return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
 
+function ud(A1, A2, B1, B2) {
+    return ((B2.x - B1.x) * (A1.y - B1.y) - (B2.y - B1.y) * (A1.x - B1.x)) / ((B2.y - B1.y) * (A2.x - A1.x) - (B2.x - B1.x) * (A2.y - A1.y));
+}
 //================================================================================================
-function intersect_point(point1, point2, point3, point4) {
-    var ua = ((point4.x - point3.x) * (point1.y - point3.y) - (point4.y - point3.y) * (point1.x - point3.x)) /
-        ((point4.y - point3.y) * (point2.x - point1.x) - (point4.x - point3.x) * (point2.y - point1.y));
-
-    var ub = ((point2.x - point1.x) * (point1.y - point3.y) -
-        (point2.y - point1.y) * (point1.x - point3.x)) /
-        ((point4.y - point3.y) * (point2.x - point1.x) -
-            (point4.y - point3.x) * (point2.y - point1.y));
-
-    var x = point1.x + ua * (point2.x - point1.x);
-    var y = point1.y + ua * (point2.y - point1.y);
-  
-  
-
-    return [x, y, ua, ub]
+function intersect_point(A1, A2, B1, B2) {
+    var ua = ud(A1, A2, B1, B2);
+    var ub = ud(B1, B2, A1, A2);
+    if ((ua >= 0) && (ua <= 1) && (ub >= 0) && (ub <= 1)) {
+        var x = A1.x + ua * (A2.x - A1.x);
+        var y = A1.y + ua * (A2.y - A1.y);
+        return [x, y, ua, ub]
+    }
+    return null;
 }
 
 
@@ -68,51 +65,44 @@ function intersect_point(point1, point2, point3, point4) {
 //  niet stabiel - putnen vallen weg, lijne schieten door en de geselecteerde punten zijn niet altijd in de range. 
 
 function trimlines(l, b) {
-    var p1_inside=inpath(l.x1,l.y1,b);
-    var p2_inside=inpath(l.x2,l.y2,b);
-    if ( p1_inside && p2_inside) return l;  //  both lines are inside
-    if ( !p1_inside && !p2_inside) return null;  // both lines are outside
-    var p1=new Vertex(l.x1,l.y1);
-    var p2=new Vertex(l.x2,l.y2);
+    var p1_inside = inpath(l.x1, l.y1, b);
+    var p2_inside = inpath(l.x2, l.y2, b);
+    if (p1_inside && p2_inside) return l;  //  both lines are inside
+    if (!p1_inside && !p2_inside) return null;  // both lines are outside
+    var p1 = new Vertex(l.x1, l.y1);
+    var p2 = new Vertex(l.x2, l.y2);
     if (!p1_inside) {
-        var tmp=p1;
-        p1=p2;
-        p2=tmp;
+        var tmp = p1;
+        p1 = p2;
+        p2 = tmp;
     }
     // p1 is now always inside
+
     var i = 0;
-    var min=10;
+    var min = 10;
     var isc;
     var fisc;
-    var v1,v2;
-    for (var i=0; i<b.length-1 ; i++ ){   
-           var q1 = b[i]
-           var q2 = b[(i + 1)];
+    var v1, v2;
+    for (var i = 0; i < b.length - 1; i++) {
+        var q1 = b[i]
+        var q2 = b[(i + 1)];
+        if (q1.x == q2.x) {
+            console.log("same:", q1, q2, i)
+        }
 
-            if (q1.x==q2.x){
-                console.log("same:",q1,q2,i)
+        isc = intersect_point(p1, p2, q1, q2);
+        if (isc != null) {
+            if (isc[2] < min) {
+                min = isc[2] // find closest one
+                fisc = isc;
+                v1 = q1; v2 = q2;
             }
-
-           isc = intersect_point(p1, p2, q1, q2);
-         
-           if ((isc[2]>=0) && (isc[2]<=1) && (isc[3]>=0) && (isc[3]<=1)) {   // is dit voldoende?   0-1  betekent krusing tussen de daadwerkelijke punten in? 
-               if (isc[3]<min){ 
-                   min=isc[3] // find closest one
-                   fisc=isc;           
-                   v1=q1;v2=q2;  
-           }      
         }
     }
-    if (min<1){
-        //circle(fisc[0],fisc[1],10)       
-        stroke('#ff0000');
-        line(v1.x,v1.y,v2.x,v2.y);
-        //circle(p1.x+(p2.x-p1.x)*fisc[2],p1.y+(p2.y-p1.y)*fisc[2],10);;      
-        stroke('#000000')
-        var l2=new Vline(p1.x,p1.y, fisc[0],fisc[1]);        
-        return l2;        
+    if (min < 1) {
+        var l2 = new Vline(p1.x, p1.y, fisc[0], fisc[1]);
+        return l2;
     }
-    
     return null
 }
 
@@ -227,56 +217,56 @@ function voronoi_render(b) {
     var polys = new Array();
 
 
-    for (var cell = 0; cell < result.cells.length; cell++) {       
+    for (var cell = 0; cell < result.cells.length; cell++) {
         for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
-            var p=result.cells[cell].halfedges[edge].getStartpoint();            
-            var q=result.cells[cell].halfedges[edge].getEndpoint();
-            if (q==null || p==null) {
+            var p = result.cells[cell].halfedges[edge].getStartpoint();
+            var q = result.cells[cell].halfedges[edge].getEndpoint();
+            if (q == null || p == null) {
                 console.log("error", cell, edge)
             }
-            var add=true;  // only add lines that do not exist yet
-            var i=0;
-            while( (add==true) && (i<polys.length)){
-                if((polys[i].x1==p.x)&&(polys[i].y1==p.y)&&(polys[i].x2==q.x)&&(polys[i].y2==q.y)) add=false;
-                if((polys[i].x1==q.x)&&(polys[i].y1==q.y)&&(polys[i].x2==p.x)&&(polys[i].y2==p.y)) add=false;
+            var add = true;  // only add lines that do not exist yet
+            var i = 0;
+            while ((add == true) && (i < polys.length)) {
+                if ((polys[i].x1 == p.x) && (polys[i].y1 == p.y) && (polys[i].x2 == q.x) && (polys[i].y2 == q.y)) add = false;
+                if ((polys[i].x1 == q.x) && (polys[i].y1 == q.y) && (polys[i].x2 == p.x) && (polys[i].y2 == p.y)) add = false;
                 i++;
-            }            
-            
-            if (add){                
-                var l=new Vline(p.x,p.y,q.x,q.y);
-                if (b != null) l=trimlines(l, b);
-                if (l!= null){
-                    polys[polys.length]=l;
-                    line(l.x1,l.y1,l.x2,l.y2);
+            }
+
+            if (add) {
+                var l = new Vline(p.x, p.y, q.x, q.y);
+                if (b != null) l = trimlines(l, b);
+                if (l != null) {
+                    polys[polys.length] = l;
+                    line(l.x1, l.y1, l.x2, l.y2);
                 }
             }
         }
     }
 
-/*
-
-    // Convert to polygon array
-    for (var cell = 0; cell < result.cells.length; cell++) {
-        polys[cell] = new Array();
-        polys[cell][0] = new Vertex(
-            result.cells[cell].halfedges[0].getStartpoint().x,
-            result.cells[cell].halfedges[0].getStartpoint().y
-        )
-        for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
-            polys[cell][edge + 1] = new Vertex(
-                result.cells[cell].halfedges[edge].getEndpoint().x,
-                result.cells[cell].halfedges[edge].getEndpoint().y
-            )
-        }
-    }
-
-    for (var poly = 0; poly < polys.length; poly++) {
-        for (var v = 1; v < polys[poly].length; v++) {
-            line(polys[poly][v - 1].x, polys[poly][v - 1].y, polys[poly][v].x, polys[poly][v].y)
-        }
-    }
-    */
+    /*
     
+        // Convert to polygon array
+        for (var cell = 0; cell < result.cells.length; cell++) {
+            polys[cell] = new Array();
+            polys[cell][0] = new Vertex(
+                result.cells[cell].halfedges[0].getStartpoint().x,
+                result.cells[cell].halfedges[0].getStartpoint().y
+            )
+            for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
+                polys[cell][edge + 1] = new Vertex(
+                    result.cells[cell].halfedges[edge].getEndpoint().x,
+                    result.cells[cell].halfedges[edge].getEndpoint().y
+                )
+            }
+        }
+    
+        for (var poly = 0; poly < polys.length; poly++) {
+            for (var v = 1; v < polys[poly].length; v++) {
+                line(polys[poly][v - 1].x, polys[poly][v - 1].y, polys[poly][v].x, polys[poly][v].y)
+            }
+        }
+        */
+
 }
 //======================================================================================================
 // draw the path defined by P
@@ -288,8 +278,8 @@ function showpath(P) {
         var y1 = (points[k - 1].y);
         var x2 = (points[k].x);
         var y2 = (points[k].y);
-        //line(x1, y1, x2, y2);
-        point(x1,y1);
+        line(x1, y1, x2, y2);
+        //point(x1, y1);
         // console.log(x1, y1, x2, y2);
     }
 }
@@ -318,23 +308,23 @@ function loadsvg(mx, my) {
         scale = Math.min(mx / cwidth, my / cheight);
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
-        var points = SVGdata[0].subPaths[0].getPoints();
-        
+        var points = SVGdata[0].subPaths[0].getPoints(50);
+
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
             var y1 = (points[k].y - y0) * scale + my / 2;
-            if (k==0){
-            border.moveTo(x1,y1)
+            if (k == 0) {
+                border.moveTo(x1, y1)
             }
-            else{
-             border.lineTo(x1, y1);
+            else {
+                border.lineTo(x1, y1);
             }
         }
         //   borderpoints = border.getPoints();
         borderloaded = true;
-        borderpoints = border.getPoints(3);
-        
-        
+        borderpoints = border.getPoints();
+
+
 
         voronoi_setup();
         //  }
