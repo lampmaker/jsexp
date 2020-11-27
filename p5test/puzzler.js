@@ -18,32 +18,32 @@ function Vline(x1, y1, x2, y2) {
     this.y2 = y2;
 }
 
-
 //======================================================================================================
 // true if pint x,y is in shapepath
 //======================================================================================================
-function inpath(x, y, vs) {
+function inpath(P, vs) {
     var inside = false;
     for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
         var xi = vs[i].x,
             yi = vs[i].y;
         var xj = vs[j].x,
             yj = vs[j].y;
-        var intersect = ((yi > y) != (yj > y)) &&
-            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        var intersect = ((yi > P.y) != (yj > P.y)) &&
+            (P.x < (xj - xi) * (P.y - yi) / (yj - yi) + xi);
         if (intersect) inside = !inside;
     }
     return inside;
 }
-//
+//  Distance between points p1 p2
 function dist(p1, p2) {
     return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
-
+// helper function for intersect-point
 function ud(A1, A2, B1, B2) {
     return ((B2.x - B1.x) * (A1.y - B1.y) - (B2.y - B1.y) * (A1.x - B1.x)) / ((B2.y - B1.y) * (A2.x - A1.x) - (B2.x - B1.x) * (A2.y - A1.y));
 }
 //================================================================================================
+// calculates intersection between lines A1-A2 and B1-B2.   null if intersection is not in-between those points
 function intersect_point(A1, A2, B1, B2) {
     var ua = ud(A1, A2, B1, B2);
     var ub = ud(B1, B2, A1, A2);
@@ -54,59 +54,40 @@ function intersect_point(A1, A2, B1, B2) {
     }
     return null;
 }
-
-
-
-
 //================================================================================================
 // trim lines outside of shape.  P contains line (4 points), b contains border
 //================================================================================================
-
-//  niet stabiel - putnen vallen weg, lijne schieten door en de geselecteerde punten zijn niet altijd in de range. 
-
 function trimlines(l, b) {
-    var p1_inside = inpath(l.x1, l.y1, b);
-    var p2_inside = inpath(l.x2, l.y2, b);
+    var p1_inside = inpath(l[0], b);
+    var p2_inside = inpath(l[1], b);
     if (p1_inside && p2_inside) return l;  //  both lines are inside
     if (!p1_inside && !p2_inside) return null;  // both lines are outside
-    var p1 = new Vertex(l.x1, l.y1);
-    var p2 = new Vertex(l.x2, l.y2);
     if (!p1_inside) {
-        var tmp = p1;
-        p1 = p2;
-        p2 = tmp;
-    }
-    // p1 is now always inside
-
+        var tmp = l[0];
+        l[0] = l[1];
+        l[1] = tmp;
+    }    // l[0] is now always inside
     var i = 0;
     var min = 10;
     var isc;
     var fisc;
-    var v1, v2;
     for (var i = 0; i < b.length - 1; i++) {
-        var q1 = b[i]
-        var q2 = b[(i + 1)];
-        if (q1.x == q2.x) {
-            console.log("same:", q1, q2, i)
-        }
-
-        isc = intersect_point(p1, p2, q1, q2);
+        isc = intersect_point(l[0], l[1], b[i], b[(i + 1)]);
         if (isc != null) {
             if (isc[2] < min) {
-                min = isc[2] // find closest one
+                min = isc[2] // find closest one.  isc2 is distance on p1-p2 line.
                 fisc = isc;
-                v1 = q1; v2 = q2;
             }
         }
     }
-    if (min < 1) {
-        var l2 = new Vline(p1.x, p1.y, fisc[0], fisc[1]);
-        return l2;
+    if (min < 1) {  // if not, no valid intersection was found.        
+
+        l[1].x = fisc[0];
+        l[1].y = fisc[1];
+        return l;
     }
     return null
 }
-
-
 
 
 
@@ -134,7 +115,9 @@ function even_spread_totaldistance(S, p) {
     }
     return { avg: TD / S.length, min: mi };
 }
-// moves every point a fraction away from the closest neighbor
+//================================================================================================
+// VORONOI SEED - move point from closest neighbotr. redistribute
+//================================================================================================
 function moveaway(S, p, fraction, a) {
     for (var i = 0; i < S.length; i++) {
         var closestdistance = 100000000;
@@ -163,7 +146,10 @@ function moveaway(S, p, fraction, a) {
         }
     }
 }
-// main function, spreads all teh points within shape
+//================================================================================================
+// main function, spreads all th points within shape
+// moves every point a fraction away from the closest neighbor
+//================================================================================================
 function evenly_spread(S, p) {
     for (var i = 0; i < 1; i++) {
         for (var j = 0; j < S.length; j++) {
@@ -174,7 +160,6 @@ function evenly_spread(S, p) {
         moveaway(S, p, 0.02, avgdist.avg);
     }
 }
-
 //======================================================================================================
 //VORONOI
 //adds[count] random points within range[size_w, size_h] and within shape defined by[path]
@@ -182,22 +167,19 @@ function evenly_spread(S, p) {
 function add_random(count, size_w, size_h, path) {
     var n = 0
     while (n < count) {
-        var x = Math.random() * size_w;
-        var y = Math.random() * size_h
+        var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
         if (path == null) {
-            seeds[seeds.length] = { x, y };
+            seeds[seeds.length] = P;
             n++
         }
         else {
-            if (inpath(x, y, path.getPoints())) {
-                seeds[seeds.length] = { x, y };
+            if (inpath(P, path.getPoints())) {
+                seeds[seeds.length] = P;
                 n++
             }
         }
     }
 }
-
-
 //======================================================================================================
 //VORONOI
 //Iniitializes voronoi with 100 points
@@ -214,9 +196,7 @@ function voronoi_render(b) {
     var bbox = { xl: 0, xr: width, yt: 0, yb: height };
     var voronoi = new Voronoi();
     var result = voronoi.compute(seeds, bbox);
-    var polys = new Array();
-
-
+    var polys = new Array();   // array of line segments. 
     for (var cell = 0; cell < result.cells.length; cell++) {
         for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
             var p = result.cells[cell].halfedges[edge].getStartpoint();
@@ -233,11 +213,14 @@ function voronoi_render(b) {
             }
 
             if (add) {
-                var l = new Vline(p.x, p.y, q.x, q.y);
+                var l = new Array();
+                l[0] = new Vertex(p.x, p.y);
+                l[1] = new Vertex(q.x, q.y);
+                //                var l = new Vline(p.x, p.y, q.x, q.y);             
                 if (b != null) l = trimlines(l, b);
                 if (l != null) {
                     polys[polys.length] = l;
-                    line(l.x1, l.y1, l.x2, l.y2);
+                    line(l[0].x, l[0].y, l[1].x, l[1].y);
                 }
             }
         }
