@@ -3,13 +3,17 @@ import { SVGLoader } from '/SVGLoader.js';
 //======================================================================================================
 // VORONOI STUFF
 //======================================================================================================
-var seeds;
+var seeds, lines;
 var border, borderpoints;
 var borderloaded = false;
+var phase = 1;
 //======================================================================================================
 function Vertex(x, y) {
     this.x = x;
     this.y = y;
+}
+function add(a, b) {
+    return new Vertex(a.x + b.x, a.y + b.y);
 }
 //======================================================================================================
 // true if pint x,y is in shapepath
@@ -54,7 +58,11 @@ function trimlines(l, b) {
     var p1_inside = inpath(l[0], b);
     var p2_inside = inpath(l[1], b);
     if (p1_inside && p2_inside) return l;  //  both lines are inside
-    if (!p1_inside && !p2_inside) return null;  // both lines are outside
+    if (!p1_inside && !p2_inside) {
+        //   console.log("both poitns outside")
+
+        return null;  // both lines are outside - possible that line in-between them still intersects with border!
+    }
     if (!p1_inside) {  // make sure l[0] is always inside
         var tmp = l[0];
         l[0] = l[1];
@@ -137,41 +145,47 @@ function even_spread_totaldistance(S, p) {
 }
 
 
+// ==========================================================================================================
+// Calculate attraction or repulsion force.  a=strength, p=power ()
+// ==========================================================================================================
 
+function force(p1, p2, a, p) {
+    var F = new Vertex(0, 0);
+    var D = dist(p1, p2);
+    if (D == 0) return F;
+    var V = new Vertex((p1.x - p2.x) / D, (p1.y - p2.y) / D);  // direction vector
+    F.x = a * V.x / Math.pow(D, p);
+    F.y = a * V.y / Math.pow(D, p);
+    if (F.x == null || F.y == null) {
+        return new Vertex(0, 0);
+    }
+    return F;
+}
 // ==========================================================================================================
 
 // ==========================================================================================================
 function attractionvector(Si, S, p, a1, a2) {
     var Fa = new Vertex(0, 0);
     for (var j = 0; j < S.length; j++) {        // compare to other seeds        
-        var D = dist(Si, S[j]);
-        if (D > 0) {
-            var V = new Vertex((S[j].x - Si.x) / D, (S[j].y - Si.y) / D);
-            Fa.x = Fa.x - a1 * V.x / (D * D);
-            Fa.y = Fa.y - a1 * V.y / (D * D);
-        }
+        var f = force(Si, S[j], a1, 2);
+        Fa = add(Fa, f);
     }
     var disttoedge = 10000;
     var Fb = new Vertex(0, 0);
     if (p != null) {
         for (var j = 0; j < p.length - 1; j++) {    // compare with border
             var ls = dist(p[j], p[j + 1]); // length of line segment
-            var D = dist(Si, p[j]);
-            if (D < disttoedge) disttoedge = D;
+            var D = dist(p[j], Si);
             if (D < 10) { ls = ls * 100 };
-            if (D > 0) {
-                var V = new Vertex((p[j].x - Si.x) / D, (p[j].y - Si.y) / D);
-                Fb.x = Fb.x - ls * a2 * V.x / (D * D * D * D);
-                Fb.y = Fb.y - ls * a2 * V.y / (D * D * D * D);
-                // scale force with length of line segment. 
-            }
+            var f = force(Si, p[j], a1 * ls, 3);
+            Fb = add(Fb, f);
         }
     }
     if (disttoedge < 5) {
         Fa.x = 0; Fa.y = 0;
     }
-    var F = new Vertex(Fa.x + Fb.x, Fa.y + Fb.y);
-    line(Si.x, Si.y, Si.x + F.x * 50, Si.y + F.y * 50) // vector
+    var F = add(Fa, Fb);
+    // line(Si.x, Si.y, Si.x + F.x * 50, Si.y + F.y * 50) // vector
     return F;
 }
 
@@ -181,8 +195,6 @@ function attractionvector(Si, S, p, a1, a2) {
 // a = distance with zero force
 // f = force
 //================================================================================================
-
-
 
 
 function moveaway(S, p, a1, a2, f, a) {
@@ -200,15 +212,79 @@ function moveaway(S, p, a1, a2, f, a) {
 // main function, spreads all th points within shape
 // moves every point a fraction away from the closest neighbor
 //================================================================================================
-function evenly_spread(S, p) {
+function evenly_spread(S, p, a1, a2, f, a) {
     var ready = true;
-    for (var j = 0; j < S.length; j++) {
-        point(S[j].x, S[j].y);
-    }
     var avgdist = even_spread_totaldistance(S, p);
-    ready = moveaway(S, p, 100, 4000, 10, .1);
+    ready = moveaway(S, p, a1, a2, f, a);
     return ready;
 }
+
+
+
+
+//==================================================================================================
+//  a: attraction force to both neighbor points
+//  b: repulsion force other points
+//  c: repulsion force border
+//  s: stepsize
+//==================================================================================================
+function diffgrowth(lines, a, b, c, p, s) {
+    //for (var l = 0; l < lines.length; l++)
+    {
+        var l = 0;
+        for (var i = 1; i < lines[l].length - 1; i++) {   // don't do this for the edge nodes
+
+            var fa = new Vertex(0, 0);
+            var fb = new Vertex(0, 0);
+            var fc, f;
+            var fa1 = force(lines[l][i], lines[l][i - 1], a, 2);
+            var fa2 = force(lines[l][i], lines[l][i + 1], a, 2);
+            fa = add(fa1, fa2);
+            //---------------------------------
+            for (var j = 0; j < lines.length; j++) {
+                fb = add(fb, attractionvector(lines[l][i], lines[j], null, b, 0));
+            }
+            //---------------------------------
+            var f = add(fa, fb);
+            lines[l][i].x += f.x * s;
+            lines[l][i].y += f.y * s;
+
+        }
+    }
+    return lines;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //======================================================================================================
 //VORONOI
 //adds[count] random points within range[size_w, size_h] and within shape defined by[path]
@@ -415,7 +491,7 @@ export function setup() {
     test[1] = new Vertex(100, 100);
     test = subdivpath(test, 10);
 
-
+    lines = new Array();
     createCanvas(1000, 1000);
     background(0);
     stroke('#FFFFFF');
@@ -435,20 +511,27 @@ export function draw() {
         background(0);
         stroke('#FFFFFF');
         showpath(border)
-        if (!evenly_spread(seeds, borderpoints)) {
+        if (phase == 1) {
             stroke('#00FF00');
-            var lines = voronoi_render(borderpoints);
+            lines = voronoi_render(borderpoints);
             drawlines(lines, 1);
+            if (evenly_spread(seeds, borderpoints, 100, 8000, 10, 0.5)) { phase = 2 }
+            for (var i = 0; i < seeds.length; i++) {
+                point(seeds[i].x, seeds[i].y);
+            }
         }
-        else {
-            console.log("READY optimizing")
+        if (phase == 2) {
             stroke('#FFFFFF')
-            var lines = voronoi_render(borderpoints);
             for (var i = 0; i < lines.length; i++) {
                 lines[i] = subdivpath(lines[i], 10);
             }
             drawlines(lines, 2);;
+            phase = 3;
+        }
+        if (phase == 3) {
+            lines = diffgrowth(lines, 0, 10, 0, 1);
 
+            drawlines(lines, 2);;
         }
     }
 }
