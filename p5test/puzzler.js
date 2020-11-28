@@ -12,8 +12,21 @@ function Vertex(x, y) {
     this.x = x;
     this.y = y;
 }
-function add(a, b) {
+function Vadd(a, b) {
     return new Vertex(a.x + b.x, a.y + b.y);
+}
+
+function Vlen(a) {
+    return sqrt(a.x * a.x + a.y * a.y);
+}
+
+//  Vdistance between points p1 p2
+function Vdist(p1, p2) {
+    return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+}
+
+function Vscale(p1, a) {
+    return new Vertex(p1.x * a, p1.y * a);
 }
 //======================================================================================================
 // true if pint x,y is in shapepath
@@ -31,10 +44,7 @@ function inpath(P, vs) {
     }
     return inside;
 }
-//  Distance between points p1 p2
-function dist(p1, p2) {
-    return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
-}
+
 // helper function for intersect-point
 function ud(A1, A2, B1, B2) {
     return ((B2.x - B1.x) * (A1.y - B1.y) - (B2.y - B1.y) * (A1.x - B1.x)) / ((B2.y - B1.y) * (A2.x - A1.x) - (B2.x - B1.x) * (A2.y - A1.y));
@@ -76,7 +86,7 @@ function trimlines(l, b) {
         isc = intersect_point(l[0], l[1], b[i], b[(i + 1)]);
         if (isc != null) {
             if (isc[2] < min) {
-                min = isc[2] // find closest one.  isc2 is distance on p1-p2 line.
+                min = isc[2] // find closest one.  isc2 is Vdistance on p1-p2 line.
                 fisc = isc;
             }
         }
@@ -92,7 +102,7 @@ function trimlines(l, b) {
 
 //================================================================================================
 //subdivides a path by inserting points between two adjacent points that are more than 2*maxd apart
-// maxd=minimum distance between points.  Actual will vary between maxd and 2*maxd.
+// maxd=minimum Vdistance between points.  Actual will vary between maxd and 2*maxd.
 //================================================================================================
 function subdivpath(P, maxd) {
     var i = 0;
@@ -100,9 +110,9 @@ function subdivpath(P, maxd) {
     while (!ready) {
         var P1 = P[i];
         var P2 = P[i + 1];
-        var D = dist(P1, P2);
+        var D = Vdist(P1, P2);
 
-        if (D > 2 * maxd) {  //.. distance is too large, need to insert point(s)
+        if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
             if (numinserts > 500) numinserts = 500;
             var dx = (P2.x - P1.x) / (numinserts + 1);
@@ -120,22 +130,22 @@ function subdivpath(P, maxd) {
 
 
 //================================================================================================
-// VORONOI - Distributepoints evenly within shape
-// calculate average between points.   Need to lower in order to distribute more evenly
+// VORONOI - Vdistributepoints evenly within shape
+// calculate average between points.   Need to lower in order to Vdistribute more evenly
 //================================================================================================
-function even_spread_totaldistance(S, p) {
+function even_spread_totalVdistance(S, p) {
     var TD = 0;
     var mi = 10000000000000;
     for (var i = 0; i < S.length; i++) {
         var mind = 10000000000;
         for (var j = 0; j < S.length; j++) {
             if (j != i) {
-                var D = dist(S[i], S[j]);
+                var D = Vdist(S[i], S[j]);
                 if (D < mind) mind = D;
             }
         }
         for (var j = 0; j < p.length; j++) {
-            var D = dist(S[i], p[j]) * 3;
+            var D = Vdist(S[i], p[j]) * 3;
             if (D < mind) mind = D;
         }
         TD = TD + mind;
@@ -151,7 +161,7 @@ function even_spread_totaldistance(S, p) {
 
 function force(p1, p2, a, p) {
     var F = new Vertex(0, 0);
-    var D = dist(p1, p2);
+    var D = Vdist(p1, p2);
     if (D == 0) return F;
     var V = new Vertex((p1.x - p2.x) / D, (p1.y - p2.y) / D);  // direction vector
     F.x = a * V.x / Math.pow(D, p);
@@ -159,6 +169,9 @@ function force(p1, p2, a, p) {
     if (F.x == null || F.y == null) {
         return new Vertex(0, 0);
     }
+    var l = Vlen(F);
+    if (l > 1) F = Vscale(F, 1 / l);
+
     return F;
 }
 // ==========================================================================================================
@@ -168,31 +181,31 @@ function attractionvector(Si, S, p, a1, a2) {
     var Fa = new Vertex(0, 0);
     for (var j = 0; j < S.length; j++) {        // compare to other seeds        
         var f = force(Si, S[j], a1, 2);
-        Fa = add(Fa, f);
+        Fa = Vadd(Fa, f);
     }
-    var disttoedge = 10000;
+    var Vdisttoedge = 10000;
     var Fb = new Vertex(0, 0);
     if (p != null) {
         for (var j = 0; j < p.length - 1; j++) {    // compare with border
-            var ls = dist(p[j], p[j + 1]); // length of line segment
-            var D = dist(p[j], Si);
+            var ls = Vdist(p[j], p[j + 1]); // length of line segment
+            var D = Vdist(p[j], Si);
             if (D < 10) { ls = ls * 100 };
-            var f = force(Si, p[j], a1 * ls, 3);
-            Fb = add(Fb, f);
+            var f = force(Si, p[j], a2 * ls, 3);
+            Fb = Vadd(Fb, f);
         }
     }
-    if (disttoedge < 5) {
+    if (Vdisttoedge < 5) {
         Fa.x = 0; Fa.y = 0;
     }
-    var F = add(Fa, Fb);
+    var F = Vadd(Fa, Fb);
     // line(Si.x, Si.y, Si.x + F.x * 50, Si.y + F.y * 50) // vector
     return F;
 }
 
 
 //================================================================================================
-// VORONOI SEED - move point from closest neighbotr. redistribute
-// a = distance with zero force
+// VORONOI SEED - move point from closest neighbotr. reVdistribute
+// a = Vdistance with zero force
 // f = force
 //================================================================================================
 
@@ -214,7 +227,7 @@ function moveaway(S, p, a1, a2, f, a) {
 //================================================================================================
 function evenly_spread(S, p, a1, a2, f, a) {
     var ready = true;
-    var avgdist = even_spread_totaldistance(S, p);
+    var avgVdist = even_spread_totalVdistance(S, p);
     ready = moveaway(S, p, a1, a2, f, a);
     return ready;
 }
@@ -229,29 +242,31 @@ function evenly_spread(S, p, a1, a2, f, a) {
 //  s: stepsize
 //==================================================================================================
 function diffgrowth(lines, a, b, c, p, s) {
-    //for (var l = 0; l < lines.length; l++)
-    {
-        var l = 0;
-        for (var i = 1; i < lines[l].length - 1; i++) {   // don't do this for the edge nodes
+    var tl = lines;
+    for (var l = 0; l < 2; l++) {
 
+        for (var i = 1; i < lines[l].length - 1; i++) {   // don't do this for the edge nodes
             var fa = new Vertex(0, 0);
             var fb = new Vertex(0, 0);
             var fc, f;
             var fa1 = force(lines[l][i], lines[l][i - 1], a, 2);
             var fa2 = force(lines[l][i], lines[l][i + 1], a, 2);
-            fa = add(fa1, fa2);
+            fa = Vadd(fa1, fa2);
             //---------------------------------
             for (var j = 0; j < lines.length; j++) {
-                fb = add(fb, attractionvector(lines[l][i], lines[j], null, b, 0));
+                fb = Vadd(fb, attractionvector(lines[l][i], lines[j], p, b, 0));
             }
             //---------------------------------
-            var f = add(fa, fb);
-            lines[l][i].x += f.x * s;
-            lines[l][i].y += f.y * s;
-
+            var f = Vadd(fa, fb);
+            stroke('#FF0000')
+            circle(lines[l][i].x, lines[l][i].y, 10);
+            //line(lines[l][i].x, lines[l][i].y, lines[l][i].x + f.x * s, lines[l][i].y + f.y * s);
+            tl[l][i].x += f.x, 1 * s;
+            tl[l][i].y += f.y, 1 * s;
+            stroke('#FFFFFF')
         }
     }
-    return lines;
+    return tl;
 }
 
 
@@ -287,9 +302,9 @@ function diffgrowth(lines, a, b, c, p, s) {
 
 //======================================================================================================
 //VORONOI
-//adds[count] random points within range[size_w, size_h] and within shape defined by[path]
+//Vadds[count] random points within range[size_w, size_h] and within shape defined by[path]
 //======================================================================================================
-function add_random(count, size_w, size_h, path) {
+function Vadd_random(count, size_w, size_h, path) {
     var n = 0
     while (n < count) {
         var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
@@ -311,7 +326,7 @@ function add_random(count, size_w, size_h, path) {
 //======================================================================================================
 function voronoi_setup() {
     seeds = new Array();
-    add_random(50, width, height, border);
+    Vadd_random(50, width, height, border);
 }
 //======================================================================================================
 //VORONOI
@@ -329,14 +344,14 @@ function voronoi_render(b) {
             if (q == null || p == null) {
                 console.log("error", cell, edge)
             }
-            var add = true;  // only add lines that do not exist yet
+            var Vadd = true;  // only Vadd lines that do not exist yet
             var i = 0;
-            while ((add == true) && (i < polys.length)) {
-                if ((polys[i].x1 == p.x) && (polys[i].y1 == p.y) && (polys[i].x2 == q.x) && (polys[i].y2 == q.y)) add = false;
-                if ((polys[i].x1 == q.x) && (polys[i].y1 == q.y) && (polys[i].x2 == p.x) && (polys[i].y2 == p.y)) add = false;
+            while ((Vadd == true) && (i < polys.length)) {
+                if ((polys[i].x1 == p.x) && (polys[i].y1 == p.y) && (polys[i].x2 == q.x) && (polys[i].y2 == q.y)) Vadd = false;
+                if ((polys[i].x1 == q.x) && (polys[i].y1 == q.y) && (polys[i].x2 == p.x) && (polys[i].y2 == p.y)) Vadd = false;
                 i++;
             }
-            if (add) {
+            if (Vadd) {
                 var l = new Array();
                 l[0] = new Vertex(p.x, p.y);
                 l[1] = new Vertex(q.x, q.y);
@@ -515,7 +530,7 @@ export function draw() {
             stroke('#00FF00');
             lines = voronoi_render(borderpoints);
             drawlines(lines, 1);
-            if (evenly_spread(seeds, borderpoints, 100, 8000, 10, 0.5)) { phase = 2 }
+            if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }
             for (var i = 0; i < seeds.length; i++) {
                 point(seeds[i].x, seeds[i].y);
             }
@@ -529,8 +544,10 @@ export function draw() {
             phase = 3;
         }
         if (phase == 3) {
-            lines = diffgrowth(lines, 0, 10, 0, 1);
-
+            lines = diffgrowth(lines, 1, 1, 1, borderpoints, 1);
+            for (var i = 0; i < lines.length; i++) {
+                lines[i] = subdivpath(lines[i], 10);
+            }
             drawlines(lines, 2);;
         }
     }
