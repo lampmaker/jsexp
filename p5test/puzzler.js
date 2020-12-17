@@ -258,8 +258,8 @@ function diffgrowth(lines, a, b, c, p, s) {
             }
             //---------------------------------
             var f = Vadd(fa, fb);
-            stroke('#FF0000')
-            circle(lines[l][i].x, lines[l][i].y, 10);
+       //     stroke('#FF0000')
+         //   circle(lines[l][i].x, lines[l][i].y, 10);
             //line(lines[l][i].x, lines[l][i].y, lines[l][i].x + f.x * s, lines[l][i].y + f.y * s);
             tl[l][i].x += f.x, 1 * s;
             tl[l][i].y += f.y, 1 * s;
@@ -421,7 +421,7 @@ function loadsvg(mx, my) {
         scale = Math.min(mx / cwidth, my / cheight);
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
-        var points = SVGdata[0].subPaths[0].getPoints(20);
+        var points = SVGdata[0].subPaths[0].getPoints(1);
         points - subdivpath(points, 1);
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
@@ -544,9 +544,9 @@ export function draw() {
             phase = 3;
         }
         if (phase == 3) {
-            lines = diffgrowth(lines, 1, 1, 1, borderpoints, 1);
+            lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
             for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], 10);
+                lines[i] = subdivpath(lines[i], 3);
             }
             drawlines(lines, 2);;
         }

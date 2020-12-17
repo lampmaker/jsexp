@@ -1,0 +1,14 @@
+{
+    "preset": "Default",
+    "remembered": {
+      "Default": {
+        "0": {
+          "t": "Default",
+          "cwidth": 1024,
+          "cheight": 1024
+        }
+      }
+    },
+    "closed": false,
+    "folders": {}
+  }
