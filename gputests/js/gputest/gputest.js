@@ -23,6 +23,8 @@ var mScreenQuad;
 var shader_stdf, shader_stdv; // shaders
 var shaderloadingmanager = new THREE.LoadingManager();
 var loader = new THREE.FileLoader(shaderloadingmanager);
+var offscreenCanvas;
+var shaderdata;
 
 shaderloadingmanager.onLoad = function () {
     init();
@@ -64,6 +66,7 @@ function init() {
     //canvas.onmousedown = onMouseDown;
     //canvas.onmouseup = onMouseUp;
     //canvas.onmousemove = onMouseMove;
+    offscreenCanvas = document.createElement("canvas");
     mRenderer = new THREE.WebGLRenderer({ canvas: canvas, preserveDrawingBuffer: true });
     mScene = new THREE.Scene();
     mCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, -10000, 10000);
@@ -121,10 +124,10 @@ export function resize(width, height, force, _scale) {
     canvasWidth = canvasQ.width();
     canvasHeight = canvasQ.height();
     mRenderer.setSize(canvasWidth, canvasHeight);
-    mRDTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
-    mTempTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
-    mUniforms.screenWidth.value = canvasWidth * scale / 2;
-    mUniforms.screenHeight.value = canvasHeight * scale / 2;
+    mRDTexture = new newtarget(canvasWidth * scale*2, canvasHeight * scale*2);
+    mTempTexture = new newtarget(canvasWidth * scale*2, canvasHeight * scale*2)
+    mUniforms.screenWidth.value = canvasWidth * scale ;
+    mUniforms.screenHeight.value = canvasHeight * scale ;
 }
 //==================================================================================================================================
 //==================================================================================================================================
@@ -161,8 +164,10 @@ var render = function (time) {
     for (var i = 0; i < 4; ++i) {         // render the system 4 times before displaying to screen
         renderSystem();
     }
-    renderScreen();
+    renderScreen();     // render to canvas
     requestAnimationFrame(render);
+    shaderdata=getrawshaderdata(); // get 2d image data
+
 }
 //==================================================================================================================================
 
@@ -171,4 +176,13 @@ var render = function (time) {
 //==================================================================================================================================
 export function cnvs() {
     return canvas;
+}
+
+function getrawshaderdata() {
+    var canvasx = cnvs();   
+    offscreenCanvas.width = canvasx.width;
+    offscreenCanvas.height = canvasx.height;
+    var ctx = offscreenCanvas.getContext("2d");
+    ctx.drawImage(canvasx, 0, 0);
+    return ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
 }
