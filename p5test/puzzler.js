@@ -1,5 +1,34 @@
 import * as THREE from '/three.module.js';
 import { SVGLoader } from '/SVGLoader.js';
+
+
+
+
+//======================================================================================================
+// GPU.jS STUFF
+//======================================================================================================
+const gpu = new GPU();
+const maxlines = 5; // max number of lines
+const maxpoints = 10; // max number of points per line
+var GPUmatrix = []
+
+function initializeGPumatrix(l, p) {
+    for (var i = 0; i < l; i++) {
+        GPUmatrix[i] = []
+        for (var j = 0; j < p; j++) {
+            GPUmatrix[i][j] = { 'x': 0, 'y': 0, 'w': 0 } // 3 values per point: x,y, weight
+        }
+    }
+}
+
+/*
+eerste point in elke lijn:
+x = aantal punten in de lijn.
+*/
+
+
+
+
 //======================================================================================================
 // VORONOI STUFF
 //======================================================================================================
@@ -7,6 +36,8 @@ var seeds, lines;
 var border, borderpoints;
 var borderloaded = false;
 var phase = 1;
+
+
 //======================================================================================================
 function Vertex(x, y) {
     this.x = x;
@@ -258,8 +289,8 @@ function diffgrowth(lines, a, b, c, p, s) {
             }
             //---------------------------------
             var f = Vadd(fa, fb);
-       //     stroke('#FF0000')
-         //   circle(lines[l][i].x, lines[l][i].y, 10);
+            //     stroke('#FF0000')
+            //   circle(lines[l][i].x, lines[l][i].y, 10);
             //line(lines[l][i].x, lines[l][i].y, lines[l][i].x + f.x * s, lines[l][i].y + f.y * s);
             tl[l][i].x += f.x, 1 * s;
             tl[l][i].y += f.y, 1 * s;
@@ -501,6 +532,10 @@ export function preload() {
 
 export function setup() {
     // example2_setup();
+
+    initializeGPumatrix(maxlines, maxpoints);
+
+
     var test = Array();
     test[0] = new Vertex(0, 0);
     test[1] = new Vertex(100, 100);
