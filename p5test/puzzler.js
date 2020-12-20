@@ -37,8 +37,8 @@ const settings =
     maxpoints: MAXPOINTS,
     d1: 20,
     d2: 3,
-    forcetonext: 500,
-    forcetopoints: 200,
+    forcetonext: 1500,
+    forcetopoints: 20,
     speed: .1
 }
 
@@ -430,6 +430,34 @@ function voronoi_render(b) {
     return polys;
 
 }
+
+
+//======================================================================================================
+//deldupes
+// Renders voronoi shape
+//======================================================================================================
+function deldupes(line) {
+    var polys = [];
+    for (var j = 0; j < line.length; j++) {
+        var p = line[j][0];
+        var q = line[j][1];
+        var Vadd = true;  // only Vadd lines that do not exist yet
+        var i = 0;
+        while ((Vadd == true) && (i < polys.length)) {
+            if ((polys[i][0].x == p.x) && (polys[i][0].y == p.y) && (polys[i][1].x == q.x) && (polys[i][1].y == q.y)) Vadd = false;
+            if ((polys[i][0].x == q.x) && (polys[i][0].y == q.y) && (polys[i][1].x == p.x) && (polys[i][1].y == p.y)) Vadd = false;
+            i++;
+        }
+        if (Vadd) {
+            var l = new Array();
+            l[0] = new Vertex(p.x, p.y);
+            l[1] = new Vertex(q.x, q.y);
+            polys[polys.length] = l;
+        }
+    }
+    return polys;
+}
+
 //======================================================================================================
 // draw the path defined by P
 //======================================================================================================
@@ -595,14 +623,14 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
     if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
 
-    if (this.thread.x == 2) return CP;  // x=2: dont change first point x
-    if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
+    //  if (this.thread.x == 2) return CP;  // x=2: dont change first point x
+    //  if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
 
     var line_numpoints = _matrix[this.thread.y][0];
     var weight = _matrix[this.thread.y][1];
 
-    if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
-    if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
+    //  if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
+    //  if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
 
@@ -669,7 +697,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
                 if (Dist < 0) {
                     F[0] = V[0] * fmax;
                     F[1] = V[1] * fmax;
-                    Ftot[0] += F[0] * fb * w - comp;
+                    Ftot[0] += F[0] * fb * w * comp;
                     Ftot[1] += F[1] * fb * w * comp;
                 }
             };
@@ -774,10 +802,13 @@ export function draw() {
             }
         }
         if (phase == 2) {
+            lines = deldupes(lines);
             for (var i = 0; i < lines.length; i++) {
+
+
                 console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
             }
-            add_line_to_gpumatrix(borderpoints, 0, -5);
+            add_line_to_gpumatrix(borderpoints, 0, -10);
             stroke('#FFFFFF')
             for (var i = 0; i < lines.length; i++) {
                 lines[i] = subdivpath(lines[i], settings.d2);
