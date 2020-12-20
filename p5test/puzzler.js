@@ -10,8 +10,8 @@ var busy = false;
 //======================================================================================================
 const gpu = new GPU();
 var GPUmatrix = []
-const MAXLINES = 264;
-const MAXPOINTS = 1024 // points per line
+const MAXLINES = 200;
+const MAXPOINTS = 1500 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 function initializeGPumatrix(l, p) {
@@ -35,9 +35,9 @@ const settings =
 {
     maxlines: MAXLINES,
     maxpoints: MAXPOINTS,
-    forcetonext: 10,
-    forcetopoints: 10,
-    forcetoborder: 20,
+    forcetonext: 1,
+    forcetopoints: 1,
+    forcetoborder: 2,
     speed: 1
 }
 
@@ -194,7 +194,7 @@ function subdivpath(P, maxd) {
 
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
-            if (numinserts > 500) numinserts = 500;
+            if (numinserts + P.length + 2 > MAXPOINTS) numinserts = MAXPOINTS - P.length - 2;
             var dx = (P2.x - P1.x) / (numinserts + 1);
             var dy = (P2.y - P1.y) / (numinserts + 1);
             for (var j = 1; j <= numinserts; j++) {
@@ -482,7 +482,7 @@ function loadsvg(mx, my) {
         scale = Math.min(mx / cwidth, my / cheight);
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
-        var points = SVGdata[0].subPaths[0].getPoints(1);
+        var points = SVGdata[0].subPaths[0].getPoints(3);
         points - subdivpath(points, 1);
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
@@ -580,6 +580,7 @@ export function setup() {
     //imageMode(CENTER);
     //mySvg.resize(1000, 0);
     //image(mySvg, width / 2, height / 2);    
+    frameRate(50);
 }
 
 
@@ -590,12 +591,20 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) 
 
     if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
     if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
-    if (_matrix[this.thread.y][0] == 0) return CP;  // empty row
-    if (_matrix[this.thread.y][1] == 0) return CP;  // weight=0, dont move point
-    if (this.thread.x > _matrix[this.thread.y][0] * 2 + 2) return CP;
 
-    var p1 = [0.0, 0.0];
+    if (this.thread.x == 2) return CP;  // x=2: dont change first point x
+    if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
+
+    var line_numpoints = _matrix[this.thread.y][0];
     var weight = _matrix[this.thread.y][1];
+
+    if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
+    if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
+    if (line_numpoints == 0) return CP;;  // empty row
+    if (weight <= 0) return CP;  // weight=0, dont move point
+
+    //return CP + 0.1;
+    var p1 = [0.0, 0.0];
     var p2 = [0.0, 0.0];
     var Dist = 0.0;
     var V = [0.0, 0.0]; // direction vector 
@@ -614,27 +623,28 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) 
     }
     for (var i = 0; i < mxl; i++) {
         if (_matrix[i][0] > 0) {
-            for (var j = 2; j <= _matrix[i][0]; j += 2) {
-                p2[0] = _matrix[i][j];
-                p2[1] = _matrix[i][j + 1];
+            var w = Math.abs(_matrix[i][1]);// weight factor of that row
+            for (var j = 0; j < _matrix[i][0]; j++) {
+                p2[0] = _matrix[i][j * 2 + 2];
+                p2[1] = _matrix[i][j * 2 + 3];
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
-                V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                if (V[0] != 0 && V[1] != 0) {
+                if (Dist != 0) {
+                    V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
                     F[0] = V[0] / Math.pow(Dist, power);
                     F[1] = V[1] / Math.pow(Dist, power);
-                    Ftot[0] += F[0];
-                    Ftot[1] += F[1];
+                    Ftot[0] += F[0] * w;
+                    Ftot[1] += F[1] * w;
                 }
-                else
-                    return CP;
             };
         }
     }
 
     Ftot[0] = Ftot[0] * fa * weight;
     Ftot[1] = Ftot[1] * fa * weight;
-    p1[0] += 1;//Ftot[0] * sp;
-    p1[1] += 0;//Ftot[1] * sp;
+    p1[0] += Ftot[0] * sp;
+    p1[1] += Ftot[1] * sp;
+    //p1[0] = Ftot[0];  // for 
+    //p1[1] = Ftot[1];
     if (even) { return p1[0] } else { return p1[1] }
 
 }).setOutput([GPUMATRIXLENGTH, MAXLINES])
@@ -668,14 +678,14 @@ function add_lines_to_gpumatrix(lines, offset, w) {
     }
 }
 
-function get_lines_from_gpumatrix() {
+function get_lines_from_gpumatrix(offset) {
     lines = []
     for (var i = 0; i < settings.maxlines; i++) {
-        var linelength = GPUmatrix[i][0];
+        var linelength = GPUmatrix[i + offset][0];
         if (linelength == 0) return lines;
         lines[i] = new Array();
         for (var j = 0; j < linelength; j++) {
-            lines[i][j] = new Vertex(GPUmatrix[i][j * 2 + 2], GPUmatrix[i][j * 2 + 3]);
+            lines[i][j] = new Vertex(GPUmatrix[i + offset][j * 2 + 2], GPUmatrix[i + offset][j * 2 + 3]);
         }
     }
     return lines;
@@ -692,18 +702,16 @@ function get_line_count_from_gpumatrix(G) {
 
 function processGPU() {
     var lc = lines.length;
-    add_lines_to_gpumatrix(lines, 0, 1);
-    var lc1 = get_line_count_from_gpumatrix(GPUmatrix)
-
+    add_lines_to_gpumatrix(lines, 1, 1);
     GPUmatrix = GPU_movepoints(
         GPUmatrix,
         settings.forcetonext,
         settings.forcetopoints,
         settings.forcetoborder,
         settings.speed,
-        min(lines.length, MAXLINES));
+        min(lines.length + 1, MAXLINES));
 
-    lines = get_lines_from_gpumatrix();
+    lines = get_lines_from_gpumatrix(1);
 }
 
 
@@ -722,10 +730,10 @@ export function draw() {
             }
         }
         if (phase == 2) {
-            // add_line_to_gpumatrix(borderpoints, 0, 0);
+            add_line_to_gpumatrix(borderpoints, 0, -3);
             stroke('#FFFFFF')
             for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], 30);
+                lines[i] = subdivpath(lines[i], 5);
             }
             //drawlines(lines, 2);;            
             phase = 3;
@@ -733,10 +741,12 @@ export function draw() {
         if (phase == 3) {
             processGPU();
             //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
-            for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], 40);
-            }
-            drawlines(lines, 2);;
+            /*
+              for (var i = 0; i < lines.length; i++) {
+                  lines[i] = subdivpath(lines[i], 15);
+              }
+              */
+            drawlines(lines, 1);;
         }
     }
 }
