@@ -35,11 +35,11 @@ const settings =
 {
     maxlines: MAXLINES,
     maxpoints: MAXPOINTS,
-    d1: 0.0,
-    d2: 10,
-    forcetonext: 0.05,
-    forcetopoints: 2000,
-    speed: .3
+    d1: 20,
+    d2: 3,
+    forcetonext: 500,
+    forcetopoints: 200,
+    speed: .1
 }
 
 
@@ -615,6 +615,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     var F = [0.0, 0.0]; //force
     var Ftot = [0.0, 0.0]; //force
     const power = 3;
+    const fmax = 1000;
     var even = true;
     if (this.thread.x % 2 == 0) {
         p1[0] = _matrix[this.thread.y][this.thread.x];  // x
@@ -650,24 +651,24 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
                 p2[1] = _matrix[i][j * 2 + 3];
                 var comp = 1;
                 if (i == this.thread.y) {  // looking at own line. 
-                    if ((j > this.thread.x - 2) && (j < this.thread.x + 2)) { // left & right neighbors
-                        comp = 0.01;
+                    if ((j >= this.thread.x - 2) && (j <= this.thread.x + 2)) { // left & right neighbors
+                        comp = 0.0;
                     }
                 }
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
                 (Dist = Dist - d1);
                 if (Dist > 0) {
                     V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                    F[0] = V[0] / Math.pow(Dist, power);
-                    F[1] = V[1] / Math.pow(Dist, power);
+                    F[0] = V[0] * (Math.min(1 / Math.pow(Dist, power), fmax));
+                    F[1] = V[1] * (Math.min(1 / Math.pow(Dist, power), fmax));
                     Ftot[0] += F[0] * fb * w * comp;
                     Ftot[1] += F[1] * fb * w * comp;
                 }
                 if (Dist == 0) {
                 }
                 if (Dist < 0) {
-                    F[0] = V[0];
-                    F[1] = V[1];
+                    F[0] = V[0] * fmax;
+                    F[1] = V[1] * fmax;
                     Ftot[0] += F[0] * fb * w - comp;
                     Ftot[1] += F[1] * fb * w * comp;
                 }
