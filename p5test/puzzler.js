@@ -35,8 +35,10 @@ const settings =
 {
     maxlines: MAXLINES,
     maxpoints: MAXPOINTS,
+    d1: 0.0,
+    d2: 10,
     forcetonext: 0.05,
-    forcetopoints: 10,
+    forcetopoints: 2000,
     speed: .3
 }
 
@@ -407,8 +409,8 @@ function voronoi_render(b) {
             var Vadd = true;  // only Vadd lines that do not exist yet
             var i = 0;
             while ((Vadd == true) && (i < polys.length)) {
-                if ((polys[i].x1 == p.x) && (polys[i].y1 == p.y) && (polys[i].x2 == q.x) && (polys[i].y2 == q.y)) Vadd = false;
-                if ((polys[i].x1 == q.x) && (polys[i].y1 == q.y) && (polys[i].x2 == p.x) && (polys[i].y2 == p.y)) Vadd = false;
+                if ((polys[i][0].x == p.x) && (polys[i][0].y == p.y) && (polys[i][1].x == q.x) && (polys[i][1].y == q.y)) Vadd = false;
+                if ((polys[i][0].x == q.x) && (polys[i][0].y == q.y) && (polys[i][1].x == p.x) && (polys[i][1].y == p.y)) Vadd = false;
                 i++;
             }
             if (Vadd) {
@@ -420,7 +422,9 @@ function voronoi_render(b) {
                 if (l != null) {
                     polys[polys.length] = l;
                 }
+
             }
+
         }
     }
     return polys;
@@ -585,7 +589,7 @@ export function setup() {
 
 
 //======================================================================================================
-const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, sp, mxl) {
+const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point    
 
     if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
@@ -610,7 +614,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, sp, mxl) {
     var V = [0.0, 0.0]; // direction vector 
     var F = [0.0, 0.0]; //force
     var Ftot = [0.0, 0.0]; //force
-    const power = 2;
+    const power = 3;
     var even = true;
     if (this.thread.x % 2 == 0) {
         p1[0] = _matrix[this.thread.y][this.thread.x];  // x
@@ -644,13 +648,28 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, sp, mxl) {
             for (var j = 0; j < _matrix[i][0]; j++) {
                 p2[0] = _matrix[i][j * 2 + 2];
                 p2[1] = _matrix[i][j * 2 + 3];
+                var comp = 1;
+                if (i == this.thread.y) {  // looking at own line. 
+                    if ((j > this.thread.x - 2) && (j < this.thread.x + 2)) { // left & right neighbors
+                        comp = 0.01;
+                    }
+                }
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
-                if (Dist != 0) {
+                (Dist = Dist - d1);
+                if (Dist > 0) {
                     V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
                     F[0] = V[0] / Math.pow(Dist, power);
                     F[1] = V[1] / Math.pow(Dist, power);
-                    Ftot[0] += F[0] * fb * w;
-                    Ftot[1] += F[1] * fb * w;
+                    Ftot[0] += F[0] * fb * w * comp;
+                    Ftot[1] += F[1] * fb * w * comp;
+                }
+                if (Dist == 0) {
+                }
+                if (Dist < 0) {
+                    F[0] = V[0];
+                    F[1] = V[1];
+                    Ftot[0] += F[0] * fb * w - comp;
+                    Ftot[1] += F[1] * fb * w * comp;
                 }
             };
         }
@@ -731,6 +750,7 @@ function processGPU() {
         GPUmatrix,
         settings.forcetonext,
         settings.forcetopoints,
+        settings.d1,
         settings.speed,
         min(lines.length + 1, MAXLINES));
 
@@ -753,10 +773,13 @@ export function draw() {
             }
         }
         if (phase == 2) {
+            for (var i = 0; i < lines.length; i++) {
+                console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
+            }
             add_line_to_gpumatrix(borderpoints, 0, -5);
             stroke('#FFFFFF')
             for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], 5);
+                lines[i] = subdivpath(lines[i], settings.d2);
             }
             //drawlines(lines, 2);;            
             phase = 3;
@@ -765,7 +788,7 @@ export function draw() {
             processGPU();
             //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
             for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], 3);
+                lines[i] = subdivpath(lines[i], settings.d2);
             }
 
             drawlines(lines, 1);;
