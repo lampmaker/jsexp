@@ -35,10 +35,9 @@ const settings =
 {
     maxlines: MAXLINES,
     maxpoints: MAXPOINTS,
-    forcetonext: 1,
-    forcetopoints: 1,
-    forcetoborder: 2,
-    speed: 1
+    forcetonext: 0.05,
+    forcetopoints: 10,
+    speed: .3
 }
 
 
@@ -586,7 +585,7 @@ export function setup() {
 
 
 //======================================================================================================
-const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) {
+const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, sp, mxl) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point    
 
     if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
@@ -606,6 +605,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) 
     //return CP + 0.1;
     var p1 = [0.0, 0.0];
     var p2 = [0.0, 0.0];
+    var pa = [0.0, 0.0];
     var Dist = 0.0;
     var V = [0.0, 0.0]; // direction vector 
     var F = [0.0, 0.0]; //force
@@ -615,12 +615,29 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) 
     if (this.thread.x % 2 == 0) {
         p1[0] = _matrix[this.thread.y][this.thread.x];  // x
         p1[1] = _matrix[this.thread.y][this.thread.x + 1]; // y
+        pa[0] = (_matrix[this.thread.y][this.thread.x - 2] + _matrix[this.thread.y][this.thread.x + 2]) / 2;
+        pa[1] = (_matrix[this.thread.y][this.thread.x - 2 + 1] + _matrix[this.thread.y][this.thread.x + 2 + 1]) / 2;
+
     }
     else {
         p1[1] = _matrix[this.thread.y][this.thread.x];   // y
         p1[0] = _matrix[this.thread.y][this.thread.x - 1]; // x
+        pa[1] = (_matrix[this.thread.y][this.thread.x - 2] + _matrix[this.thread.y][this.thread.x + 2]) / 2;
+        pa[0] = (_matrix[this.thread.y][this.thread.x - 2 - 1] + _matrix[this.thread.y][this.thread.x + 2 - 1]) / 2;
         even = false;
     }
+
+    // move to point in-between neighborhood points
+    Dist = 1 * Math.sqrt((p1[0] - pa[0]) * (p1[0] - pa[0]) + (p1[1] - pa[1]) * (p1[1] - pa[1]));  // distance between points
+    if (Dist != 0) {
+        V = [(p1[0] - pa[0]) / Dist, (p1[1] - pa[1]) / Dist];  // direction vector
+        F[0] = (fa * V[0]) / Math.pow(Dist, power);
+        F[1] = (fa * V[1]) / Math.pow(Dist, power);
+        Ftot[0] -= F[0];
+        Ftot[1] -= F[1];
+    }
+
+    // move to all other points
     for (var i = 0; i < mxl; i++) {
         if (_matrix[i][0] > 0) {
             var w = Math.abs(_matrix[i][1]);// weight factor of that row
@@ -632,17 +649,24 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) 
                     V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
                     F[0] = V[0] / Math.pow(Dist, power);
                     F[1] = V[1] / Math.pow(Dist, power);
-                    Ftot[0] += F[0] * w;
-                    Ftot[1] += F[1] * w;
+                    Ftot[0] += F[0] * fb * w;
+                    Ftot[1] += F[1] * fb * w;
                 }
             };
         }
     }
 
-    Ftot[0] = Ftot[0] * fa * weight;
-    Ftot[1] = Ftot[1] * fa * weight;
-    p1[0] += Ftot[0] * sp;
-    p1[1] += Ftot[1] * sp;
+    Ftot[0] = Ftot[0] * weight;
+    Ftot[1] = Ftot[1] * weight;
+
+    var Spd = Math.sqrt(Ftot[0] * Ftot[0] + Ftot[1] * Ftot[1]);
+    var rt = 1;
+    if (Spd > 1) {
+        rt = 1 / Spd;
+    }
+
+    p1[0] += Ftot[0] * sp * rt;
+    p1[1] += Ftot[1] * sp * rt;
     //p1[0] = Ftot[0];  // for 
     //p1[1] = Ftot[1];
     if (even) { return p1[0] } else { return p1[1] }
@@ -707,7 +731,6 @@ function processGPU() {
         GPUmatrix,
         settings.forcetonext,
         settings.forcetopoints,
-        settings.forcetoborder,
         settings.speed,
         min(lines.length + 1, MAXLINES));
 
@@ -730,7 +753,7 @@ export function draw() {
             }
         }
         if (phase == 2) {
-            add_line_to_gpumatrix(borderpoints, 0, -3);
+            add_line_to_gpumatrix(borderpoints, 0, -5);
             stroke('#FFFFFF')
             for (var i = 0; i < lines.length; i++) {
                 lines[i] = subdivpath(lines[i], 5);
@@ -741,11 +764,10 @@ export function draw() {
         if (phase == 3) {
             processGPU();
             //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
-            /*
-              for (var i = 0; i < lines.length; i++) {
-                  lines[i] = subdivpath(lines[i], 15);
-              }
-              */
+            for (var i = 0; i < lines.length; i++) {
+                lines[i] = subdivpath(lines[i], 3);
+            }
+
             drawlines(lines, 1);;
         }
     }
