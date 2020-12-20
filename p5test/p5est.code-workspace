@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Launch Edge",
+				"request": "launch",
+				"type": "pwa-msedge",
+				"url": "http://localhost:8080/puzzler.html",
+				"webRoot": "${workspaceFolder}"
+			},
+			{
+				"type": "edge",
+				"request": "launch",
+				"name": "Launch Edge against localhost",
+				"url": "http://localhost:8080/puzzler.html",
+				"webRoot": "${workspaceFolder}"
+			}
+		]
+	}
+}

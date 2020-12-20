@@ -2,7 +2,7 @@ import * as THREE from '/three.module.js';
 import { SVGLoader } from '/SVGLoader.js';
 
 
-
+var busy = false;
 
 
 //======================================================================================================
@@ -30,7 +30,7 @@ n w x1 y1 x2 y2  x3 y3
 
 const settings =
 {
-    maxlines: 500,
+    maxlines: 200,
     maxpoints: 2000,
     forcetonext: 10,
     forcetopoints: 10,
@@ -64,11 +64,13 @@ function force(p1, p2, a, p) {
 //======================================================================================================
 const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point    
-    if (this.thread.x == 0) return CP;  // x=1: length     
-    if (this.thread.x == 1) return CP;  // x=1: weight     
+    return (CP);
+    if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
+    if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
     if (_matrix[this.thread.y][0] == 0) return CP;  // empty row
     if (_matrix[this.thread.y][1] == 0) return CP;  // weight=0, dont move point
-    return CP + 1;
+    if (this.thread.x > _matrix[this.thread.y][0] * 2 + 2) return CP;
+
     var p1 = [0.0, 0.0];
     var weight = _matrix[this.thread.y][1];
     var p2 = [0.0, 0.0];
@@ -635,9 +637,7 @@ export function setup() {
     //imageMode(CENTER);
     //mySvg.resize(1000, 0);
 
-    //image(mySvg, width / 2, height / 2);
-
-
+    //image(mySvg, width / 2, height / 2);    
 }
 
 // adds a single line to the GPU matrix
@@ -667,7 +667,6 @@ function add_lines_to_gpumatrix(lines, offset, w) {
             add_line_to_gpumatrix(lines[i], io, w);
         }
     }
-
 }
 
 function get_lines_from_gpumatrix() {
@@ -681,6 +680,24 @@ function get_lines_from_gpumatrix() {
         }
     }
     return lines;
+}
+
+
+function processGPU() {
+    add_lines_to_gpumatrix(lines, 0, 1);
+    console.log("lines added: ", lines.length)
+    //console.log("GPU-before", GPUmatrix);            
+    /*
+     GPUmatrix = GPU_movepoints(
+         GPUmatrix,
+         settings.forcetonext,
+         settings.forcetopoints,
+         settings.forcetoborder,
+         settings.speed,
+         lines.length + 1);
+     */
+    // console.log("GPU-after", GPUmatrix);
+    lines = get_lines_from_gpumatrix();
 }
 
 
@@ -704,24 +721,11 @@ export function draw() {
             for (var i = 0; i < lines.length; i++) {
                 lines[i] = subdivpath(lines[i], 30);
             }
-            //drawlines(lines, 2);;
-            add_lines_to_gpumatrix(lines, 0, 0);
+            //drawlines(lines, 2);;            
             phase = 3;
         }
         if (phase == 3) {
-            add_lines_to_gpumatrix(lines, 0, 0);
-            console.log("lines added: ", lines.length)
-            //console.log("GPU-before", GPUmatrix);
-            GPUmatrix = GPU_movepoints(
-                GPUmatrix,
-                settings.forcetonext,
-                settings.forcetopoints,
-                settings.forcetoborder,
-                settings.speed,
-                lines.length + 1);
-            // console.log("GPU-after", GPUmatrix);
-            lines = get_lines_from_gpumatrix();
-            console.log("lines extracted: ", lines.length)
+            processGPU();
             //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
             for (var i = 0; i < lines.length; i++) {
                 lines[i] = subdivpath(lines[i], 40);
