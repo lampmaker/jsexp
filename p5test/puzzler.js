@@ -10,11 +10,14 @@ var busy = false;
 //======================================================================================================
 const gpu = new GPU();
 var GPUmatrix = []
+const MAXLINES = 264;
+const MAXPOINTS = 1024 // points per line
+const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 function initializeGPumatrix(l, p) {
     for (var i = 0; i < l; i++) {
         GPUmatrix[i] = []
-        for (var j = 0; j < p * 3; j++) {
+        for (var j = 0; j < p * 2 + 2; j++) {
             GPUmatrix[i][j] = 0;
         }
     }
@@ -30,8 +33,8 @@ n w x1 y1 x2 y2  x3 y3
 
 const settings =
 {
-    maxlines: 200,
-    maxpoints: 2000,
+    maxlines: MAXLINES,
+    maxpoints: MAXPOINTS,
     forcetonext: 10,
     forcetopoints: 10,
     forcetoborder: 20,
@@ -59,66 +62,6 @@ function force(p1, p2, a, p) {
     return F;
 }
 // ==========================================================================================================
-
-
-//======================================================================================================
-const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) {
-    var CP = _matrix[this.thread.y][this.thread.x] // current point    
-    return (CP);
-    if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
-    if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
-    if (_matrix[this.thread.y][0] == 0) return CP;  // empty row
-    if (_matrix[this.thread.y][1] == 0) return CP;  // weight=0, dont move point
-    if (this.thread.x > _matrix[this.thread.y][0] * 2 + 2) return CP;
-
-    var p1 = [0.0, 0.0];
-    var weight = _matrix[this.thread.y][1];
-    var p2 = [0.0, 0.0];
-    var Dist = 0.0;
-    var V = [0.0, 0.0]; // direction vector 
-    var F = [0.0, 0.0]; //force
-    var Ftot = [0.0, 0.0]; //force
-    const power = 2;
-    var even = true;
-    if (this.thread.x % 2 == 0) {
-        p1[0] = _matrix[this.thread.y][this.thread.x];  // x
-        p1[1] = _matrix[this.thread.y][this.thread.x + 1]; // y
-    }
-    else {
-        p1[1] = _matrix[this.thread.y][this.thread.x];   // y
-        p1[0] = _matrix[this.thread.y][this.thread.x - 1]; // x
-        even = false;
-    }
-    for (var i = 0; i < mxl; i++) {
-        for (var j = 2; j <= _matrix[i][0]; j += 2) {
-            p2[0] = _matrix[i][j];
-            p2[1] = _matrix[i][j + 1];
-            Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
-            V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-            if (V[0] != 0 && V[1] != 0) {
-                F[0] = V[0] / Math.pow(Dist, power);
-                F[1] = V[1] / Math.pow(Dist, power);
-                Ftot[0] += F[0];
-                Ftot[1] += F[1];
-            }
-            else
-                return CP;
-        };
-    }
-    Ftot[0] = Ftot[0] * fa * weight;
-    Ftot[1] = Ftot[1] * fa * weight;
-    p1[0] += 1;//Ftot[0] * sp;
-    p1[1] += 0;//Ftot[1] * sp;
-    if (even) { return p1[0] } else { return p1[1] }
-}).setOutput([settings.maxpoints, settings.maxlines])
-
-
-
-
-
-
-
-
 
 
 
@@ -623,12 +566,12 @@ export function setup() {
     initializeGPumatrix(settings.maxlines, settings.maxpoints);
 
 
-    var test = Array();
+    var test = [];
     test[0] = new Vertex(0, 0);
     test[1] = new Vertex(100, 100);
     test = subdivpath(test, 10);
 
-    lines = new Array();
+    lines = [];
     createCanvas(1000, 1000);
     background(0);
     stroke('#FFFFFF');
@@ -636,9 +579,65 @@ export function setup() {
     loadsvg(1000, 1000);
     //imageMode(CENTER);
     //mySvg.resize(1000, 0);
-
     //image(mySvg, width / 2, height / 2);    
 }
+
+
+
+//======================================================================================================
+const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, sp, mxl) {
+    var CP = _matrix[this.thread.y][this.thread.x] // current point    
+
+    if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
+    if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
+    if (_matrix[this.thread.y][0] == 0) return CP;  // empty row
+    if (_matrix[this.thread.y][1] == 0) return CP;  // weight=0, dont move point
+    if (this.thread.x > _matrix[this.thread.y][0] * 2 + 2) return CP;
+
+    var p1 = [0.0, 0.0];
+    var weight = _matrix[this.thread.y][1];
+    var p2 = [0.0, 0.0];
+    var Dist = 0.0;
+    var V = [0.0, 0.0]; // direction vector 
+    var F = [0.0, 0.0]; //force
+    var Ftot = [0.0, 0.0]; //force
+    const power = 2;
+    var even = true;
+    if (this.thread.x % 2 == 0) {
+        p1[0] = _matrix[this.thread.y][this.thread.x];  // x
+        p1[1] = _matrix[this.thread.y][this.thread.x + 1]; // y
+    }
+    else {
+        p1[1] = _matrix[this.thread.y][this.thread.x];   // y
+        p1[0] = _matrix[this.thread.y][this.thread.x - 1]; // x
+        even = false;
+    }
+    for (var i = 0; i < mxl; i++) {
+        if (_matrix[i][0] > 0) {
+            for (var j = 2; j <= _matrix[i][0]; j += 2) {
+                p2[0] = _matrix[i][j];
+                p2[1] = _matrix[i][j + 1];
+                Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
+                V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
+                if (V[0] != 0 && V[1] != 0) {
+                    F[0] = V[0] / Math.pow(Dist, power);
+                    F[1] = V[1] / Math.pow(Dist, power);
+                    Ftot[0] += F[0];
+                    Ftot[1] += F[1];
+                }
+                else
+                    return CP;
+            };
+        }
+    }
+
+    Ftot[0] = Ftot[0] * fa * weight;
+    Ftot[1] = Ftot[1] * fa * weight;
+    p1[0] += 1;//Ftot[0] * sp;
+    p1[1] += 0;//Ftot[1] * sp;
+    if (even) { return p1[0] } else { return p1[1] }
+
+}).setOutput([GPUMATRIXLENGTH, MAXLINES])
 
 // adds a single line to the GPU matrix
 function add_line_to_gpumatrix(line, offset, w) {
@@ -670,7 +669,7 @@ function add_lines_to_gpumatrix(lines, offset, w) {
 }
 
 function get_lines_from_gpumatrix() {
-    lines = new Array();
+    lines = []
     for (var i = 0; i < settings.maxlines; i++) {
         var linelength = GPUmatrix[i][0];
         if (linelength == 0) return lines;
@@ -682,21 +681,28 @@ function get_lines_from_gpumatrix() {
     return lines;
 }
 
+function get_line_count_from_gpumatrix(G) {
+    for (var i = 0; i < settings.maxlines; i++) {
+        var linelength = G[i][0];
+        if (linelength == 0) return i;
+    }
+    return i;
+}
+
 
 function processGPU() {
+    var lc = lines.length;
     add_lines_to_gpumatrix(lines, 0, 1);
-    console.log("lines added: ", lines.length)
-    //console.log("GPU-before", GPUmatrix);            
-    /*
-     GPUmatrix = GPU_movepoints(
-         GPUmatrix,
-         settings.forcetonext,
-         settings.forcetopoints,
-         settings.forcetoborder,
-         settings.speed,
-         lines.length + 1);
-     */
-    // console.log("GPU-after", GPUmatrix);
+    var lc1 = get_line_count_from_gpumatrix(GPUmatrix)
+
+    GPUmatrix = GPU_movepoints(
+        GPUmatrix,
+        settings.forcetonext,
+        settings.forcetopoints,
+        settings.forcetoborder,
+        settings.speed,
+        min(lines.length, MAXLINES));
+
     lines = get_lines_from_gpumatrix();
 }
 
