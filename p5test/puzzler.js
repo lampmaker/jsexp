@@ -33,14 +33,14 @@ n w x1 y1 x2 y2  x3 y3
 
 const settings =
 {
-    pieces:20,    
-    d1: 20,
-    d2: 10,
-    forcetonext: 1500,
-    forcetopoints: 20,
-    speed: .1,
+    cells: 70,
     maxlines: MAXLINES,
     maxpoints: MAXPOINTS,
+    d1: 50,
+    d2: 2,
+    forcetonext: .01,
+    forcetopoints: 100,
+    speed: .1
 }
 
 
@@ -197,8 +197,8 @@ function subdivpath(P, maxd) {
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
             if (numinserts + P.length + 2 > MAXPOINTS) numinserts = MAXPOINTS - P.length - 2;
-            var dx = (P2.x - P1.x) / (numinserts + 1);
-            var dy = (P2.y - P1.y) / (numinserts + 1);
+            var dx = (P2.x - P1.x) / (numinserts + 1) + (Math.random() - 0.5) * 0.1;
+            var dy = (P2.y - P1.y) / (numinserts + 1) + (Math.random() - 0.5) * 0.1;
             for (var j = 1; j <= numinserts; j++) {
                 var newpoint = new Vertex(P1.x + dx * j, P1.y + dy * j);
                 P.splice(i + j, 0, newpoint);  // insert point
@@ -390,6 +390,7 @@ function Vadd_random(count, size_w, size_h, path) {
 function voronoi_setup() {
     seeds = new Array();
     Vadd_random(settings.pieces, width, height, border);
+    Vadd_random(settings.cells, width, height, border);
 }
 //======================================================================================================
 //VORONOI
@@ -619,15 +620,12 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
 
     if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
     if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
-
-    //  if (this.thread.x == 2) return CP;  // x=2: dont change first point x
-    //  if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
-
+    if (this.thread.x == 2) return CP;  // x=2: dont change first point x
+    if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
     var line_numpoints = _matrix[this.thread.y][0];
     var weight = _matrix[this.thread.y][1];
 
-    //  if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
-    //  if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
+    if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
 
@@ -639,30 +637,29 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     var V = [0.0, 0.0]; // direction vector 
     var F = [0.0, 0.0]; //force
     var Ftot = [0.0, 0.0]; //force
-    const power = 3;
-    const fmax = 1000;
+    const power = 2;
+    const fmax = 100000;
     var even = true;
-    if (this.thread.x % 2 == 0) {
-        p1[0] = _matrix[this.thread.y][this.thread.x];  // x
-        p1[1] = _matrix[this.thread.y][this.thread.x + 1]; // y
-        pa[0] = (_matrix[this.thread.y][this.thread.x - 2] + _matrix[this.thread.y][this.thread.x + 2]) / 2;
-        pa[1] = (_matrix[this.thread.y][this.thread.x - 2 + 1] + _matrix[this.thread.y][this.thread.x + 2 + 1]) / 2;
-
-    }
-    else {
-        p1[1] = _matrix[this.thread.y][this.thread.x];   // y
-        p1[0] = _matrix[this.thread.y][this.thread.x - 1]; // x
-        pa[1] = (_matrix[this.thread.y][this.thread.x - 2] + _matrix[this.thread.y][this.thread.x + 2]) / 2;
-        pa[0] = (_matrix[this.thread.y][this.thread.x - 2 - 1] + _matrix[this.thread.y][this.thread.x + 2 - 1]) / 2;
+    var xindex = this.thread.x;
+    var yindex = this.thread.x + 1;
+    if (this.thread.x % 2 != 0) {  // odd values 
+        xindex = this.thread.x - 1;
+        yindex = this.thread.x;
         even = false;
     }
+    // current point
+    p1[0] = _matrix[this.thread.y][xindex];
+    p1[1] = _matrix[this.thread.y][yindex];
+    // average between neighbors
+    pa[0] = (_matrix[this.thread.y][xindex - 2] + _matrix[this.thread.y][xindex + 2]) / 2;
+    pa[1] = (_matrix[this.thread.y][yindex - 2] + _matrix[this.thread.y][yindex + 2]) / 2;
 
     // move to point in-between neighborhood points
     Dist = 1 * Math.sqrt((p1[0] - pa[0]) * (p1[0] - pa[0]) + (p1[1] - pa[1]) * (p1[1] - pa[1]));  // distance between points
     if (Dist != 0) {
         V = [(p1[0] - pa[0]) / Dist, (p1[1] - pa[1]) / Dist];  // direction vector
-        F[0] = (fa * V[0]) / Math.pow(Dist, power);
-        F[1] = (fa * V[1]) / Math.pow(Dist, power);
+        F[0] = (fa * V[0]) / Math.pow(Dist, 3);
+        F[1] = (fa * V[1]) / Math.pow(Dist, 3);
         Ftot[0] -= F[0];
         Ftot[1] -= F[1];
     }
@@ -681,21 +678,24 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
                     }
                 }
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
-                (Dist = Dist - d1);
-                if (Dist > 0) {
-                    V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                    F[0] = V[0] * (Math.min(1 / Math.pow(Dist, power), fmax));
-                    F[1] = V[1] * (Math.min(1 / Math.pow(Dist, power), fmax));
-                    Ftot[0] += F[0] * fb * w * comp;
-                    Ftot[1] += F[1] * fb * w * comp;
-                }
-                if (Dist == 0) {
-                }
-                if (Dist < 0) {
-                    F[0] = V[0] * fmax;
-                    F[1] = V[1] * fmax;
-                    Ftot[0] += F[0] * fb * w * comp;
-                    Ftot[1] += F[1] * fb * w * comp;
+
+                if (Dist < (d1 * 5)) { // don't worry about points too far away.
+                    //(Dist = Dist - d1);
+                    if (Dist > 0) {
+                        V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
+                        F[0] = V[0] * (Math.min(1 / Math.pow(Dist, power), fmax));
+                        F[1] = V[1] * (Math.min(1 / Math.pow(Dist, power), fmax));
+                        Ftot[0] += F[0] * fb * w * comp;
+                        Ftot[1] += F[1] * fb * w * comp;
+                    }
+                    if (Dist == 0) {
+                    }
+                    if (Dist < 0) {
+                        F[0] = V[0] * fmax;
+                        F[1] = V[1] * fmax;
+                        Ftot[0] += F[0] * fb * w * comp;
+                        Ftot[1] += F[1] * fb * w * comp;
+                    }
                 }
             };
         }
@@ -817,6 +817,7 @@ export function draw() {
         if (phase == 3) {
             processGPU();
             //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
+
             for (var i = 0; i < lines.length; i++) {
                 lines[i] = subdivpath(lines[i], settings.d2);
             }
