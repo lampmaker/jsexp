@@ -10,8 +10,8 @@ var busy = false;
 //======================================================================================================
 const gpu = new GPU();
 var GPUmatrix = []
-const MAXLINES = 200;
-const MAXPOINTS = 1500 // points per line
+const MAXLINES = 140;
+const MAXPOINTS = 2000 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 function initializeGPumatrix(l, p) {
@@ -33,13 +33,14 @@ n w x1 y1 x2 y2  x3 y3
 
 const settings =
 {
-    maxlines: MAXLINES,
-    maxpoints: MAXPOINTS,
+    pieces:20,    
     d1: 20,
-    d2: 3,
+    d2: 10,
     forcetonext: 1500,
     forcetopoints: 20,
-    speed: .1
+    speed: .1,
+    maxlines: MAXLINES,
+    maxpoints: MAXPOINTS,
 }
 
 
@@ -388,7 +389,7 @@ function Vadd_random(count, size_w, size_h, path) {
 //======================================================================================================
 function voronoi_setup() {
     seeds = new Array();
-    Vadd_random(50, width, height, border);
+    Vadd_random(settings.pieces, width, height, border);
 }
 //======================================================================================================
 //VORONOI
@@ -593,15 +594,11 @@ export function preload() {
 
 export function setup() {
     // example2_setup();
-
     initializeGPumatrix(settings.maxlines, settings.maxpoints);
-
-
     var test = [];
     test[0] = new Vertex(0, 0);
     test[1] = new Vertex(100, 100);
     test = subdivpath(test, 10);
-
     lines = [];
     createCanvas(1000, 1000);
     background(0);
@@ -611,7 +608,7 @@ export function setup() {
     //imageMode(CENTER);
     //mySvg.resize(1000, 0);
     //image(mySvg, width / 2, height / 2);    
-    frameRate(50);
+    frameRate(25);
 }
 
 
@@ -775,6 +772,7 @@ function get_line_count_from_gpumatrix(G) {
 function processGPU() {
     var lc = lines.length;
     add_lines_to_gpumatrix(lines, 1, 1);
+    
     GPUmatrix = GPU_movepoints(
         GPUmatrix,
         settings.forcetonext,
@@ -782,7 +780,7 @@ function processGPU() {
         settings.d1,
         settings.speed,
         min(lines.length + 1, MAXLINES));
-
+    
     lines = get_lines_from_gpumatrix(1);
 }
 
@@ -796,7 +794,7 @@ export function draw() {
             stroke('#00FF00');
             lines = voronoi_render(borderpoints);
             drawlines(lines, 1);
-            if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }
+            if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }            
             for (var i = 0; i < seeds.length; i++) {
                 point(seeds[i].x, seeds[i].y);
             }
