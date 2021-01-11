@@ -441,6 +441,7 @@ function loadSVG(url) {
 
         //-- repositioning  and scaling
         group.scale.y *= - 1;
+        /*
         var box = new THREE.BoxHelper(group, 0xffff00);
         box.geometry.computeBoundingBox();
         var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
@@ -463,7 +464,7 @@ function loadSVG(url) {
         dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
         dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
         dimZ = (box.geometry.boundingBox.max.z - box.geometry.boundingBox.min.z);
-
+        */
         addGrouptoScene(group)
     });
 }

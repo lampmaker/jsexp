@@ -285,6 +285,28 @@ var render = function (time) {
 }
 //==================================================================================================================================
 //==================================================================================================================================
+function getsizeandpos(geo) {
+    var bbox = new THREE.Box3;
+    bbox.setFromObject(geo);
+    var dimX = (bbox.max.x - bbox.min.x);
+    var dimY = (bbox.max.y - bbox.min.y);
+    var dimZ = (bbox.max.z - bbox.min.z);
+    var centerX = (bbox.max.x + bbox.min.x) / 2;
+    var centerY = (bbox.max.y + bbox.min.y) / 2;
+    var centerZ = (bbox.max.z + bbox.min.z) / 2;
+    var res = new Array();
+    //   res = [dimX, dimY, dimZ, centerX, centerY, centerZ];
+    res = {
+        width: dimX,
+        height: dimY,
+        depth: dimZ,
+        cx: centerX,
+        cy: centerY,
+        cz: centerZ
+    }
+    console.log('size:', res);
+    return res;
+}
 //==================================================================================================================================
 export function addGrouptoScene(g) {
     console.log('add group to scene');
@@ -292,25 +314,32 @@ export function addGrouptoScene(g) {
     //    camera.position.set( 0, 0, 200 );
     //mScene.background = new THREE.Color( 0xb0b0b0 );
 
-    var box = new THREE.BoxHelper(g, 0xffff00);
-    box.geometry.computeBoundingBox();
-    var dimX = (box.geometry.boundingBox.max.x - box.geometry.boundingBox.min.x);
-    var dimY = (box.geometry.boundingBox.max.y - box.geometry.boundingBox.min.y);
-    var ratio = dimX / dimY;
     var screenratio = mUniforms.screenWidth.value / mUniforms.screenHeight.value;
-    var r2 = screenratio;
-    if (r2 < 1) {
-        //g.scale.x *= 1 / r2;
+    var props = getsizeandpos(g);
+    var imgratio = props.width / props.height;
+    // scale to max size of 1 high, wide
+    var scale = Math.max(props.width, props.height);
+    g.scale.x *= .95 / scale;
+    g.scale.y *= .95 / scale;
+    g.scale.z *= .95 / scale;
+
+    if (imgratio / screenratio > 1) {
+        console.log("scale1")
+        g.scale.y = g.scale.y * screenratio;
     }
     else {
-        //   g.scale.y *= r2;
+        g.scale.x = g.scale.x / screenratio;
+        console.log("scale2")
     }
-    box.update();
-    box.geometry.computeBoundingBox();
-    var centerX = (box.geometry.boundingBox.max.x + box.geometry.boundingBox.min.x) / 2;
-    var centerY = (box.geometry.boundingBox.max.y + box.geometry.boundingBox.min.y) / 2;
-    //  g.position.x = -centerX;
-    //  g.position.y = -centerY;
+
+
+
+    props = getsizeandpos(g);
+    g.position.x = -props.cx;
+    g.position.y = -props.cy;
+    g.position.z = 0.1;
+
+
     mScene.add(g);
 
     // scaling options here:  keep aspect ratio of image constant and fit into target
