@@ -181,7 +181,7 @@ export function resize(width, height, force, _scale) {
     canvasWidth = canvasQ.width();
 
     canvasHeight = canvasQ.height();
-    if (!force && (canvasWidth == width) && (canvasHeight == height) && (scale == _scale)) {
+    if (!force && (canvasWidth == Math.round(width)) && (canvasHeight == Math.round(height)) && (scale == _scale)) {
         console.log('nothign to do')
         return;
     }
@@ -199,6 +199,9 @@ export function resize(width, height, force, _scale) {
 
 
     mRDTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
+
+
+
     mBrushtexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     //   mEmtpytexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
     mThinningTexture = new newtarget(canvasWidth * scale, canvasHeight * scale);
@@ -315,6 +318,7 @@ export function addGrouptoScene(g) {
     //mScene.background = new THREE.Color( 0xb0b0b0 );
 
     var screenratio = mUniforms.screenWidth.value / mUniforms.screenHeight.value;
+    g.scale.x *= 1 / screenratio;
     var props = getsizeandpos(g);
     var imgratio = props.width / props.height;
     // scale to max size of 1 high, wide
@@ -322,17 +326,17 @@ export function addGrouptoScene(g) {
     g.scale.x *= .95 / scale;
     g.scale.y *= .95 / scale;
     g.scale.z *= .95 / scale;
-
-    if (imgratio / screenratio > 1) {
-        console.log("scale1")
-        g.scale.y = g.scale.y * screenratio;
-    }
-    else {
-        g.scale.x = g.scale.x / screenratio;
-        console.log("scale2")
-    }
-
-
+    /*
+        if (imgratio / screenratio > 1) {
+            console.log("scale1")
+            g.scale.y = g.scale.y * screenratio;
+        }
+        else {
+            g.scale.x = g.scale.x / screenratio;
+            console.log("scale2")
+        }
+    
+    */
 
     props = getsizeandpos(g);
     g.position.x = -props.cx;
