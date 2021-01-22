@@ -33,14 +33,14 @@ n w x1 y1 x2 y2  x3 y3
 
 const settings =
 {
-    cells: 70,
+    cells: 50,
     maxlines: MAXLINES,
     maxpoints: MAXPOINTS,
-    d1: 50,
-    d2: 2,
-    forcetonext: .01,
+    d1: 30,
+    d2: 3,
+    forcetonext: .1,
     forcetopoints: 100,
-    speed: .1
+    speed: .2
 }
 
 
@@ -638,7 +638,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     var F = [0.0, 0.0]; //force
     var Ftot = [0.0, 0.0]; //force
     const power = 2;
-    const fmax = 100000;
+    const fmax = 1000;
     var even = true;
     var xindex = this.thread.x;
     var yindex = this.thread.x + 1;
@@ -772,7 +772,7 @@ function get_line_count_from_gpumatrix(G) {
 function processGPU() {
     var lc = lines.length;
     add_lines_to_gpumatrix(lines, 1, 1);
-    
+
     GPUmatrix = GPU_movepoints(
         GPUmatrix,
         settings.forcetonext,
@@ -780,7 +780,7 @@ function processGPU() {
         settings.d1,
         settings.speed,
         min(lines.length + 1, MAXLINES));
-    
+
     lines = get_lines_from_gpumatrix(1);
 }
 
@@ -794,7 +794,7 @@ export function draw() {
             stroke('#00FF00');
             lines = voronoi_render(borderpoints);
             drawlines(lines, 1);
-            if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }            
+            if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }
             for (var i = 0; i < seeds.length; i++) {
                 point(seeds[i].x, seeds[i].y);
             }
