@@ -174,7 +174,7 @@ $(function () {
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         //var maskgui = gui.addFolder('Mask');
         gui.add(guiData, 'maskfilename').name('File name');
-        gui.add(guiData, 'maxedge_dist', 1, 30).name('edge density').onFinishChange(loadImage);;
+        gui.add(guiData, 'maxedge_dist', 2, 30).name('edge density').onFinishChange(loadImage);;
 
         gui.add(guiData, 'maskfile').name('load from SVG');
     });

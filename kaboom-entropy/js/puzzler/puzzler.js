@@ -61,7 +61,7 @@ export function setup2() {
 //spreads points in a path so that the max distance between points is dist.  and the minimum number of points is used
 //======================================================================================================
 function spread_path(p, dist) {
-    p = subdivpath(p, dist / 5);
+    p = subdivpath(p, dist / 2);
     var k = 0;
     var j = 0;
     var p2 = [];
@@ -107,10 +107,17 @@ export function loadSVG(url, fn, density) {
         var cheight = maxy - miny;
         var x0 = (minx + maxx) / 2
         var y0 = (miny + maxy) / 2;
-        scale = Math.min(mx / cwidth, my / cheight);
+        scale = Math.min(mx / cwidth, my / cheight) * 0.95;
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
-        var points = SVGdata[0].subPaths[0].getPoints(15);
+        var points = SVGdata[0].subPaths[0].getPoints(12);
+
+        points = subdivpath(points, 100);
+        points = subdivpath(points, 50);
+        points = subdivpath(points, 20);
+        points = subdivpath(points, 10);
+        points = subdivpath(points, density);
+
 
         points = spread_path(points, density);
 
@@ -336,7 +343,7 @@ function subdivpath(P, maxd) {
             }
         }
         i++;
-        ready = (i >= (P.length - 1) || i > 2000);
+        ready = (i >= (P.length - 1));// || i > 20000);
     }
     return P;
 }
