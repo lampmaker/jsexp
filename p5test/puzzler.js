@@ -38,7 +38,7 @@ const settings =
     maxpoints: MAXPOINTS,
     d1: 30,
     d2: 3,
-    forcetonext: .1,
+    forcetonext: -100,
     forcetopoints: 100,
     speed: .2
 }

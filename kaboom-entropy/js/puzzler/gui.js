@@ -161,7 +161,7 @@ $(function () {
     navigator.requestMIDIAccess()
         .then(onMIDISuccess, onMIDIFailure);
 
-    $.getJSON('/js/entropy/presets.json', function (json) {
+    $.getJSON('/js/puzzler/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
