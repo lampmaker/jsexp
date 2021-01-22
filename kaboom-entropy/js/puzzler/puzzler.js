@@ -57,12 +57,32 @@ export function setup2() {
     frameRate(25);
 }
 
+//======================================================================================================
+//spreads points in a path so that the max distance between points is dist.  and the minimum number of points is used
+//======================================================================================================
+function spread_path(p, dist) {
+    p = subdivpath(p, dist / 5);
+    var k = 0;
+    var j = 0;
+    var p2 = [];
+    var d;
+    p2[j] = p[k]
+    while (k < p.length - 1) {
+        d = 0;
+        while (d < dist && k < p.length - 1) {
+            k++;
+            d += Math.sqrt((p[k].x - p[k - 1].x) * (p[k].x - p[k - 1].x) + (p[k].y - p[k - 1].y) * (p[k].y - p[k - 1].y));
+        }
+        j++;
+        p2[j] = p[k];
 
-
+    }
+    return p2;
+}
 //======================================================================================================
 // loads SVG with dimensions mx,my
 //======================================================================================================
-export function loadSVG(url, fn) {
+export function loadSVG(url, fn, density) {
     initializeGPumatrix(settings.maxlines, settings.maxpoints);
     lines = [];
     border = new THREE.Path;
@@ -90,8 +110,10 @@ export function loadSVG(url, fn) {
         scale = Math.min(mx / cwidth, my / cheight);
         console.log(cwidth, cheight, x0, y0, scale);
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
-        var points = SVGdata[0].subPaths[0].getPoints(3);
-        points - subdivpath(points, 1);
+        var points = SVGdata[0].subPaths[0].getPoints(15);
+
+        points = spread_path(points, density);
+
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
             var y1 = (points[k].y - y0) * scale + my / 2;
@@ -105,7 +127,6 @@ export function loadSVG(url, fn) {
         //   borderpoints = border.getPoints();
         borderloaded = true;
         borderpoints = border.getPoints();
-
 
 
         voronoi_setup();
@@ -307,8 +328,8 @@ function subdivpath(P, maxd) {
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
             if (numinserts + P.length + 2 > MAXPOINTS) numinserts = MAXPOINTS - P.length - 2;
-            var dx = (P2.x - P1.x) / (numinserts + 1) + (Math.random() - 0.5) * 0.1;
-            var dy = (P2.y - P1.y) / (numinserts + 1) + (Math.random() - 0.5) * 0.1;
+            var dx = (P2.x - P1.x) / (numinserts + 1);
+            var dy = (P2.y - P1.y) / (numinserts + 1);
             for (var j = 1; j <= numinserts; j++) {
                 var newpoint = new Vertex(P1.x + dx * j, P1.y + dy * j);
                 P.splice(i + j, 0, newpoint);  // insert point

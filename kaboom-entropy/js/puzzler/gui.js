@@ -32,6 +32,10 @@ guiData = {
     maskfile: loadImage,
     imagetracer: imgtr,
     maskfilename: "olifant",
+    maxedge_dist: 10,
+    npieces: 50,
+    d1: 30,
+    d2: 3
 };
 //=================================================================================================================
 
@@ -170,6 +174,8 @@ $(function () {
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         //var maskgui = gui.addFolder('Mask');
         gui.add(guiData, 'maskfilename').name('File name');
+        gui.add(guiData, 'maxedge_dist', 1, 30).name('edge density').onFinishChange(loadImage);;
+
         gui.add(guiData, 'maskfile').name('load from SVG');
     });
     updatescreen();
@@ -183,7 +189,7 @@ function loadImage() {
     if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url, guiData.maskfilename);
     if (guiData.maskfilename.split('.')[1] == null) {
         url = s1.concat(guiData.maskfilename, '.svg')
-        loadSVG(url, guiData.maskfilename);
+        loadSVG(url, guiData.maskfilename, guiData.maxedge_dist);
     }
 }
 
