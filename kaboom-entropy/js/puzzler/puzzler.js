@@ -1,21 +1,57 @@
 import * as THREE from '/js/three/three.module.js';
 import { SVGLoader } from '/js/three/SVGLoader.js';
-// geometry through gui
+
 var csimplify, cfilename, svgDocument;
 var _filename;
 var canvasWidth = 1000;
 var canvasHeight = 1000;
 var busy = false;
-//========================================================================================================
 
-//========================================================================================================
+const gpu = new GPU();
+var GPUmatrix = []
+const MAXLINES = 140;
+const MAXPOINTS = 2000 // points per line
+const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
-function setup() {
-    createCanvas(1024, 1024);
+const settings =
+{
+    cells: 50,
+    maxlines: MAXLINES,
+    maxpoints: MAXPOINTS,
+    d1: 30,
+    d2: 3,
+    forcetonext: -100,
+    forcetopoints: 100,
+    speed: .2
 }
-window.preload = preload
-window.setup = setup2;
-window.draw = draw;
+
+var seeds;
+var lines;
+var border, borderpoints;
+var borderloaded = false;
+var phase = 0;
+
+
+
+var stageEnum = {
+    idle: 0,
+    voronoi_show: 1,
+    voronoi_auto: 2,
+}
+
+var STAGE = stageEnum.idle;
+
+var VData
+
+VData = {
+    a1: 100,
+    a1: 80,
+    f: 10,
+    a: 0.5
+}
+
+
+//========================================================================================================
 
 export function init(size_w, size_h) {
     //  resizeCanvas(size_w, size_h);
@@ -44,6 +80,14 @@ export function init(size_w, size_h) {
         svgDocument.appendChild(shape);
     */
 }
+//========================================================================================================
+
+function setup() {
+    createCanvas(1024, 1024);
+}
+window.preload = preload
+window.setup = setup2;
+window.draw = draw;
 
 export function preload() {
     //  mySvg = loadImage("beer.svg");
@@ -134,23 +178,81 @@ export function loadSVG(url, fn, density) {
         //   borderpoints = border.getPoints();
         borderloaded = true;
         borderpoints = border.getPoints();
-
-
-        voronoi_setup();
-        //  }
     })
 }
+
+
+//======================================================================================================
+//VORONOI
+//Vadds[count] random points within range[size_w, size_h] and within shape defined by[path]
+//======================================================================================================
+function Vadd_random(count, size_w, size_h, path) {
+    var n = 0
+    while (n < count) {
+        var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
+        if (path == null) {
+            seeds[seeds.length] = P;
+            n++
+        }
+        else {
+            if (inpath(P, path.getPoints())) {
+                seeds[seeds.length] = P;
+                n++
+            }
+        }
+    }
+}
+
+// checks ifd all seeds are still within path. if not, add.
+function V_Check(size_w, size_h, path) {
+    for (var i = 0; i < seeds.length; i++) {
+        if (!inpath(seeds[i], path.getPoints())) {
+            var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
+            seeds[i] = P;
+        }
+    }
+}
+
+
+
+
+//======================================================================================================
+//VORONOI
+//Iniitializes voronoi with 100 points
+//======================================================================================================
+export function voronoi_setup(numseeds, distr) {
+    if (border == null) return;
+    seeds = new Array();
+    settings.cells = int(numseeds);
+    Vadd_random(settings.cells, width, height, border);
+    if (distr) STAGE = stageEnum.voronoi_auto
+    else STAGE = stageEnum.voronoi_show;
+}
+//==
+export function voronoi_auto(distr) {
+    if (distr) STAGE = stageEnum.voronoi_auto
+    else STAGE = stageEnum.voronoi_show;
+}
+
+export function voronoi_updateparams(v) {
+    VData = v;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
 //======================================================================================================
 // GPU.jS STUFF
 //======================================================================================================
-const gpu = new GPU();
-var GPUmatrix = []
-const MAXLINES = 140;
-const MAXPOINTS = 2000 // points per line
-const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 function initializeGPumatrix(l, p) {
     for (var i = 0; i < l; i++) {
@@ -169,17 +271,6 @@ x = aantal punten in de lijn.
 n w x1 y1 x2 y2  x3 y3 
 */
 
-const settings =
-{
-    cells: 50,
-    maxlines: MAXLINES,
-    maxpoints: MAXPOINTS,
-    d1: 30,
-    d2: 3,
-    forcetonext: -100,
-    forcetopoints: 100,
-    speed: .2
-}
 
 
 // ==========================================================================================================
@@ -220,11 +311,6 @@ const GPUtest2 = gpu.createKernel(function (_m, _a) {
 //======================================================================================================
 // VORONOI STUFF
 //======================================================================================================
-var seeds;
-var lines;
-var border, borderpoints;
-var borderloaded = false;
-var phase = 1;
 
 
 //======================================================================================================
@@ -411,25 +497,30 @@ function attractionvector(Si, S, p, a1, a2) {
 //================================================================================================
 
 
-function moveaway(S, p, a1, a2, f, a) {
+function moveaway(S, p, V) {
     var ready = true
     var t = 0;
     for (var i = 0; i < S.length; i++) {
-        var V = attractionvector(S[i], S, p, a1, a2);
-        t = t + Math.sqrt((V.x * V.x) + (V.y * V.y));
-        S[i].x = S[i].x + V.x * f;
-        S[i].y = S[i].y + V.y * f;
+        var Q = attractionvector(S[i], S, p, V.a1, V.a2);
+        t = t + Math.sqrt((Q.x * Q.x) + (Q.y * Q.y));
+        S[i].x = S[i].x + Q.x * V.f;
+        S[i].y = S[i].y + Q.y * V.f;
     }
-    return (t < a)
+    return (t < V.a)
 }
 //================================================================================================
 // main function, spreads all th points within shape
 // moves every point a fraction away from the closest neighbor
 //================================================================================================
-function evenly_spread(S, p, a1, a2, f, a) {
+function evenly_spread(S, p, V) {
     var ready = true;
-    var avgVdist = even_spread_totalVdistance(S, p);
-    ready = moveaway(S, p, a1, a2, f, a);
+    //var avgVdist = even_spread_totalVdistance(S, p);
+    ready = moveaway(S, p, V);
+
+
+
+
+
     return ready;
 }
 
@@ -501,36 +592,7 @@ function diffgrowth(lines, a, b, c, p, s) {
 
 
 
-//======================================================================================================
-//VORONOI
-//Vadds[count] random points within range[size_w, size_h] and within shape defined by[path]
-//======================================================================================================
-function Vadd_random(count, size_w, size_h, path) {
-    var n = 0
-    while (n < count) {
-        var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
-        if (path == null) {
-            seeds[seeds.length] = P;
-            n++
-        }
-        else {
-            if (inpath(P, path.getPoints())) {
-                seeds[seeds.length] = P;
-                n++
-            }
-        }
-    }
-}
-//======================================================================================================
-//VORONOI
-//Iniitializes voronoi with 100 points
-//======================================================================================================
-function voronoi_setup() {
-    seeds = new Array();
-    Vadd_random(settings.pieces, width, height, border);
-    Vadd_random(settings.cells, width, height, border);
-}
-//======================================================================================================
+//====================================================================================================
 //VORONOI
 // Renders voronoi shape
 //======================================================================================================
@@ -538,7 +600,7 @@ function voronoi_render(b) {
     var bbox = { xl: 0, xr: width, yt: 0, yb: height };
     var voronoi = new Voronoi();
     var result = voronoi.compute(seeds, bbox);
-    var polys = new Array();   // array of line segments. 
+    var polys = new Array();   // array of line segments.
     for (var cell = 0; cell < result.cells.length; cell++) {
         for (var edge = 0; edge < result.cells[cell].halfedges.length - 1; edge++) {
             var p = result.cells[cell].halfedges[edge].getStartpoint();
@@ -557,7 +619,7 @@ function voronoi_render(b) {
                 var l = new Array();
                 l[0] = new Vertex(p.x, p.y);
                 l[1] = new Vertex(q.x, q.y);
-                //                var l = new Vline(p.x, p.y, q.x, q.y);             
+                //                var l = new Vline(p.x, p.y, q.x, q.y);
                 if (b != null) l = trimlines(l, b);
                 if (l != null) {
                     polys[polys.length] = l;
@@ -634,7 +696,7 @@ function drawlines(P, l) {
 
 //======================================================================================================
 const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) {
-    var CP = _matrix[this.thread.y][this.thread.x] // current point    
+    var CP = _matrix[this.thread.y][this.thread.x] // current point
 
     if (this.thread.x == 0) return CP;  // x=1: length     - no calculation required
     if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
@@ -652,7 +714,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     var p2 = [0.0, 0.0];
     var pa = [0.0, 0.0];
     var Dist = 0.0;
-    var V = [0.0, 0.0]; // direction vector 
+    var V = [0.0, 0.0]; // direction vector
     var F = [0.0, 0.0]; //force
     var Ftot = [0.0, 0.0]; //force
     const power = 2;
@@ -660,7 +722,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     var even = true;
     var xindex = this.thread.x;
     var yindex = this.thread.x + 1;
-    if (this.thread.x % 2 != 0) {  // odd values 
+    if (this.thread.x % 2 != 0) {  // odd values
         xindex = this.thread.x - 1;
         yindex = this.thread.x;
         even = false;
@@ -690,7 +752,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
                 p2[0] = _matrix[i][j * 2 + 2];
                 p2[1] = _matrix[i][j * 2 + 3];
                 var comp = 1;
-                if (i == this.thread.y) {  // looking at own line. 
+                if (i == this.thread.y) {  // looking at own line.
                     if ((j >= this.thread.x - 2) && (j <= this.thread.x + 2)) { // left & right neighbors
                         comp = 0.0;
                     }
@@ -730,7 +792,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
 
     p1[0] += Ftot[0] * sp * rt;
     p1[1] += Ftot[1] * sp * rt;
-    //p1[0] = Ftot[0];  // for 
+    //p1[0] = Ftot[0];  // for
     //p1[1] = Ftot[1];
     if (even) { return p1[0] } else { return p1[1] }
 
@@ -808,40 +870,68 @@ export function draw() {
         background(0);
         stroke('#FFFFFF');
         showpath(border)
-        if (phase == 1) {
-            stroke('#00FF00');
-            lines = voronoi_render(borderpoints);
-            drawlines(lines, 1);
-            if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }
-            for (var i = 0; i < seeds.length; i++) {
-                point(seeds[i].x, seeds[i].y);
+        switch (STAGE) {
+            case stageEnum.idle: {
+
             }
+                break;
+            case stageEnum.voronoi_auto:
+                {
+                    V_Check(width, height, border);
+                    if (evenly_spread(seeds, borderpoints, VData)) { STAGE = stageEnum.voronoi_show }
+                }
+            // fall through
+            case stageEnum.voronoi_show: {
+                stroke('#00FF00');
+                lines = voronoi_render(borderpoints);
+                drawlines(lines, 1);
+                for (var i = 0; i < seeds.length; i++) {
+                    stroke('#FF0000');
+                    fill('#000000');
+                    circle(seeds[i].x, seeds[i].y, 5);
+                }
+            }
+                break;
+
         }
-        if (phase == 2) {
-            lines = deldupes(lines);
-            for (var i = 0; i < lines.length; i++) {
-
-
-                console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
-            }
-            add_line_to_gpumatrix(borderpoints, 0, -10);
-            stroke('#FFFFFF')
-            for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], settings.d2);
-            }
-            //drawlines(lines, 2);;            
-            phase = 3;
-        }
-        if (phase == 3) {
-            processGPU();
-            //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
-
-            for (var i = 0; i < lines.length; i++) {
-                lines[i] = subdivpath(lines[i], settings.d2);
-            }
-
-            drawlines(lines, 1);;
-        }
+        /*
+        
+                if (phase == 1) {
+                    stroke('#00FF00');
+                    lines = voronoi_render(borderpoints);
+                    drawlines(lines, 1);
+                    if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }
+                    for (var i = 0; i < seeds.length; i++) {
+                        point(seeds[i].x, seeds[i].y);
+                    }
+                }
+                if (phase == 2) {
+                    lines = deldupes(lines);
+                    for (var i = 0; i < lines.length; i++) {
+        
+        
+                        console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
+                    }
+                    add_line_to_gpumatrix(borderpoints, 0, -10);
+                    stroke('#FFFFFF')
+                    for (var i = 0; i < lines.length; i++) {
+                        lines[i] = subdivpath(lines[i], settings.d2);
+                    }
+                    //drawlines(lines, 2);;
+                    phase = 3;
+                }
+                if (phase == 3) {
+                    processGPU();
+                    //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
+        
+                    for (var i = 0; i < lines.length; i++) {
+                        lines[i] = subdivpath(lines[i], settings.d2);
+                    }
+        
+                    drawlines(lines, 1);;
+                }
+                */
     }
+
 }
 

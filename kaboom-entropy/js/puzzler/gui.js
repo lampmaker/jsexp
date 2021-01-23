@@ -1,7 +1,8 @@
 
-//import { getImgdata, imagedataToSVG, imagedataToTracedata } from '/js/imagetracer_V1.2.6.js';
+
 import { GUI } from '/js/three/dat.gui.module.js'
-import { loadSVG, init } from '/js/puzzler/puzzler.js';
+import { loadSVG, init, voronoi_setup, voronoi_auto, voronoi_updateparams } from '/js/puzzler/puzzler.js';
+;
 
 
 //window.clean = clean;
@@ -10,7 +11,7 @@ import { loadSVG, init } from '/js/puzzler/puzzler.js';
 var gui, guiData, x, y;
 var loaded = false;
 var midiconnected = false;
-
+var VData;
 var stream, mediaRecorder, recordedChunks = [];
 
 var mididata = {
@@ -31,12 +32,23 @@ guiData = {
     cheight: 1024,
     maskfile: loadImage,
     imagetracer: imgtr,
-    maskfilename: "olifant",
-    maxedge_dist: 10,
-    npieces: 50,
+    SVG_filename: "olifant",
+    SVG_edgedist: 3,
+    SEED_npieces: 50,
+    SEED_autodistribute: true,
     d1: 30,
     d2: 3
 };
+
+VData = {
+    SEED_npieces: 50,
+    SEED_autodistribute: true,
+    a1: 100,
+    a2: 80,
+    f: 10,
+    a: 0.5
+}
+
 //=================================================================================================================
 
 function scalemidi(i) {
@@ -173,26 +185,46 @@ $(function () {
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         //var maskgui = gui.addFolder('Mask');
-        gui.add(guiData, 'maskfilename').name('File name');
-        gui.add(guiData, 'maxedge_dist', 2, 30).name('edge density').onFinishChange(loadImage);;
-
+        gui.add(guiData, 'SVG_filename').name('File name');
+        gui.add(guiData, 'SVG_edgedist', 1, 30).name('edge density').onFinishChange(loadImage);;
         gui.add(guiData, 'maskfile').name('load from SVG');
+        gui.add(guiData, 'SEED_npieces', 20, 200, 1).name('number of pieces').onFinishChange(startseed);
+        gui.add(guiData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(updateseed);
+        var vmenu = gui.addFolder('Voronoi Details')
+        vmenu.add(VData, 'a1', -10, 500, 1).name('cell-force').onFinishChange(vdetails);
+        vmenu.add(VData, 'a2', 0, 500, 1).name('edge-force').onFinishChange(vdetails);
+        vmenu.add(VData, 'f', 0, 10,).name('force').onFinishChange(vdetails);
+        vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
     });
     updatescreen();
 });
-
 //========================================================================================================
 //========================================================================================================
 function loadImage() {
     var s1 = '/img/';
-    var url = s1.concat(guiData.maskfilename);
-    if (guiData.maskfilename.split('.')[1] == 'svg') loadSVG(url, guiData.maskfilename);
-    if (guiData.maskfilename.split('.')[1] == null) {
-        url = s1.concat(guiData.maskfilename, '.svg')
-        loadSVG(url, guiData.maskfilename, guiData.maxedge_dist);
+    var url = s1.concat(guiData.SVG_filename);
+    if (guiData.SVG_filename.split('.')[1] == 'svg') loadSVG(url, guiData.SVG_filename);
+    if (guiData.SVG_filename.split('.')[1] == null) {
+        url = s1.concat(guiData.SVG_filename, '.svg')
+        loadSVG(url, guiData.SVG_filename, guiData.SVG_edgedist);
+        //  startseed();
     }
+
 }
 
+function startseed() {
+    voronoi_setup(guiData.SEED_npieces, guiData.SEED_autodistribute)
+    voronoi_updateparams(VData);
+}
+
+function updateseed() {
+    voronoi_auto(guiData.SEED_autodistribute)
+    voronoi_updateparams(VData);
+}
+
+function vdetails() {
+    voronoi_updateparams(VData);
+}
 
 //=================================================================================================================
 //=================================================================================================================
