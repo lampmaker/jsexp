@@ -44,6 +44,8 @@ var STAGE = stageEnum.idle;
 var VData
 
 VData = {
+    SEED_npieces: 50,
+    SEED_autodistribute: true,
     a1: 100,
     a1: 80,
     f: 10,
@@ -88,6 +90,7 @@ function setup() {
 window.preload = preload
 window.setup = setup2;
 window.draw = draw;
+window.mousedown
 
 export function preload() {
     //  mySvg = loadImage("beer.svg");
@@ -220,28 +223,28 @@ function V_Check(size_w, size_h, path) {
 //VORONOI
 //Iniitializes voronoi with 100 points
 //======================================================================================================
-export function voronoi_setup(numseeds, distr) {
-    if (border == null) return;
-    seeds = new Array();
-    settings.cells = int(numseeds);
-    Vadd_random(settings.cells, width, height, border);
-    if (distr) STAGE = stageEnum.voronoi_auto
-    else STAGE = stageEnum.voronoi_show;
-}
-//==
-export function voronoi_auto(distr) {
-    if (distr) STAGE = stageEnum.voronoi_auto
-    else STAGE = stageEnum.voronoi_show;
-}
 
-export function voronoi_updateparams(v) {
+export function voronoi_updateparams(v, restart) {
     VData = v;
+    if (border == null) return;
+    if (restart) {
+        seeds = new Array();
+        settings.cells = int(VData.SEED_npieces);
+        Vadd_random(settings.cells, width, height, border);
+    }
+    if (VData.SEED_autodistribute) STAGE = stageEnum.voronoi_auto
+    else STAGE = stageEnum.voronoi_show;
 }
 
 
+/*
+function mousePressed() {
+    if (STAGE == stageEnum.voronoi_auto || STAGE == stageEnum.voronoi_show) {
+        // find closest point and drag
+    }
+}
 
-
-
+*/
 
 
 
@@ -864,6 +867,9 @@ function processGPU() {
     lines = get_lines_from_gpumatrix(1);
 }
 
+function mouseover(P, d) {
+    return (mouseX > P.x - d && mouseX < P.x + d && mouseY > P.y - d && mouseY < P.y + d)
+}
 
 export function draw() {
     if (borderloaded) {
@@ -888,7 +894,15 @@ export function draw() {
                 for (var i = 0; i < seeds.length; i++) {
                     stroke('#FF0000');
                     fill('#000000');
-                    circle(seeds[i].x, seeds[i].y, 5);
+                    if (mouseover(seeds[i], 10)) {
+                        fill('#FFFFFF');
+                        if (mouseIsPressed) {
+                            seeds[i].x = mouseX;
+                            seeds[i].y = mouseY;
+                            fill('#0000FF');
+                        }
+                    }
+                    circle(seeds[i].x, seeds[i].y, 10);
                 }
             }
                 break;
