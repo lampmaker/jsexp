@@ -778,6 +778,7 @@ len      wei        x         y       x       y       x        y       x        
 */
 //======================================================================================================
 const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax, mxl, numpoints) {
+    const FSCALE = 1E6;
     var CP = _matrix[this.thread.y][this.thread.x] // current point
     var row = this.thread.y;
     if (this.thread.x == 0) return CP;  // x=: length     - no calculation required
@@ -789,7 +790,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
-    var scale = 1 / (numpoints * 100);
+    var scale = 1 / (numpoints);
     //return CP + 0.1;
     var p1 = [0.0, 0.0];
     var p2 = [0.0, 0.0];
@@ -818,11 +819,11 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     Dist = 1 * Math.sqrt((p1[0] - pa[0]) * (p1[0] - pa[0]) + (p1[1] - pa[1]) * (p1[1] - pa[1]));  // distance between points
     if (Dist != 0) {
         V = [(p1[0] - pa[0]) / Dist, (p1[1] - pa[1]) / Dist];  // direction vector
-        var strength = Math.min(fmax, 1 / Math.pow(Math.abs(Dist), power));
-        F[0] = V[0] * strength;
-        F[1] = V[1] * strength;
-        Ftot[0] -= F[0] * fa * scale;
-        Ftot[1] -= F[1] * fa * scale;
+        var strength = 1 / Math.pow(Math.abs(Dist), power);
+        F[0] = V[0] * strength / FSCALE;
+        F[1] = V[1] * strength / FSCALE;
+        Ftot[0] -= F[0] * fa;
+        Ftot[1] -= F[1] * fa;
     }
 
     // move to all other points
@@ -835,13 +836,12 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
 
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
                 if (Dist < (d1 * 15)) { // don't worry about points too far away.
-                    Dist = Dist - d1;
+                    //Dist = Dist - d1;
                     V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                    var strength = Math.min(fmax, 1 / Math.pow(Math.abs(Dist), power));
-
+                    var strength = 1 / Math.pow(Math.abs(Dist), power);
                     if (Dist < 0) strength = fmax;
-                    F[0] = V[0] * strength;
-                    F[1] = V[1] * strength;
+                    F[0] = V[0] * strength / FSCALE;
+                    F[1] = V[1] * strength / FSCALE;
                     Ftot[0] += F[0] * fb * w * scale;
                     Ftot[1] += F[1] * fb * w * scale;
 
