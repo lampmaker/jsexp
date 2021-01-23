@@ -9,40 +9,32 @@ var busy = false;
 
 const gpu = new GPU();
 var GPUmatrix = []
-const MAXLINES = 140;
+const MAXLINES = 1400;
 const MAXPOINTS = 2000 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
-
-const settings =
-{
-    cells: 50,
-    maxlines: MAXLINES,
-    maxpoints: MAXPOINTS,
-    d1: 30,
-    d2: 3,
-    forcetonext: -100,
-    forcetopoints: 100,
-    speed: .2
-}
 
 var seeds;
 var lines;
 var border, borderpoints;
 var borderloaded = false;
 var phase = 0;
-
-
-
+//==================================================================
+var mouseboxEnum = {
+    small: 10,
+    large: 20
+}
+var mousebox = mouseboxEnum.small;
+//==================================================================
 var stageEnum = {
     idle: 0,
     voronoi_show: 1,
     voronoi_auto: 2,
+    diffgrowthstart: 3,
+    diffgrowth: 4
 }
-
 var STAGE = stageEnum.idle;
-
+//==================================================================
 var VData
-
 VData = {
     SEED_npieces: 50,
     SEED_autodistribute: true,
@@ -51,7 +43,15 @@ VData = {
     f: 10,
     a: 0.5
 }
-
+//==================================================================
+var DiffData;
+DiffData = {
+    d1: 30,
+    d2: 3,
+    forcetonext: -100,
+    forcetopoints: 100,
+    speed: .2
+}
 
 //========================================================================================================
 
@@ -102,6 +102,16 @@ export function setup2() {
     background(0);
     stroke('#FFFFFF');
     frameRate(25);
+
+    var nu = new Date;
+    var straks = new Date(2021, 0, 23, 17, 2, 0);
+
+    console.log(nu, straks);
+    var countdown = straks - nu;
+    console.log(countdown);
+
+
+
 }
 
 //======================================================================================================
@@ -130,8 +140,6 @@ function spread_path(p, dist) {
 // loads SVG with dimensions mx,my
 //======================================================================================================
 export function loadSVG(url, fn, density) {
-    initializeGPumatrix(settings.maxlines, settings.maxpoints);
-    lines = [];
     border = new THREE.Path;
 
     _filename = fn;
@@ -225,28 +233,34 @@ function V_Check(size_w, size_h, path) {
 //======================================================================================================
 
 export function voronoi_updateparams(v, restart) {
+    lines = [];
     VData = v;
     if (border == null) return;
     if (restart) {
         seeds = new Array();
-        settings.cells = int(VData.SEED_npieces);
-        Vadd_random(settings.cells, width, height, border);
+        Vadd_random(VData.SEED_npieces, width, height, border);
     }
     if (VData.SEED_autodistribute) STAGE = stageEnum.voronoi_auto
     else STAGE = stageEnum.voronoi_show;
 }
 
 
-/*
-function mousePressed() {
-    if (STAGE == stageEnum.voronoi_auto || STAGE == stageEnum.voronoi_show) {
-        // find closest point and drag
+export function diffgrowth_updateparams(v, restart) {
+    VData = v;
+    if (STAGE == stageEnum.idle) return;
+    if (restart) {
+        initializeGPumatrix(MAXLINES, MAXPOINTS);
+        lines = deldupes(lines);
+        //for (var i = 0; i < lines.length; i++) {
+        //    console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
+        // }
+        add_line_to_gpumatrix(borderpoints, 0, -10);
+        for (var i = 0; i < lines.length; i++) {
+            lines[i] = subdivpath(lines[i], VData.d2);
+        }
     }
+    STAGE = stageEnum.diffgrowth;
 }
-
-*/
-
-
 
 
 
@@ -269,7 +283,7 @@ function initializeGPumatrix(l, p) {
 /*
 eerste point in elke lijn:
 x = aantal punten in de lijn.
-
+ 
 0 1  2  3  4  5  6  7 
 n w x1 y1 x2 y2  x3 y3 
 */
@@ -307,7 +321,7 @@ const GPUtest = gpu.createKernel(function (_a) {
 const GPUtest2 = gpu.createKernel(function (_m, _a) {
     var CP = _m[this.thread.y][this.thread.x] + _a // current point
     return CP
-}).setOutput([settings.maxpoints, settings.maxlines])
+}).setOutput([MAXPOINTS, MAXLINES])
 
 
 
@@ -373,7 +387,7 @@ function intersect_point(A1, A2, B1, B2) {
 //================================================================================================
 // trim lines outside of shape.  P contains line (4 points), b contains border
 //================================================================================================
-function trimlines(l, b) {
+function trimlines2(l, b) {
     var p1_inside = inpath(l[0], b);
     var p2_inside = inpath(l[1], b);
     if (p1_inside && p2_inside) return l;  //  both lines are inside
@@ -387,12 +401,11 @@ function trimlines(l, b) {
         l[0] = l[1];
         l[1] = tmp;
     }
-    var i = 0;
+
     var min = 10;
-    var isc;
     var fisc;
     for (var i = 0; i < b.length - 1; i++) {
-        isc = intersect_point(l[0], l[1], b[i], b[(i + 1)]);
+        var isc = intersect_point(l[0], l[1], b[i], b[(i + 1)]);
         if (isc != null) {
             if (isc[2] < min) {
                 min = isc[2] // find closest one.  isc2 is Vdistance on p1-p2 line.
@@ -406,6 +419,62 @@ function trimlines(l, b) {
         return l;
     }
     return null
+}
+
+
+//================================================================================================
+// trim lines outside of shape.  P contains line (4 points), b contains border
+//================================================================================================
+function trimlines(l, b) {
+    var p0_inside = inpath(l[0], b);
+    var p1_inside = inpath(l[1], b);
+    if (p0_inside && p1_inside) return l;  //  both lines are inside
+
+    if (!p0_inside) {
+        var min = 100;
+        var fisc;
+        for (var i = 0; i < b.length - 1; i++) {
+            var isc = intersect_point(l[0], l[1], b[i], b[(i + 1)]);
+            if (isc != null) {
+                if (isc[2] < min) {
+                    min = isc[2] // find closest one.  isc2 is Vdistance on p1-p2 line.
+                    fisc = isc;
+                }
+            }
+        }
+        if (min <= 1) {  // if not, no valid intersection was found.        
+            l[0].x = fisc[0];
+            l[0].y = fisc[1];
+        }
+        else {
+            return null;
+        }
+    }
+
+    if (!p1_inside) {
+        var min = 10;
+        var fisc;
+        for (var i = 0; i < b.length - 1; i++) {
+            var isc = intersect_point(l[0], l[1], b[i], b[(i + 1)]);
+            if (isc != null) {
+                if (isc[2] < min) {
+                    min = isc[2] // find closest one.  isc2 is Vdistance on p1-p2 line.
+                    fisc = isc;
+                }
+            }
+        }
+        if (min <= 1) {  // if not, no valid intersection was found.        
+            l[1].x = fisc[0];
+            l[1].y = fisc[1];
+        }
+        else {
+            /// console.log("trim:null")
+            return null
+                ;
+        }
+    }
+
+    return l
 }
 
 
@@ -741,8 +810,8 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     Dist = 1 * Math.sqrt((p1[0] - pa[0]) * (p1[0] - pa[0]) + (p1[1] - pa[1]) * (p1[1] - pa[1]));  // distance between points
     if (Dist != 0) {
         V = [(p1[0] - pa[0]) / Dist, (p1[1] - pa[1]) / Dist];  // direction vector
-        F[0] = (fa * V[0]) / Math.pow(Dist, 3);
-        F[1] = (fa * V[1]) / Math.pow(Dist, 3);
+        F[0] = (fa * V[0]) / Math.pow(Dist, 2);
+        F[1] = (fa * V[1]) / Math.pow(Dist, 2);
         Ftot[0] -= F[0];
         Ftot[1] -= F[1];
     }
@@ -763,21 +832,17 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
 
                 if (Dist < (d1 * 5)) { // don't worry about points too far away.
-                    //(Dist = Dist - d1);
+                    Dist = Dist - d1;
+                    V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
+                    F[0] = V[0] * (Math.min(1 / Math.pow(Dist, power), fmax));
+                    F[1] = V[1] * (Math.min(1 / Math.pow(Dist, power), fmax));
                     if (Dist > 0) {
-                        V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                        F[0] = V[0] * (Math.min(1 / Math.pow(Dist, power), fmax));
-                        F[1] = V[1] * (Math.min(1 / Math.pow(Dist, power), fmax));
                         Ftot[0] += F[0] * fb * w * comp;
                         Ftot[1] += F[1] * fb * w * comp;
                     }
-                    if (Dist == 0) {
-                    }
-                    if (Dist < 0) {
-                        F[0] = V[0] * fmax;
-                        F[1] = V[1] * fmax;
-                        Ftot[0] += F[0] * fb * w * comp;
-                        Ftot[1] += F[1] * fb * w * comp;
+                    if (Dist <= 0) {
+                        Ftot[0] -= F[0] * fb * w * comp;
+                        Ftot[1] -= F[1] * fb * w * comp;
                     }
                 }
             };
@@ -804,9 +869,9 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
 // adds a single line to the GPU matrix
 function add_line_to_gpumatrix(line, offset, w) {
     var mx = line.length;
-    if (line.length * 2 > settings.maxpoints - 2) {
-        console.log("maxpoints TOO SMALL", line.length, settings.maxpoints / 2);
-        mx = settings.maxpoints / 2 - 2;
+    if (line.length * 2 > MAXPOINTS - 2) {
+        console.log("maxpoints TOO SMALL", line.length, MAXPOINTS / 2);
+        mx = MAXPOINTS / 2 - 2;
     }
     GPUmatrix[offset][0] = mx;
     GPUmatrix[offset][1] = w;
@@ -818,9 +883,9 @@ function add_line_to_gpumatrix(line, offset, w) {
 // adds multiple lines to the GPU matrix
 function add_lines_to_gpumatrix(lines, offset, w) {
     var count = lines.length;
-    if (count + offset > settings.maxlines) {
-        console.log("maxlines TOO SMALL", lines.length, settings.maxlines);
-        count = settings.maxlines - offset;
+    if (count + offset > MAXLINES) {
+        console.log("maxlines TOO SMALL", lines.length, MAXLINES);
+        count = MAXLINES - offset;
     }
     if (count > 0) {
         for (var i = 0; i < count; i++) {
@@ -832,7 +897,7 @@ function add_lines_to_gpumatrix(lines, offset, w) {
 
 function get_lines_from_gpumatrix(offset) {
     lines = []
-    for (var i = 0; i < settings.maxlines; i++) {
+    for (var i = 0; i < MAXLINES; i++) {
         var linelength = GPUmatrix[i + offset][0];
         if (linelength == 0) return lines;
         lines[i] = new Array();
@@ -844,7 +909,7 @@ function get_lines_from_gpumatrix(offset) {
 }
 
 function get_line_count_from_gpumatrix(G) {
-    for (var i = 0; i < settings.maxlines; i++) {
+    for (var i = 0; i < MAXLINES; i++) {
         var linelength = G[i][0];
         if (linelength == 0) return i;
     }
@@ -858,29 +923,34 @@ function processGPU() {
 
     GPUmatrix = GPU_movepoints(
         GPUmatrix,
-        settings.forcetonext,
-        settings.forcetopoints,
-        settings.d1,
-        settings.speed,
+        VData.forcetonext,
+        VData.forcetopoints,
+        VData.d1,
+        VData.speed,
         min(lines.length + 1, MAXLINES));
 
     lines = get_lines_from_gpumatrix(1);
 }
+//=============================================================================================================//=============================================================================================================
+//=============================================================================================================//=============================================================================================================
+//=============================================================================================================//=============================================================================================================
 
 function mouseover(P, d) {
-    return (mouseX > P.x - d && mouseX < P.x + d && mouseY > P.y - d && mouseY < P.y + d)
+    return (mouseX > P.x - d && mouseX < P.x + d && mouseY > P.y - d && mouseY < P.y + d);
 }
-
+//=============================================================================================================
 export function draw() {
     if (borderloaded) {
         background(0);
         stroke('#FFFFFF');
         showpath(border)
         switch (STAGE) {
+            //-----------------------------------------------------------------------------------------
             case stageEnum.idle: {
 
             }
                 break;
+            //-----------------------------------------------------------------------------------------
             case stageEnum.voronoi_auto:
                 {
                     V_Check(width, height, border);
@@ -894,57 +964,41 @@ export function draw() {
                 for (var i = 0; i < seeds.length; i++) {
                     stroke('#FF0000');
                     fill('#000000');
-                    if (mouseover(seeds[i], 10)) {
+                    if (mouseover(seeds[i], mousebox)) {
                         fill('#FFFFFF');
                         if (mouseIsPressed) {
+                            mousebox = mouseboxEnum.large;
                             seeds[i].x = mouseX;
                             seeds[i].y = mouseY;
                             fill('#0000FF');
+                        }
+                        else {
+                            mousebox = mouseboxEnum.small;
                         }
                     }
                     circle(seeds[i].x, seeds[i].y, 10);
                 }
             }
                 break;
+            //-----------------------------------------------------------------------------------------
+            case stageEnum.diffgrowthstart: {
+            }
+                break;
+            //-----------------------------------------------------------------------------------------
+            case stageEnum.diffgrowth: {
+                processGPU();
+                //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
 
+                for (var i = 0; i < lines.length; i++) {
+                    lines[i] = subdivpath(lines[i], VData.d2);
+                }
+
+                drawlines(lines, 2);;
+            }
+                break;
+            //-----------------------------------------------------------------------------------------
         }
-        /*
-        
-                if (phase == 1) {
-                    stroke('#00FF00');
-                    lines = voronoi_render(borderpoints);
-                    drawlines(lines, 1);
-                    if (evenly_spread(seeds, borderpoints, 100, 80, 10, 0.5)) { phase = 2 }
-                    for (var i = 0; i < seeds.length; i++) {
-                        point(seeds[i].x, seeds[i].y);
-                    }
-                }
-                if (phase == 2) {
-                    lines = deldupes(lines);
-                    for (var i = 0; i < lines.length; i++) {
-        
-        
-                        console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
-                    }
-                    add_line_to_gpumatrix(borderpoints, 0, -10);
-                    stroke('#FFFFFF')
-                    for (var i = 0; i < lines.length; i++) {
-                        lines[i] = subdivpath(lines[i], settings.d2);
-                    }
-                    //drawlines(lines, 2);;
-                    phase = 3;
-                }
-                if (phase == 3) {
-                    processGPU();
-                    //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
-        
-                    for (var i = 0; i < lines.length; i++) {
-                        lines[i] = subdivpath(lines[i], settings.d2);
-                    }
-        
-                    drawlines(lines, 1);;
-                }
-                */
+
     }
 
 }

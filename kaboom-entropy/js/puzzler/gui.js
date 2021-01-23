@@ -1,7 +1,7 @@
 
 
 import { GUI } from '/js/three/dat.gui.module.js'
-import { loadSVG, init, voronoi_setup, voronoi_auto, voronoi_updateparams } from '/js/puzzler/puzzler.js';
+import { loadSVG, init, voronoi_updateparams, diffgrowth_updateparams } from '/js/puzzler/puzzler.js';
 ;
 
 
@@ -34,10 +34,7 @@ guiData = {
     imagetracer: imgtr,
     SVG_filename: "olifant",
     SVG_edgedist: 3,
-    SEED_npieces: 50,
-    SEED_autodistribute: true,
-    d1: 30,
-    d2: 3
+    start: diffstart
 };
 
 VData = {
@@ -47,6 +44,15 @@ VData = {
     a2: 80,
     f: 10,
     a: 0.5
+}
+
+var DiffData;
+DiffData = {
+    d1: 30,
+    d2: 3,
+    forcetonext: -100,
+    forcetopoints: 100,
+    speed: .2
 }
 
 //=================================================================================================================
@@ -188,13 +194,21 @@ $(function () {
         gui.add(guiData, 'SVG_filename').name('File name');
         gui.add(guiData, 'SVG_edgedist', 1, 30).name('edge density').onFinishChange(loadImage);;
         gui.add(guiData, 'maskfile').name('load from SVG');
-        gui.add(guiData, 'SEED_npieces', 20, 200, 1).name('number of pieces').onFinishChange(startseed);
-        gui.add(guiData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(updateseed);
+        gui.add(VData, 'SEED_npieces', 20, 200, 1).name('number of pieces').onFinishChange(startseed);
+        gui.add(VData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(vdetails);
         var vmenu = gui.addFolder('Voronoi Details')
         vmenu.add(VData, 'a1', -10, 500, 1).name('cell-force').onFinishChange(vdetails);
         vmenu.add(VData, 'a2', 0, 500, 1).name('edge-force').onFinishChange(vdetails);
         vmenu.add(VData, 'f', 0, 10,).name('force').onFinishChange(vdetails);
         vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
+        gui.add(guiData, 'start').name('Diffgrowth start');
+        var Dmenu = gui.addFolder('Diff Details')
+        Dmenu.add(DiffData, 'd1', -100, 500).name('d1').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'd2', -100, 500).name('d2').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', -100, 500).name('forcetonext').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', -100, 500).name('forcetopoints').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onFinishChange(diffdetails);
+
     });
     updatescreen();
 });
@@ -213,19 +227,21 @@ function loadImage() {
 }
 
 function startseed() {
-    voronoi_setup(guiData.SEED_npieces, guiData.SEED_autodistribute)
-    voronoi_updateparams(VData);
+    voronoi_updateparams(VData, true);
 }
 
-function updateseed() {
-    voronoi_auto(guiData.SEED_autodistribute)
-    voronoi_updateparams(VData);
-}
 
 function vdetails() {
-    voronoi_updateparams(VData);
+    voronoi_updateparams(VData, false);
 }
 
+function diffstart() {
+    diffgrowth_updateparams(DiffData, true)
+}
+
+function diffdetails() {
+    diffgrowth_updateparams(DiffData, false)
+}
 //=================================================================================================================
 //=================================================================================================================
 
