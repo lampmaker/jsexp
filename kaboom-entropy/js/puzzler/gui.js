@@ -52,6 +52,7 @@ DiffData = {
     d2: 30,
     forcetonext: 500,
     forcetopoints: 10,
+    fmax: 1,
     speed: .2
 }
 
@@ -208,7 +209,7 @@ $(function () {
         Dmenu.add(DiffData, 'forcetonext', -0, 500).name('forcetonext').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 500).name('forcetopoints').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onFinishChange(diffdetails);
-
+        Dmenu.add(DiffData, 'fmax', 0, 500).name('fmax').onFinishChange(diffdetails);
     });
     updatescreen();
 });
