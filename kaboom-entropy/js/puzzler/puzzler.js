@@ -47,8 +47,8 @@ VData = {
 var DiffData;
 DiffData = {
     d1: 30,
-    d2: 3,
-    forcetonext: -100,
+    d2: 10,
+    forcetonext: 500,
     forcetopoints: 100,
     speed: .2
 }
@@ -248,7 +248,7 @@ export function voronoi_updateparams(v, restart) {
 export function diffgrowth_updateparams(v, restart) {
     VData = v;
     if (STAGE == stageEnum.idle) return;
-    if (restart) {
+    if (restart || STAGE != stageEnum.diffgrowth) {
         initializeGPumatrix(MAXLINES, MAXPOINTS);
         lines = deldupes(lines);
         //for (var i = 0; i < lines.length; i++) {
@@ -259,6 +259,7 @@ export function diffgrowth_updateparams(v, restart) {
             lines[i] = subdivpath(lines[i], VData.d2);
         }
     }
+
     STAGE = stageEnum.diffgrowth;
 }
 
@@ -790,7 +791,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
     var F = [0.0, 0.0]; //force
     var Ftot = [0.0, 0.0]; //force
     const power = 2;
-    const fmax = 1000;
+    const fmax = 10000;
     var even = true;
     var xindex = this.thread.x;
     var yindex = this.thread.x + 1;
@@ -826,24 +827,20 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, mxl) 
                 var comp = 1;
                 if (i == this.thread.y) {  // looking at own line.
                     if ((j >= this.thread.x - 2) && (j <= this.thread.x + 2)) { // left & right neighbors
-                        comp = 0.0;
+                        //comp = 0.0;
                     }
                 }
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
-
-                if (Dist < (d1 * 5)) { // don't worry about points too far away.
+                if (Dist < (d1 * 15)) { // don't worry about points too far away.
                     Dist = Dist - d1;
                     V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                    F[0] = V[0] * (Math.min(1 / Math.pow(Dist, power), fmax));
-                    F[1] = V[1] * (Math.min(1 / Math.pow(Dist, power), fmax));
-                    if (Dist > 0) {
-                        Ftot[0] += F[0] * fb * w * comp;
-                        Ftot[1] += F[1] * fb * w * comp;
-                    }
-                    if (Dist <= 0) {
-                        Ftot[0] -= F[0] * fb * w * comp;
-                        Ftot[1] -= F[1] * fb * w * comp;
-                    }
+                    var strength = Math.min(1 / Math.pow(Math.abs(Dist), power), fmax);
+                    if (Dist < 0) strength = fmax * fmax;
+                    F[0] = V[0] * strength;
+                    F[1] = V[1] * strength;
+                    Ftot[0] += F[0] * fb * w * comp;
+                    Ftot[1] += F[1] * fb * w * comp;
+
                 }
             };
         }

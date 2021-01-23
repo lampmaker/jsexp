@@ -49,9 +49,9 @@ VData = {
 var DiffData;
 DiffData = {
     d1: 30,
-    d2: 3,
-    forcetonext: -100,
-    forcetopoints: 100,
+    d2: 30,
+    forcetonext: 500,
+    forcetopoints: 10,
     speed: .2
 }
 
@@ -203,10 +203,10 @@ $(function () {
         vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
-        Dmenu.add(DiffData, 'd1', -100, 500).name('d1').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'd2', -100, 500).name('d2').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', -100, 500).name('forcetonext').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetopoints', -100, 500).name('forcetopoints').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'd1', 5, 100, 1).name('d1').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'd2', 2, 100, 1).name('d2').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', -0, 500).name('forcetonext').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', 0, 500).name('forcetopoints').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onFinishChange(diffdetails);
 
     });
