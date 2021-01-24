@@ -778,7 +778,6 @@ len      wei        x         y       x       y       x        y       x        
 */
 //======================================================================================================
 const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax, mxl, numpoints) {
-    const FSCALE = 1E6;
     var CP = _matrix[this.thread.y][this.thread.x] // current point
     var row = this.thread.y;
     if (this.thread.x == 0) return CP;  // x=: length     - no calculation required
@@ -790,15 +789,15 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
-    var scale = 1 / (numpoints);
-    //return CP + 0.1;
-    var p1 = [0.0, 0.0];
+
+    // var p1 = [0.0, 0.0];
     var p2 = [0.0, 0.0];
     var pa = [0.0, 0.0];
     var Dist = 0.0;
     var V = [0.0, 0.0]; // direction vector
     var F = [0.0, 0.0]; //force
-    var Ftot = [0.0, 0.0]; //force
+    var Fa = [0.0, 0.0]; //force to neightbor points: attract
+    var Fb = [0.0, 0.0]; //force to other point: repulse
     const power = 2;
     var even = true;
     var xindex = this.thread.x;
@@ -809,49 +808,48 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
         even = false;
     }
     // current point
-    p1[0] = _matrix[row][xindex];
-    p1[1] = _matrix[row][yindex];
+    var p1 = [_matrix[row][xindex], _matrix[row][yindex]]
     // average between neighbors
     pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2;
     pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2;
 
-    // move to point in-between neighborhood points
-    Dist = 1 * Math.sqrt((p1[0] - pa[0]) * (p1[0] - pa[0]) + (p1[1] - pa[1]) * (p1[1] - pa[1]));  // distance between points
-    if (Dist != 0) {
-        V = [(p1[0] - pa[0]) / Dist, (p1[1] - pa[1]) / Dist];  // direction vector
-        var strength = 1 / Math.pow(Math.abs(Dist), power);
-        F[0] = V[0] * strength / FSCALE;
-        F[1] = V[1] * strength / FSCALE;
-        Ftot[0] -= F[0] * fa;
-        Ftot[1] -= F[1] * fa;
-    }
+    // move to point in-between neighborhood points.   Linear attraction force
+    Fa[0] = (pa[0] - p1[0]) * fa;
+    Fa[1] = (pa[1] - p1[1]) * fa;
 
-    // move to all other points
+
+    // repulsion force to all other points
     for (var i = 0; i < mxl; i++) {
         if (_matrix[i][0] > 0) {
             var w = Math.abs(_matrix[i][1]);// weight factor of that row
             for (var j = 0; j < _matrix[i][0]; j++) {
                 p2[0] = _matrix[i][j * 2 + 2];   // point to review
                 p2[1] = _matrix[i][j * 2 + 3];   // point to review
-
-                Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points
-                if (Dist < (d1 * 15)) { // don't worry about points too far away.
-                    //Dist = Dist - d1;
-                    V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector
-                    var strength = 1 / Math.pow(Math.abs(Dist), power);
-                    if (Dist < 0) strength = fmax;
-                    F[0] = V[0] * strength / FSCALE;
-                    F[1] = V[1] * strength / FSCALE;
-                    Ftot[0] += F[0] * fb * w * scale;
-                    Ftot[1] += F[1] * fb * w * scale;
-
-                }
+                Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points                
+                //if (Dist < (d1 * 15)) { // don't worry about points too far away.                   
+                Dist = Dist - d1;
+                if (Dist < 1) Dist = 1;
+                V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector                   
+                var strength = 1 / Math.pow(Math.abs(Dist), power);
+                F[0] = V[0] * strength;
+                F[1] = V[1] * strength;
+                Fb[0] -= F[0] * fb * w;
+                Fb[1] -= F[1] * fb * w;
+                //}
             };
         }
     }
 
-    p1[0] += Ftot[0] * sp;
-    p1[1] += Ftot[1] * sp;
+    // limit force if > fmax
+    var Ftot = [Fa[0] + Fb[0], Fa[1] + Fb[0]];
+
+
+    var scale = 1;
+    if (fa * sp > 0.5) scale = (0.5 / (fa * sp));
+
+
+    p1[0] += Ftot[0] * sp * scale;
+    p1[1] += Ftot[1] * sp * scale;
 
     if (even) { return p1[0] } else { return p1[1] }
 
