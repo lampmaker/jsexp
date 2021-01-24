@@ -1,1 +1,26 @@
-{}
+{
+    "preset": "Default",
+    "closed": false,
+    "remembered": {
+        "Default": {
+            "0": {
+                "cwidth": 1024,
+                "cheight": 1024,
+                "SVG_filename": "beer",
+                "SVG_edgedist": 1
+            }
+        }
+    },
+    "folders": {
+        "Voronoi Details": {
+            "preset": "Default",
+            "closed": false,
+            "folders": {}
+        },
+        "Diff Details": {
+            "preset": "Default",
+            "closed": false,
+            "folders": {}
+        }
+    }
+}

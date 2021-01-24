@@ -32,8 +32,8 @@ guiData = {
     cheight: 1024,
     maskfile: loadImage,
     imagetracer: imgtr,
-    SVG_filename: "olifant",
-    SVG_edgedist: 3,
+    SVG_filename: "beer",
+    SVG_edgedist: 1,
     start: diffstart
 };
 
@@ -48,12 +48,12 @@ VData = {
 
 var DiffData;
 DiffData = {
-    d1: 30,
-    d2: 15,
-    forcetonext: .1,
-    forcetopoints: .1,
-    fmax: 1,
-    speed: .02
+    d1: 5,
+    d2: 3,
+    forcetonext: .21,
+    forcetopoints: 600,
+    speed: .07,
+    fmax: 1
 }
 
 //=================================================================================================================
@@ -207,7 +207,7 @@ $(function () {
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('d1').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 2, 100, 1).name('d2').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'forcetonext', 0, 1).name('forcetonext').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetopoints', 0, 1).name('forcetopoints').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('forcetopoints').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 1).name('fmax').onFinishChange(diffdetails);
     });

@@ -46,11 +46,11 @@ VData = {
 //==================================================================
 var DiffData;
 DiffData = {
-    d1: 30,
-    d2: 10,
-    forcetonext: 500,
-    forcetopoints: 100,
-    speed: .2,
+    d1: 5,
+    d2: 3,
+    forcetonext: .21,
+    forcetopoints: 600,
+    speed: .07,
     fmax: 1
 }
 
@@ -119,7 +119,7 @@ export function setup2() {
 //spreads points in a path so that the max distance between points is dist.  and the minimum number of points is used
 //======================================================================================================
 function spread_path(p, dist) {
-    p = subdivpath(p, dist / 2);
+    p = subdivpath(p, dist / 2, 0);
     var k = 0;
     var j = 0;
     var p2 = [];
@@ -168,11 +168,11 @@ export function loadSVG(url, fn, density) {
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
         var points = SVGdata[0].subPaths[0].getPoints(12);
 
-        points = subdivpath(points, 100);
-        points = subdivpath(points, 50);
-        points = subdivpath(points, 20);
-        points = subdivpath(points, 10);
-        points = subdivpath(points, density);
+        points = subdivpath(points, 100, 0);
+        points = subdivpath(points, 50, 0);
+        points = subdivpath(points, 20, 0);
+        points = subdivpath(points, 10, 0);
+        points = subdivpath(points, density, 0);
 
 
         points = spread_path(points, density);
@@ -255,9 +255,9 @@ export function diffgrowth_updateparams(v, restart) {
         //for (var i = 0; i < lines.length; i++) {
         //    console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
         // }
-        add_line_to_gpumatrix(borderpoints, 0, -10);
+        add_line_to_gpumatrix(borderpoints, 0, -1000);
         for (var i = 0; i < lines.length; i++) {
-            lines[i] = subdivpath(lines[i], VData.d2);
+            lines[i] = subdivpath(lines[i], VData.d2, 0);
         }
     }
 
@@ -484,7 +484,7 @@ function trimlines(l, b) {
 //subdivides a path by inserting points between two adjacent points that are more than 2*maxd apart
 // maxd=minimum Vdistance between points.  Actual will vary between maxd and 2*maxd.
 //================================================================================================
-function subdivpath(P, maxd) {
+function subdivpath(P, maxd, r) {
     var i = 0;
     var ready = false;
     while (!ready) {
@@ -498,7 +498,10 @@ function subdivpath(P, maxd) {
             var dx = (P2.x - P1.x) / (numinserts + 1);
             var dy = (P2.y - P1.y) / (numinserts + 1);
             for (var j = 1; j <= numinserts; j++) {
-                var newpoint = new Vertex(P1.x + dx * j, P1.y + dy * j);
+                var newpoint = new Vertex(
+                    P1.x + dx * j + r * (Math.random() - 0.5),
+                    P1.y + dy * j + r * (Math.random() - 0.5)
+                );
                 P.splice(i + j, 0, newpoint);  // insert point
             }
         }
@@ -712,6 +715,12 @@ function voronoi_render(b) {
 //deldupes
 // Renders voronoi shape
 //======================================================================================================
+
+function issame(p1, p2) {
+    var accuracy = 0.5;
+    return ((Math.abs(p1.x - p2.x) < accuracy) && (Math.abs(p1.y - p2.y) < accuracy));
+}
+
 function deldupes(line) {
     var polys = [];
     for (var j = 0; j < line.length; j++) {
@@ -720,8 +729,8 @@ function deldupes(line) {
         var Vadd = true;  // only Vadd lines that do not exist yet
         var i = 0;
         while ((Vadd == true) && (i < polys.length)) {
-            if ((polys[i][0].x == p.x) && (polys[i][0].y == p.y) && (polys[i][1].x == q.x) && (polys[i][1].y == q.y)) Vadd = false;
-            if ((polys[i][0].x == q.x) && (polys[i][0].y == q.y) && (polys[i][1].x == p.x) && (polys[i][1].y == p.y)) Vadd = false;
+            if (issame(polys[i][0], p) && issame(polys[i][1], q)) Vadd = false;
+            if (issame(polys[i][0], q) && issame(polys[i][1], p)) Vadd = false;
             i++;
         }
         if (Vadd) {
@@ -731,6 +740,7 @@ function deldupes(line) {
             polys[polys.length] = l;
         }
     }
+    console.log("Deldupes: from ", line.length, " to ", polys.length);
     return polys;
 }
 
@@ -826,13 +836,13 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
                 p2[0] = _matrix[i][j * 2 + 2];   // point to review
                 p2[1] = _matrix[i][j * 2 + 3];   // point to review
                 Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points                                
-                if (Dist < d1 * 3) {
+                if (Dist < d1 * 2) {
                     Dist = Dist - d1;
                     if (Dist < 1) Dist = 1;
                     V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector, normalized to 1                   
                     var strength = 1 / Math.pow(Math.abs(Dist), power);
-                    Fb[0] += V[0] * fb * w * strength;
-                    Fb[1] += V[1] * fb * w * strength;
+                    Fb[0] += V[0] * fb * w * strength / numpoints;
+                    Fb[1] += V[1] * fb * w * strength / numpoints;
                 }
             };
         }
@@ -983,10 +993,10 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
 
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d2);
+                    lines[i] = subdivpath(lines[i], VData.d2, 2);
                 }
 
-                drawlines(lines, 2);;
+                drawlines(lines, 1);;
             }
                 break;
             //-----------------------------------------------------------------------------------------
