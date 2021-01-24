@@ -86,8 +86,9 @@ export function init(size_w, size_h) {
 //========================================================================================================
 
 function setup() {
-    createCanvas(1024, 1024, SVG);
+    //  createCanvas(1024, 1024);
 }
+
 window.preload = preload
 window.setup = setup2;
 window.draw = draw;
@@ -99,7 +100,7 @@ export function preload() {
 
 export function setup2() {
     setup;
-    createCanvas(canvasWidth, canvasHeight, SVG);
+    createCanvas(canvasWidth, canvasHeight);
     background(0);
     stroke('#FFFFFF');
     frameRate(25);
@@ -265,10 +266,39 @@ export function diffgrowth_updateparams(v, restart) {
 }
 
 
+let sketch = function (p) {
+    p.setup = function () {
+        p.createCanvas(1024, 1024, "SVG")
+        p.noLoop();
+    };
+
+    p.draw = function () {
+        p.background(0);
+        p.stroke('#FF0000');
+        var points = border.getPoints();
+        for (var k = 1; k < points.length; k++) {
+            var x1 = (points[k - 1].x);
+            var y1 = (points[k - 1].y);
+            var x2 = (points[k].x);
+            var y2 = (points[k].y);
+            p.line(x1, y1, x2, y2);
+        }
+        p.stroke('#FFFFFF');
+
+        for (var i = 0; i < lines.length; i++) {
+            for (var j = 0; j < lines[i].length - 1; j++) {
+                p.line(lines[i][j].x, lines[i][j].y, lines[i][j + 1].x, lines[i][j + 1].y)
+            }
+        }
+    };
+}
+
 export function savesvg() {
-    showpath(border, true);;
-    drawlines(lines, 1);;
-    save("mySVG.svg"); // give file name
+    let myp5 = new p5(sketch);
+    myp5.type = "SVG"
+    myp5.draw();
+    myp5.save("mySVG.svg"); // give file name
+    myp5.remove();
 }
 
 
@@ -763,6 +793,7 @@ function showpath(P, l) {
         // console.log(x1, y1, x2, y2);
     }
 }
+
 function drawlines(P, l) {
     for (var i = 0; i < P.length; i++) {
         for (var j = 0; j < P[i].length - 1; j++) {
@@ -947,6 +978,7 @@ function mouseover(P, d) {
 }
 //=============================================================================================================
 export function draw() {
+    //clear();    /// clears the canvas.  if not done this, all original shapoes will remain., 
     if (borderloaded) {
         background(0);
         stroke('#FFFFFF');
