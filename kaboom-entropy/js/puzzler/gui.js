@@ -1,7 +1,7 @@
 
 
 import { GUI } from '/js/three/dat.gui.module.js'
-import { loadSVG, init, voronoi_updateparams, diffgrowth_updateparams } from '/js/puzzler/puzzler.js';
+import { loadSVG, init, voronoi_updateparams, diffgrowth_updateparams, savesvg } from '/js/puzzler/puzzler.js';
 ;
 
 
@@ -34,7 +34,8 @@ guiData = {
     imagetracer: imgtr,
     SVG_filename: "beer",
     SVG_edgedist: 1,
-    start: diffstart
+    start: diffstart,
+    save: savesvg
 };
 
 VData = {
@@ -210,6 +211,7 @@ $(function () {
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('forcetopoints').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 1).name('fmax').onFinishChange(diffdetails);
+        gui.add(guiData, 'save').name('save to SVG');
     });
     updatescreen();
 });
@@ -245,6 +247,7 @@ function diffdetails() {
 }
 //=================================================================================================================
 //=================================================================================================================
+
 
 
 

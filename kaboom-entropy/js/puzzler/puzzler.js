@@ -86,7 +86,7 @@ export function init(size_w, size_h) {
 //========================================================================================================
 
 function setup() {
-    createCanvas(1024, 1024);
+    createCanvas(1024, 1024, SVG);
 }
 window.preload = preload
 window.setup = setup2;
@@ -99,7 +99,7 @@ export function preload() {
 
 export function setup2() {
     setup;
-    createCanvas(canvasWidth, canvasHeight);
+    createCanvas(canvasWidth, canvasHeight, SVG);
     background(0);
     stroke('#FFFFFF');
     frameRate(25);
@@ -265,7 +265,11 @@ export function diffgrowth_updateparams(v, restart) {
 }
 
 
-
+export function savesvg() {
+    showpath(border, true);;
+    drawlines(lines, 1);;
+    save("mySVG.svg"); // give file name
+}
 
 
 
@@ -747,15 +751,15 @@ function deldupes(line) {
 //======================================================================================================
 // draw the path defined by P
 //======================================================================================================
-function showpath(P) {
+function showpath(P, l) {
     var points = P.getPoints();
     for (var k = 1; k < points.length; k++) {
         var x1 = (points[k - 1].x);
         var y1 = (points[k - 1].y);
         var x2 = (points[k].x);
         var y2 = (points[k].y);
-        //line(x1, y1, x2, y2);
-        point(x1, y1);
+        if (l) line(x1, y1, x2, y2);
+        else point(x1, y1);
         // console.log(x1, y1, x2, y2);
     }
 }
@@ -946,7 +950,7 @@ export function draw() {
     if (borderloaded) {
         background(0);
         stroke('#FFFFFF');
-        showpath(border)
+        showpath(border, false);
         switch (STAGE) {
             //-----------------------------------------------------------------------------------------
             case stageEnum.idle: {
@@ -985,6 +989,7 @@ export function draw() {
                 break;
             //-----------------------------------------------------------------------------------------
             case stageEnum.diffgrowthstart: {
+
             }
                 break;
             //-----------------------------------------------------------------------------------------
@@ -995,11 +1000,11 @@ export function draw() {
                 for (var i = 0; i < lines.length; i++) {
                     lines[i] = subdivpath(lines[i], VData.d2, 2);
                 }
-
                 drawlines(lines, 1);;
             }
                 break;
             //-----------------------------------------------------------------------------------------
+
         }
 
     }
