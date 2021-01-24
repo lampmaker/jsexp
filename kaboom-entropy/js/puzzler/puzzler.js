@@ -268,7 +268,7 @@ export function diffgrowth_updateparams(v, restart) {
 
 let sketch = function (p) {
     p.setup = function () {
-        p.createCanvas(1024, 1024, "SVG")
+        p.createCanvas(1024, 1024, p.SVG)
         p.noLoop();
     };
 
@@ -297,7 +297,7 @@ export function savesvg() {
     let myp5 = new p5(sketch);
     myp5.type = "SVG"
     myp5.draw();
-    myp5.save("mySVG.svg"); // give file name
+    myp5.save("mySVG.svg",); // give file name
     myp5.remove();
 }
 
