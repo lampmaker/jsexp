@@ -49,9 +49,9 @@ VData = {
 var DiffData;
 DiffData = {
     d1: 30,
-    d2: 30,
-    forcetonext: .5,
-    forcetopoints: .5,
+    d2: 15,
+    forcetonext: .1,
+    forcetopoints: .1,
     fmax: 1,
     speed: .02
 }
@@ -206,9 +206,9 @@ $(function () {
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('d1').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 2, 100, 1).name('d2').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 10).name('forcetonext').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetopoints', 0, 10).name('forcetopoints').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'speed', 0, 10).name('speed').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 1).name('forcetonext').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', 0, 1).name('forcetopoints').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 1).name('fmax').onFinishChange(diffdetails);
     });
     updatescreen();

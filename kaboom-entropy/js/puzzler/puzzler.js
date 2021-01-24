@@ -784,18 +784,16 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
     if (this.thread.x == 2) return CP;  // x=2: dont change first point x
     if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
-    var line_numpoints = _matrix[this.thread.y][0];
-    var weight = _matrix[this.thread.y][1];
+    var line_numpoints = _matrix[row][0];
+    var weight = _matrix[row][1];
     if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
 
-    // var p1 = [0.0, 0.0];
+
     var p2 = [0.0, 0.0];
-    var pa = [0.0, 0.0];
     var Dist = 0.0;
-    var V = [0.0, 0.0]; // direction vector
-    var F = [0.0, 0.0]; //force
+    var V = [0.0, 0.0]; // direction vector    
     var Fa = [0.0, 0.0]; //force to neightbor points: attract
     var Fb = [0.0, 0.0]; //force to other point: repulse
     const power = 2;
@@ -810,6 +808,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     // current point
     var p1 = [_matrix[row][xindex], _matrix[row][yindex]]
     // average between neighbors
+    var pa = [0.0, 0.0];
     pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2;
     pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2;
 
@@ -819,29 +818,28 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
 
 
     // repulsion force to all other points
-    for (var i = 0; i < mxl; i++) {
+    for (var i = 0; i < mxl + 1; i++) {
         if (_matrix[i][0] > 0) {
             var w = Math.abs(_matrix[i][1]);// weight factor of that row
+            w = 1;  // override for debugging purposes
             for (var j = 0; j < _matrix[i][0]; j++) {
                 p2[0] = _matrix[i][j * 2 + 2];   // point to review
                 p2[1] = _matrix[i][j * 2 + 3];   // point to review
-                Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points                
-                //if (Dist < (d1 * 15)) { // don't worry about points too far away.                   
-                Dist = Dist - d1;
-                if (Dist < 1) Dist = 1;
-                V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector                   
-                var strength = 1 / Math.pow(Math.abs(Dist), power);
-                F[0] = V[0] * strength;
-                F[1] = V[1] * strength;
-                Fb[0] -= F[0] * fb * w;
-                Fb[1] -= F[1] * fb * w;
-                //}
+                Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points                                
+                if (Dist < d1 * 3) {
+                    Dist = Dist - d1;
+                    if (Dist < 1) Dist = 1;
+                    V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector, normalized to 1                   
+                    var strength = 1 / Math.pow(Math.abs(Dist), power);
+                    Fb[0] += V[0] * fb * w * strength;
+                    Fb[1] += V[1] * fb * w * strength;
+                }
             };
         }
     }
 
     // limit force if > fmax
-    var Ftot = [Fa[0] + Fb[0], Fa[1] + Fb[0]];
+    var Ftot = [Fa[0] + Fb[0], Fa[1] + Fb[1]];
 
 
     var scale = 1;
@@ -851,7 +849,11 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     p1[0] += Ftot[0] * sp * scale;
     p1[1] += Ftot[1] * sp * scale;
 
-    if (even) { return p1[0] } else { return p1[1] }
+    if (even) {
+        return p1[0]
+    } else {
+        return p1[1]
+    }
 
 }).setOutput([GPUMATRIXLENGTH, MAXLINES])
 
