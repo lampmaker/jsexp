@@ -882,8 +882,8 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2;
 
     // move to point in-between neighborhood points.   Linear attraction force
-    Fa[0] = (pa[0] - p1[0]) * fa;
-    Fa[1] = (pa[1] - p1[1]) * fa;
+    Fa[0] = Math.sign(pa[0] - p1[0]) * (pa[0] - p1[0]) * (pa[0] - p1[0]) * fa;
+    Fa[1] = Math.sign(pa[1] - p1[1]) * (pa[1] - p1[1]) * (pa[1] - p1[1]) * fa;
 
 
     // repulsion force to all other points
@@ -912,7 +912,9 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
 
 
     var scale = 1;
-    if (fa * sp > 0.5) scale = (0.5 / (fa * sp));
+    var fm = Math.sqrt(Ftot[0] * Ftot[0] + Ftot[1] * Ftot[1]);
+    if (fm > fmax)
+        scale = fmax / fm;
 
 
     p1[0] += Ftot[0] * sp * scale;
