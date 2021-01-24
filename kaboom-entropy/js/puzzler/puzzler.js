@@ -9,8 +9,8 @@ var busy = false;
 
 const gpu = new GPU();
 var GPUmatrix = []
-const MAXLINES = 1400;
-const MAXPOINTS = 2000 // points per line
+const MAXLINES = 1000;
+const MAXPOINTS = 5000 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 var seeds;
@@ -273,9 +273,12 @@ let sketch = function (p) {
     };
 
     p.draw = function () {
-        p.background(0);
+        p.background('#FFFFFF');
         p.stroke('#FF0000');
+        p.strokeWeight(1);
+        p.noFill();
         var points = border.getPoints();
+        /*
         for (var k = 1; k < points.length; k++) {
             var x1 = (points[k - 1].x);
             var y1 = (points[k - 1].y);
@@ -283,20 +286,34 @@ let sketch = function (p) {
             var y2 = (points[k].y);
             p.line(x1, y1, x2, y2);
         }
-        p.stroke('#FFFFFF');
+        */
+        p.beginShape();
+        for (var k = 0; k < points.length; k++) {
+            var x = (points[k].x);
+            var y = (points[k].y);
+            p.vertex(x, y);
+        }
+        p.endShape();
+        p.stroke('#000000');
+
 
         for (var i = 0; i < lines.length; i++) {
-            for (var j = 0; j < lines[i].length - 1; j++) {
-                p.line(lines[i][j].x, lines[i][j].y, lines[i][j + 1].x, lines[i][j + 1].y)
+            p.beginShape();
+            p.vertex(lines[i][0].x, lines[i][0].y);
+            for (var j = 0; j < lines[i].length; j++) {
+                p.curveVertex(lines[i][j].x, lines[i][j].y);
             }
+            p.vertex(lines[i][lines[i].length - 1].x, lines[i][lines[i].length - 1].y);
+            p.endShape();
         }
+
     };
 }
 
 export function savesvg() {
     let myp5 = new p5(sketch);
     myp5.type = "SVG"
-    myp5.draw();
+    //myp5.draw();
     myp5.save("mySVG.svg",); // give file name
     myp5.remove();
 }
@@ -796,9 +813,12 @@ function showpath(P, l) {
 
 function drawlines(P, l) {
     for (var i = 0; i < P.length; i++) {
+        if (l >= 1) {
+            beginShape();
+        }
         for (var j = 0; j < P[i].length - 1; j++) {
             if (l >= 1) {
-                line(P[i][j].x, P[i][j].y, P[i][j + 1].x, P[i][j + 1].y)
+                vertex(P[i][j].x, P[i][j].y);
             }
             else {
                 point(P[i][j].x, P[i][j].y);
@@ -806,6 +826,10 @@ function drawlines(P, l) {
             if (l > 1) {
                 circle(P[i][j].x, P[i][j].y, 3)
             }
+        }
+        if (l >= 1) {
+            vertex(P[i][P[i].length - 1].x, P[i][P[i].length - 1].y);
+            endShape();
         }
     }
 }

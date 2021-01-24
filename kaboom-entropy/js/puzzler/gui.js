@@ -205,9 +205,9 @@ $(function () {
         vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
-        Dmenu.add(DiffData, 'd1', 5, 100, 1).name('d1').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'd1', 4, 10, 1).name('d1').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 2, 100, 1).name('d2').onFinishChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 1).name('forcetonext').onFinishChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 10).name('forcetonext').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('forcetopoints').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onFinishChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 1).name('fmax').onFinishChange(diffdetails);
