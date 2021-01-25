@@ -51,7 +51,8 @@ DiffData = {
     forcetonext: .21,
     forcetopoints: 600,
     speed: .07,
-    fmax: 1
+    fmax: 1,
+    edgeforce:100
 }
 
 //========================================================================================================
@@ -255,8 +256,7 @@ export function diffgrowth_updateparams(v, restart) {
         lines = deldupes(lines);
         //for (var i = 0; i < lines.length; i++) {
         //    console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
-        // }
-        add_line_to_gpumatrix(borderpoints, 0, -1000);
+        // }        
         for (var i = 0; i < lines.length; i++) {
             lines[i] = subdivpath(lines[i], VData.d2, 0);
         }
@@ -876,14 +876,15 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     }
     // current point
     var p1 = [_matrix[row][xindex], _matrix[row][yindex]]
-    // average between neighbors
-    var pa = [0.0, 0.0];
-    pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2;
-    pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2;
 
-    // move to point in-between neighborhood points.   Linear attraction force
-    Fa[0] = Math.sign(pa[0] - p1[0]) * (pa[0] - p1[0]) * (pa[0] - p1[0]) * fa;
-    Fa[1] = Math.sign(pa[1] - p1[1]) * (pa[1] - p1[1]) * (pa[1] - p1[1]) * fa;
+    // average between neighbors
+    var pa = [0.0, 0.0]; //: difference vector towards average of neighbor points
+    pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
+    pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 -p1[1];
+    var pad=Math.sqrt(pa[0]*pa[0]+pa[1]*pa[1]);  // distance
+    // move to point in-between neighborhood points.   attraction force: dist^3
+    Fa[0] = fa * pa[0] * Math.pow(pad,3);
+    Fa[1] = fa * pa[1] * Math.pow(pad,3);
 
 
     // repulsion force to all other points
@@ -983,7 +984,8 @@ function get_line_count_from_gpumatrix(G) {
 
 
 function processGPU() {
-    var numpoints = add_lines_to_gpumatrix(lines, 1, 1);
+    var numpoints =add_line_to_gpumatrix(borderpoints, 0, -VData.edgeforce);
+    numpoints+=add_lines_to_gpumatrix(lines, 1, 1);
     GPUmatrix = GPU_movepoints(
         GPUmatrix,
         VData.forcetonext,
