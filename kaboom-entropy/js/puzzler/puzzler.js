@@ -942,9 +942,9 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
 // adds a single line to the GPU matrix
 function add_line_to_gpumatrix(line, offset, w) {
     var mx = line.length;
-    if (line.length * 2 > MAXPOINTS - 2) {
-        console.log("maxpoints TOO SMALL", line.length, MAXPOINTS / 2);
-        mx = MAXPOINTS / 2 - 2;
+    if (line.length > MAXPOINTS) {
+        console.log("maxpoints TOO SMALL", line.length, MAXPOINTS);
+        mx = MAXPOINTS;
     }
     GPUmatrix[offset][0] = mx;
     GPUmatrix[offset][1] = w;
@@ -992,9 +992,26 @@ function get_line_count_from_gpumatrix(G) {
     return i;
 }
 
+var linelengthcheck = [];
+
+function readlinelengths() {
+    for (var i = 0; i < lines.length; i++) {
+        linelengthcheck[i] = lines[i].length;
+    }
+}
+
+function readlinelengthcheck() {
+    for (var i = 0; i < lines.length; i++) {
+        if (linelengthcheck[i] != lines[i].length) {
+            console.log("Line length: ", i, " expexted ", linelengthcheck[i], "got", lines[i].length);
+        };
+    }
+}
+
 
 function processGPU() {
     var numpoints = add_line_to_gpumatrix(borderpoints, 0, -VData.edgeforce);
+
     numpoints += add_lines_to_gpumatrix(lines, 1, 1);
     GPUmatrix = GPU_movepoints(
         GPUmatrix,
@@ -1007,6 +1024,7 @@ function processGPU() {
         min(lines.length + 1, MAXLINES),
         numpoints);
     lines = get_lines_from_gpumatrix(1);
+
 }
 //=============================================================================================================//=============================================================================================================
 //=============================================================================================================//=============================================================================================================
@@ -1067,10 +1085,12 @@ export function draw() {
             case stageEnum.diffgrowth: {
                 processGPU();
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
-
+                readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
                     lines[i] = subdivpath(lines[i], VData.d2, 2);
                 }
+                readlinelengthcheck();
+
                 drawlines(lines, 1);;
             }
                 break;
