@@ -209,11 +209,11 @@ $(function () {
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 1, 100, 1).name('splitdistance').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 100).name('forcetonext').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 300).name('contraction').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force').onChange(diffdetails);
-        Dmenu.add(DiffData, 'fc', -10, 100, 1).name('force2').onChange(diffdetails);
-        Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onChange(diffdetails);
-        Dmenu.add(DiffData, 'fmax', 0, 100).name('fmax').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fc', -5, 100, 1).name('force2').onChange(diffdetails);
+        Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fmax', 0, 10).name('fmax').onChange(diffdetails);
         Dmenu.add(DiffData, 'edgeforce', 0, 1000).name('edge repulsion').onChange(diffdetails);
         gui.add(guiData, 'save').name('save to SVG');
     });

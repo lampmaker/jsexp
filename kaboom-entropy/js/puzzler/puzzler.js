@@ -9,9 +9,9 @@ var busy = false;
 
 const gpu = new GPU();
 var GPUmatrix = []
-const MAXLINES = 1024;
-const MAXPOINTS = 1023 // points per line
-const GPUMATRIXLENGTH = 4 + MAXPOINTS * 2;
+const MAXLINES = 1000;
+const MAXPOINTS = 500 // points per line
+const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 var seeds;
 var vlines, lines;
@@ -120,8 +120,8 @@ export function setup2() {
 //======================================================================================================
 //spreads points in a path so that the max distance between points is dist.  and the minimum number of points is used
 //======================================================================================================
-function spread_path(p, dist, maxpoints) {
-    p = subdivpath(p, dist / 2, 0, maxpoints);
+function spread_path(p, dist) {
+    p = subdivpath(p, dist / 2, 0);
     var k = 0;
     var j = 0;
     var p2 = [];
@@ -170,20 +170,14 @@ export function loadSVG(url, fn, density) {
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
         var points = SVGdata[0].subPaths[0].getPoints(12);
 
-        points = subdivpath(points, 100, 0, MAXPOINTS * 10);
-        points = subdivpath(points, 50, 0, MAXPOINTS * 10);
-        points = subdivpath(points, 20, 0, MAXPOINTS * 10);
-        points = subdivpath(points, 10, 0, MAXPOINTS * 10);
-        points = subdivpath(points, density, 0, MAXPOINTS * 10);
+        points = subdivpath(points, 100, 0);
+        points = subdivpath(points, 50, 0);
+        points = subdivpath(points, 20, 0);
+        points = subdivpath(points, 10, 0);
+        points = subdivpath(points, density, 0);
 
 
-        var circumference = 0;
-        for (var k = 0; k < points.length - 1; k++) {
-            circumference += Math.sqrt((points[k].x - points[k + 1].x) * (points[k].x - points[k + 1].x) + (points[k].y - points[k + 1].y) * (points[k].y - points[k + 1].y));
-        }
-        density = max(density, circumference / MAXPOINTS);
-        console.log(density);
-        points = spread_path(points, density, MAXPOINTS);
+        points = spread_path(points, density);
 
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
@@ -198,7 +192,6 @@ export function loadSVG(url, fn, density) {
         //   borderpoints = border.getPoints();
         borderloaded = true;
         borderpoints = border.getPoints();
-        console.log(borderpoints.length)
     })
 }
 
@@ -266,7 +259,7 @@ export function diffgrowth_updateparams(v, restart) {
         //    console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
         // }        
         for (var i = 0; i < lines.length; i++) {
-            lines[i] = subdivpath(lines[i], VData.d2, 0, MAXPOINTS);
+            lines[i] = subdivpath(lines[i], VData.d2, 0);
         }
     }
 
@@ -543,7 +536,7 @@ function trimlines(l, b) {
 //subdivides a path by inserting points between two adjacent points that are more than 2*maxd apart
 // maxd=minimum Vdistance between points.  Actual will vary between maxd and 2*maxd.
 //================================================================================================
-function subdivpath(P, maxd, r, maxpoints) {
+function subdivpath(P, maxd, r) {
     var i = 0;
     var ready = false;
     while (!ready) {
@@ -553,7 +546,7 @@ function subdivpath(P, maxd, r, maxpoints) {
 
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
-            if (numinserts + P.length + 2 > maxpoints) numinserts = maxpoints - P.length - 2;
+            if (numinserts + P.length + 2 > MAXPOINTS) numinserts = MAXPOINTS - P.length - 2;
             var dx = (P2.x - P1.x) / (numinserts + 1);
             var dy = (P2.y - P1.y) / (numinserts + 1);
             for (var j = 1; j <= numinserts; j++) {
@@ -949,9 +942,9 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
 // adds a single line to the GPU matrix
 function add_line_to_gpumatrix(line, offset, w) {
     var mx = line.length;
-    if (line.length > MAXPOINTS) {
-        console.log("maxpoints TOO SMALL", line.length, MAXPOINTS);
-        mx = MAXPOINTS;
+    if (line.length * 2 > MAXPOINTS - 2) {
+        console.log("maxpoints TOO SMALL", line.length, MAXPOINTS / 2);
+        mx = MAXPOINTS / 2 - 2;
     }
     GPUmatrix[offset][0] = mx;
     GPUmatrix[offset][1] = w;
@@ -1076,7 +1069,7 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
 
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d2, 2, MAXPOINTS);
+                    lines[i] = subdivpath(lines[i], VData.d2, 2);
                 }
                 drawlines(lines, 1);;
             }
@@ -1088,4 +1081,3 @@ export function draw() {
     }
 
 }
-
