@@ -51,12 +51,12 @@ var DiffData;
 DiffData = {
     d1: 5,
     d2: 3,
-    fc:3,
+    fc: 3,
     forcetonext: .21,
     forcetopoints: 600,
     speed: .07,
     fmax: 1,
-    edgeforce:100
+    edgeforce: 100
 }
 
 //=================================================================================================================
@@ -211,7 +211,7 @@ $(function () {
         Dmenu.add(DiffData, 'd2', 1, 100, 1).name('splitdistance').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetonext', 0, 100).name('forcetonext').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force').onChange(diffdetails);
-        Dmenu.add(DiffData, 'fc', 5, 100, 1).name('force2').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fc', -10, 100, 1).name('force2').onChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 100).name('fmax').onChange(diffdetails);
         Dmenu.add(DiffData, 'edgeforce', 0, 1000).name('edge repulsion').onChange(diffdetails);
