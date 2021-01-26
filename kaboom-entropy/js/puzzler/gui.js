@@ -51,6 +51,7 @@ var DiffData;
 DiffData = {
     d1: 5,
     d2: 3,
+    fc:3,
     forcetonext: .21,
     forcetopoints: 600,
     speed: .07,
@@ -197,7 +198,7 @@ $(function () {
         gui.add(guiData, 'SVG_filename').name('File name');
         gui.add(guiData, 'SVG_edgedist', 1, 30).name('edge density').onFinishChange(loadImage);;
         gui.add(guiData, 'maskfile').name('load from SVG');
-        gui.add(VData, 'SEED_npieces', 20, 200, 1).name('number of pieces').onFinishChange(startseed);
+        gui.add(VData, 'SEED_npieces', 20, 300, 1).name('number of pieces').onFinishChange(startseed);
         gui.add(VData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(vdetails);
         var vmenu = gui.addFolder('Voronoi Details')
         vmenu.add(VData, 'a1', -10, 500, 1).name('cell-force').onFinishChange(vdetails);
@@ -206,13 +207,14 @@ $(function () {
         vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
-        Dmenu.add(DiffData, 'd1', 4, 10, 1).name('d1').onChange(diffdetails);
-        Dmenu.add(DiffData, 'd2', 2, 100, 1).name('d2').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 10).name('forcetonext').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('forcetopoints').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd2', 1, 100, 1).name('splitdistance').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 100).name('forcetonext').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fc', 5, 100, 1).name('force2').onChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 1).name('speed').onChange(diffdetails);
-        Dmenu.add(DiffData, 'fmax', 0, 1).name('fmax').onChange(diffdetails);
-        Dmenu.add(DiffData, 'edgeforce', 0, 100).name('edge repulsion').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fmax', 0, 100).name('fmax').onChange(diffdetails);
+        Dmenu.add(DiffData, 'edgeforce', 0, 1000).name('edge repulsion').onChange(diffdetails);
         gui.add(guiData, 'save').name('save to SVG');
     });
     updatescreen();

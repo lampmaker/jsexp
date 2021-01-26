@@ -299,11 +299,11 @@ let sketch = function (p) {
 
         for (var i = 0; i < lines.length; i++) {
             p.beginShape();
-            p.vertex(lines[i][0].x, lines[i][0].y);
+            //p.vertex(lines[i][0].x, lines[i][0].y);
             for (var j = 0; j < lines[i].length; j++) {
-                p.curveVertex(lines[i][j].x, lines[i][j].y);
+                p.Vertex(lines[i][j].x, lines[i][j].y);
             }
-            p.vertex(lines[i][lines[i].length - 1].x, lines[i][lines[i].length - 1].y);
+            //p.vertex(lines[i][lines[i].length - 1].x, lines[i][lines[i].length - 1].y);
             p.endShape();
         }
 
@@ -846,7 +846,7 @@ len      wei        x         y       x       y       x        y       x        
 
 */
 //======================================================================================================
-const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax, mxl, numpoints) {
+const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, fmax, mxl, numpoints) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point
     var row = this.thread.y;
     if (this.thread.x == 0) return CP;  // x=: length     - no calculation required
@@ -883,8 +883,8 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
     pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 -p1[1];
     var pad=Math.sqrt(pa[0]*pa[0]+pa[1]*pa[1]);  // distance
     // move to point in-between neighborhood points.   attraction force: dist^3
-    Fa[0] = fa * pa[0] * Math.pow(pad,3);
-    Fa[1] = fa * pa[1] * Math.pow(pad,3);
+    Fa[0] = pa[0] * Math.pow(pad,2)*fa;
+    Fa[1] = pa[1] * Math.pow(pad,2)*fa;
 
 
     // repulsion force to all other points
@@ -893,17 +893,24 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, d1, sp, fmax,
             var w = Math.abs(_matrix[i][1]);// weight factor of that row
             w = 1;  // override for debugging purposes
             for (var j = 0; j < _matrix[i][0]; j++) {
-                p2[0] = _matrix[i][j * 2 + 2];   // point to review
-                p2[1] = _matrix[i][j * 2 + 3];   // point to review
-                Dist = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));  // distance between points                                
-                if (Dist < d1 * 2) {
-                    Dist = Dist - d1;
-                    if (Dist < 1) Dist = 1;
-                    V = [(p1[0] - p2[0]) / Dist, (p1[1] - p2[1]) / Dist];  // direction vector, normalized to 1                   
-                    var strength = 1 / Math.pow(Math.abs(Dist), power);
-                    Fb[0] += V[0] * fb * w * strength / numpoints;
-                    Fb[1] += V[1] * fb * w * strength / numpoints;
+
+                p2[0] = p1[0]-_matrix[i][j * 2 + 2];   // vector to point 
+                p2[1] = p1[1]-_matrix[i][j * 2 + 3];   // vector to point point to review
+                Dist = Math.sqrt(p2[0]*p2[0] +p2[1]*p2[1]);  // distance between points                                
+                if (Dist < d1) {  // less than repulsion radius
+                    var strength = (d1-Dist)/d1; 
+                    Fb[0] += p2[0]  * w * strength*strength*fb ;
+                    Fb[1] += p2[1]  * w * strength*strength*fb ;
                 }
+                if (Dist < d1*3) {  // less than repulsion radius
+                    Dist=Dist-d1;                    
+                    var strength = 1 / Math.pow(Math.abs(Dist), power);
+                    Fb[0] += p2[0]  * w * strength*fc ;
+                    Fb[1] += p2[1]  * w * strength*fc ;
+                }
+
+
+
             };
         }
     }
@@ -990,7 +997,8 @@ function processGPU() {
         GPUmatrix,
         VData.forcetonext,
         VData.forcetopoints,
-        VData.d1,
+        VData.fc,
+        VData.d1,        
         VData.speed,
         VData.fmax,
         min(lines.length + 1, MAXLINES),
