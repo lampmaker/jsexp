@@ -14,7 +14,7 @@ const MAXPOINTS = 5000 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 var seeds;
-var lines;
+var vlines,lines;
 var border, borderpoints;
 var borderloaded = false;
 var phase = 0;
@@ -252,6 +252,7 @@ export function diffgrowth_updateparams(v, restart) {
     VData = v;
     if (STAGE == stageEnum.idle) return;
     if (restart || STAGE != stageEnum.diffgrowth) {
+        lines=vlines;
         initializeGPumatrix(MAXLINES, MAXPOINTS);
         lines = deldupes(lines);
         //for (var i = 0; i < lines.length; i++) {
@@ -897,18 +898,20 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
                 p2[0] = p1[0]-_matrix[i][j * 2 + 2];   // vector to point 
                 p2[1] = p1[1]-_matrix[i][j * 2 + 3];   // vector to point point to review
                 Dist = Math.sqrt(p2[0]*p2[0] +p2[1]*p2[1]);  // distance between points                                
-                if (Dist < d1) {  // less than repulsion radius
-                    var strength = (d1-Dist)/d1; 
-                    Fb[0] += p2[0]  * w * strength*strength*fb ;
-                    Fb[1] += p2[1]  * w * strength*strength*fb ;
-                }
-                if (Dist < d1*3) {  // less than repulsion radius
-                    Dist=Dist-d1;                    
-                    var strength = 1 / Math.pow(Math.abs(Dist), power);
-                    Fb[0] += p2[0]  * w * strength*fc ;
-                    Fb[1] += p2[1]  * w * strength*fc ;
-                }
-
+                if (Dist>0){                    
+                    if (Dist < d1) {  // less than repulsion radius
+                        var strength = (d1-Dist)/d1; 
+                        Fb[0] += p2[0]  * w * strength*strength*fb ;
+                        Fb[1] += p2[1]  * w * strength*strength*fb ;
+                    }
+                    if (Dist < d1*2) {  // less than repulsion radius                        
+                        p2=[p2[0]/Dist,p2[1]/Dist];   // scale vector t0 length 1
+                        Dist=Dist-d1;                                            
+                        var strength = 1 / Math.pow(Math.abs(Dist), power);
+                        Fb[0] += p2[0]  * w * strength * fc ;
+                        Fb[1] += p2[1]  * w * strength * fc ;
+                    }
+            }
 
 
             };
@@ -1034,8 +1037,8 @@ export function draw() {
             // fall through
             case stageEnum.voronoi_show: {
                 stroke('#00FF00');
-                lines = voronoi_render(borderpoints);
-                drawlines(lines, 1);
+                vlines = voronoi_render(borderpoints);
+                drawlines(vlines, 1);
                 for (var i = 0; i < seeds.length; i++) {
                     stroke('#FF0000');
                     fill('#000000');
