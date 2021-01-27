@@ -606,7 +606,7 @@ function even_spread_totalVdistance(S, p) {
 function attractionvector(Si, S, p, a1, a2) {
     var Fa = new Vertex(0, 0);
     for (var j = 0; j < S.length; j++) {        // compare to other seeds        
-        var f = force(Si, S[j], a1, 2);
+        var f = force(Si, S[j], a1, 3);
         Fa = Vadd(Fa, f);
     }
     var Vdisttoedge = 10000;
@@ -616,6 +616,7 @@ function attractionvector(Si, S, p, a1, a2) {
             var ls = Vdist(p[j], p[j + 1]); // length of line segment
             var D = Vdist(p[j], Si);
             if (D < 10) { ls = ls * 100 };
+
             var f = force(Si, p[j], a2 * ls, 3);
             Fb = Vadd(Fb, f);
         }

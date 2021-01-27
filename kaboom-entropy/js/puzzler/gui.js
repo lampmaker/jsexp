@@ -202,8 +202,8 @@ $(function () {
         gui.add(VData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(vdetails);
         var vmenu = gui.addFolder('Voronoi Details')
         vmenu.add(VData, 'a1', -10, 500, 1).name('cell-force').onFinishChange(vdetails);
-        vmenu.add(VData, 'a2', 0, 500, 1).name('edge-force').onFinishChange(vdetails);
-        vmenu.add(VData, 'f', 0, 10,).name('force').onFinishChange(vdetails);
+        vmenu.add(VData, 'a2', 0, 50, 1).name('edge-force').onFinishChange(vdetails);
+        vmenu.add(VData, 'f', 0, 1000,).name('force').onFinishChange(vdetails);
         vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
