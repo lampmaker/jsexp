@@ -309,11 +309,11 @@ let sketch = function (p) {
 
         for (var i = 0; i < lines.length; i++) {
             p.beginShape();
-            //p.vertex(lines[i][0].x, lines[i][0].y);
+            p.vertex(lines[i][0].x, lines[i][0].y);
             for (var j = 0; j < lines[i].length; j++) {
-                p.Vertex(lines[i][j].x, lines[i][j].y);
+                p.curveVertex(lines[i][j].x, lines[i][j].y);
             }
-            //p.vertex(lines[i][lines[i].length - 1].x, lines[i][lines[i].length - 1].y);
+            p.vertex(lines[i][lines[i].length - 1].x, lines[i][lines[i].length - 1].y);
             p.endShape();
         }
 
@@ -548,6 +548,7 @@ function trimlines(l, b) {
 function subdivpath(P, maxd, r, mxp) {
     var i = 0;
     var ready = false;
+    if (P.length > mxp) return P;
     while (!ready) {
         var P1 = P[i];
         var P2 = P[i + 1];
@@ -916,9 +917,11 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
                     if (Dist < d1 * 2) {  // less than repulsion radius                        
                         p2 = [p2[0] / Dist, p2[1] / Dist];   // scale vector t0 length 1
                         Dist = Dist - d1;
-                        var strength = 1 / Math.pow(Math.abs(Dist), power);
-                        Fb[0] += p2[0] * w * strength * fc;
-                        Fb[1] += p2[1] * w * strength * fc;
+                        if (Dist > 0) {
+                            var strength = 1 / Math.pow(Math.abs(Dist), power);
+                            Fb[0] += p2[0] * w * strength * fc;
+                            Fb[1] += p2[1] * w * strength * fc;
+                        }
                     }
                 }
 
@@ -1094,11 +1097,11 @@ export function draw() {
             case stageEnum.diffgrowth: {
                 processGPU();
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
-                readlinelengths();
+                //   readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
                     lines[i] = subdivpath(lines[i], VData.d2, 2, MAXPOINTS);
                 }
-                readlinelengthcheck();
+                //   readlinelengthcheck();
 
                 drawlines(lines, 1);;
             }
