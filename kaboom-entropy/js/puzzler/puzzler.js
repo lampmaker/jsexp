@@ -10,7 +10,7 @@ var busy = false;
 const gpu = new GPU();
 var GPUmatrix = []
 const MAXLINES = 1000;
-const MAXPOINTS = 500 // points per line
+const MAXPOINTS = 1000 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 var seeds;
@@ -120,8 +120,8 @@ export function setup2() {
 //======================================================================================================
 //spreads points in a path so that the max distance between points is dist.  and the minimum number of points is used
 //======================================================================================================
-function spread_path(p, dist) {
-    p = subdivpath(p, dist / 2, 0);
+function spread_path(p, dist, mxp) {
+    p = subdivpath(p, dist / 2, 0, mxp);
     var k = 0;
     var j = 0;
     var p2 = [];
@@ -170,11 +170,20 @@ export function loadSVG(url, fn, density) {
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
         var points = SVGdata[0].subPaths[0].getPoints(12);
 
-        points = subdivpath(points, 100, 0);
-        points = subdivpath(points, 50, 0);
-        points = subdivpath(points, 20, 0);
-        points = subdivpath(points, 10, 0);
-        points = subdivpath(points, density, 0);
+        points = subdivpath(points, 100, 0, MAXPOINTS * 10);
+        points = subdivpath(points, 50, 0, MAXPOINTS * 10);
+        points = subdivpath(points, 20, 0, MAXPOINTS * 10);
+        points = subdivpath(points, 10, 0, MAXPOINTS * 10);
+        points = subdivpath(points, density, 0, MAXPOINTS * 10);
+
+        var circum = 0;
+        for (var k = 0; k < points.length - 1; k++) {
+            circum += Math.sqrt((points[k].x - points[k + 1].x) * (points[k].x - points[k + 1].x) + (points[k].y - points[k + 1].y) * (points[k].y - points[k + 1].y))
+        }
+        if (circum / density > MAXPOINTS) {
+            density = circum / MAXPOINTS;
+        }
+
 
 
         points = spread_path(points, density);
@@ -259,7 +268,7 @@ export function diffgrowth_updateparams(v, restart) {
         //    console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
         // }        
         for (var i = 0; i < lines.length; i++) {
-            lines[i] = subdivpath(lines[i], VData.d2, 0);
+            lines[i] = subdivpath(lines[i], VData.d2, 0, MAXPOINTS);
         }
     }
 
@@ -536,7 +545,7 @@ function trimlines(l, b) {
 //subdivides a path by inserting points between two adjacent points that are more than 2*maxd apart
 // maxd=minimum Vdistance between points.  Actual will vary between maxd and 2*maxd.
 //================================================================================================
-function subdivpath(P, maxd, r) {
+function subdivpath(P, maxd, r, mxp) {
     var i = 0;
     var ready = false;
     while (!ready) {
@@ -546,7 +555,7 @@ function subdivpath(P, maxd, r) {
 
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
-            if (numinserts + P.length + 2 > MAXPOINTS) numinserts = MAXPOINTS - P.length - 2;
+            if (numinserts + P.length + 2 > mxp) numinserts = mxp - P.length - 2;
             var dx = (P2.x - P1.x) / (numinserts + 1);
             var dy = (P2.y - P1.y) / (numinserts + 1);
             for (var j = 1; j <= numinserts; j++) {
@@ -1087,7 +1096,7 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
                 readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d2, 2);
+                    lines[i] = subdivpath(lines[i], VData.d2, 2, MAXPOINTS);
                 }
                 readlinelengthcheck();
 
