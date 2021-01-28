@@ -35,9 +35,10 @@ guiData = {
     SVG_filename: "beer",
     SVG_edgedist: 1,
     start: diffstart,
-    save: savesvg
-};
+    save: savesvg,
 
+};
+var VData, DiffData;
 VData = {
     SEED_npieces: 50,
     SEED_autodistribute: true,
@@ -45,9 +46,8 @@ VData = {
     a2: 80,
     f: 10,
     a: 0.5
-}
+};
 
-var DiffData;
 DiffData = {
     d1: 5,
     d2: 3,
@@ -58,6 +58,8 @@ DiffData = {
     fmax: 1,
     edgeforce: 100
 }
+
+
 
 //=================================================================================================================
 
@@ -191,12 +193,14 @@ $(function () {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
+        gui.remember(VData);
+        gui.remember(DiffData);
         //gui.add(guiData, 't').name('Description');
         gui.add(guiData, 'cwidth', 0, 4096).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096).name('height').onFinishChange(updatescreen);;
         //var maskgui = gui.addFolder('Mask');
         gui.add(guiData, 'SVG_filename').name('File name');
-        gui.add(guiData, 'SVG_edgedist', 1, 30).name('edge density').onFinishChange(loadImage);;
+        gui.add(guiData, 'SVG_edgedist', .1, 10).name('edge density').onFinishChange(loadImage);;
         gui.add(guiData, 'maskfile').name('load from SVG');
         gui.add(VData, 'SEED_npieces', 20, 300, 1).name('number of pieces').onFinishChange(startseed);
         gui.add(VData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(vdetails);
@@ -209,7 +213,7 @@ $(function () {
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 1, 100, 1).name('splitdistance').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 300).name('contraction').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('contraction').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force').onChange(diffdetails);
         Dmenu.add(DiffData, 'fc', -5, 100, 1).name('force2').onChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onChange(diffdetails);

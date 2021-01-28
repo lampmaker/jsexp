@@ -211,17 +211,22 @@ export function loadSVG(url, fn, density) {
 //======================================================================================================
 function Vadd_random(count, size_w, size_h, path) {
     var n = 0
-    while (n < count) {
+    var failed = 0;
+    while (n < count && failed < 100) {
         var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
-        if (path == null) {
+        if (path == null || path.length == 0) {
             seeds[seeds.length] = P;
-            n++
+            n++;
+            failed = 0;
         }
         else {
             if (inpath(P, path.getPoints())) {
                 seeds[seeds.length] = P;
                 n++
+                failed = 0;
             }
+            else
+                failed++
         }
     }
 }

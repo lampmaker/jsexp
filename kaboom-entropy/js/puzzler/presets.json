@@ -7,7 +7,25 @@
                 "cwidth": 1024,
                 "cheight": 1024,
                 "SVG_filename": "beer",
-                "SVG_edgedist": 1
+                "SVG_edgedist": 1.121667055802008
+            },
+            "1": {
+                "SEED_npieces": 78,
+                "SEED_autodistribute": true,
+                "a1": 435,
+                "a2": 3,
+                "f": 1000,
+                "a": 0
+            },
+            "2": {
+                "d1": 20,
+                "d2": 4,
+                "forcetonext": 300,
+                "forcetopoints": 320.65217391304344,
+                "fc": 1,
+                "speed": 0.1271266540642722,
+                "fmax": 1,
+                "edgeforce": 1000
             }
         }
     },
