@@ -50,6 +50,8 @@ DiffData = {
     d2: 3,
     forcetonext: .21,
     forcetopoints: 600,
+    power1: 2,
+    power2: 2,
     speed: .07,
     fmax: 1,
     edgeforce: 100
@@ -58,7 +60,7 @@ DiffData = {
 //========================================================================================================
 
 export function init(size_w, size_h) {
-    //  resizeCanvas(size_w, size_h);
+    resizeCanvas(size_w, size_h);
     /*
     
     
@@ -146,7 +148,7 @@ export function loadSVG(url, fn, density) {
     border = new THREE.Path;
 
     _filename = fn;
-    var mx = canvasWidth; var my = canvasHeight;
+    var mx = width; var my = height;
     var minx = 100000000, maxx = -100000000, miny = 100000000, maxy = -100000000;
     var loader = new SVGLoader();
     var scale;
@@ -866,7 +868,7 @@ len      wei        x         y       x       y       x        y       x        
 
 */
 //======================================================================================================
-const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, fmax, mxl, numpoints) {
+const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, fc, d1, sp, fmax, mxl, numpoints) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point
     var row = this.thread.y;
     if (this.thread.x == 0) return CP;  // x=: length     - no calculation required
@@ -885,7 +887,6 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
     var V = [0.0, 0.0]; // direction vector    
     var Fa = [0.0, 0.0]; //force to neightbor points: attract
     var Fb = [0.0, 0.0]; //force to other point: repulse
-    const power = 2;
     var even = true;
     var xindex = this.thread.x;
     var yindex = this.thread.x + 1;
@@ -903,8 +904,8 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
     pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
     var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance
     // move to point in-between neighborhood points.   attraction force: dist^3
-    Fa[0] = pa[0] * Math.pow(pad, 2) * fa;
-    Fa[1] = pa[1] * Math.pow(pad, 2) * fa;
+    Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
+    Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
 
 
     // repulsion force to all other points
@@ -919,15 +920,15 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, fc, d1, sp, f
                 Dist = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]);  // distance between points                                
                 if (Dist > 0) {
                     if (Dist < d1) {  // less than repulsion radius
-                        var strength = (d1 - Dist) / d1;
-                        Fb[0] += p2[0] * w * strength * strength * fb;
-                        Fb[1] += p2[1] * w * strength * strength * fb;
+                        var strength = Math.pow((d1 - Dist) / d1, pwr2);
+                        Fb[0] += p2[0] * w * strength * fb;
+                        Fb[1] += p2[1] * w * strength * fb;
                     }
                     if (Dist < d1 * 2) {  // less than repulsion radius                        
                         p2 = [p2[0] / Dist, p2[1] / Dist];   // scale vector t0 length 1
                         Dist = Dist - d1;
                         if (Dist > 0) {
-                            var strength = 1 / Math.pow(Math.abs(Dist), power);
+                            var strength = 1 / Math.pow(Math.abs(Dist), pwr2);
                             Fb[0] += p2[0] * w * strength * fc;
                             Fb[1] += p2[1] * w * strength * fc;
                         }
@@ -1038,6 +1039,8 @@ function processGPU() {
         GPUmatrix,
         VData.forcetonext,
         VData.forcetopoints,
+        VData.power1,
+        VData.power2,
         VData.fc,
         VData.d1,
         VData.speed,

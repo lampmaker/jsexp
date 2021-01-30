@@ -52,6 +52,8 @@ DiffData = {
     d1: 5,
     d2: 3,
     fc: 3,
+    power1: 2,
+    power2: 2,
     forcetonext: .21,
     forcetopoints: 600,
     speed: .07,
@@ -213,9 +215,11 @@ $(function () {
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 1, 100, 1).name('splitdistance').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('contraction').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force').onChange(diffdetails);
-        Dmenu.add(DiffData, 'fc', -5, 100, 1).name('force2').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('contraction force').onChange(diffdetails);
+        Dmenu.add(DiffData, 'power1', 0.5, 5, 0.1).name('contraction power').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force1').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fc', -5, 100, 1).name('repulsion force2').onChange(diffdetails);
+        Dmenu.add(DiffData, 'power2', 0.5, 5, 0.1).name('repulsion power').onChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 10).name('fmax').onChange(diffdetails);
         Dmenu.add(DiffData, 'edgeforce', 0, 1000).name('edge repulsion').onChange(diffdetails);
