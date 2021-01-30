@@ -208,7 +208,7 @@ $(function () {
         vmenu.add(VData, 'a1', -10, 500, 1).name('cell-force').onFinishChange(vdetails);
         vmenu.add(VData, 'a2', 0, 50, 1).name('edge-force').onFinishChange(vdetails);
         vmenu.add(VData, 'f', 0, 1000,).name('force').onFinishChange(vdetails);
-        vmenu.add(VData, 'a', 0, 2).name('limit').onFinishChange(vdetails);
+        vmenu.add(VData, 'a', 0, 10, 0.1).name('limit').onFinishChange(vdetails);
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);

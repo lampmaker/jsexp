@@ -233,12 +233,15 @@ function Vadd_random(count, size_w, size_h, path) {
 
 // checks ifd all seeds are still within path. if not, add.
 function V_Check(size_w, size_h, path) {
+    var outside = 0;
     for (var i = 0; i < seeds.length; i++) {
         if (!inpath(seeds[i], path.getPoints())) {
             var P = new Vertex(Math.random() * size_w, Math.random() * size_h);
             seeds[i] = P;
+            outside++;
         }
     }
+    return outside;
 }
 
 
@@ -647,11 +650,11 @@ function moveaway(S, p, V) {
     var t = 0;
     for (var i = 0; i < S.length; i++) {
         var Q = attractionvector(S[i], S, p, V.a1, V.a2);
-        t = t + Math.sqrt((Q.x * Q.x) + (Q.y * Q.y));
+        t = Math.max(t, Math.sqrt((Q.x * Q.x) + (Q.y * Q.y)));
         S[i].x = S[i].x + Q.x * V.f;
         S[i].y = S[i].y + Q.y * V.f;
     }
-    return (t < V.a)
+    return (1000 * t < V.a)
 }
 //================================================================================================
 // main function, spreads all th points within shape
@@ -1068,7 +1071,10 @@ export function draw() {
             case stageEnum.voronoi_auto:
                 {
                     V_Check(width, height, border);
-                    if (evenly_spread(seeds, borderpoints, VData)) { STAGE = stageEnum.voronoi_show }
+                    if (evenly_spread(seeds, borderpoints, VData)) {
+                        while (V_Check(width, height, border) > 0);  // make sure all points are within shape!
+                        STAGE = stageEnum.voronoi_show
+                    }
                 }
             // fall through
             case stageEnum.voronoi_show: {
