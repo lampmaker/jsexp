@@ -74,7 +74,11 @@ let pointers = [];
 let splatStack = [];
 pointers.push(new pointerPrototype());
 
-const { gl, ext } = getWebGLContext(canvas);
+
+// returns the canvas context  {gl ,  ext}
+const { gl, ext } = getWebGLContext(canvas);  
+
+
 
 if (isMobile()) {
     config.DYE_RESOLUTION = 512;
@@ -86,11 +90,20 @@ if (!ext.supportLinearFiltering) {
     config.SUNRAYS = false;
 }
 
+
 //====================================================================================================================
+// creates the GUI
 //====================================================================================================================
 startGUI();
+
+
+
 //====================================================================================================================
 //
+// returns the canvas context  {gl ,  ext}
+//  https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext
+
+//  gl = WebGL2RenderingContext
 //====================================================================================================================
 
 function getWebGLContext (canvas) {
@@ -100,7 +113,6 @@ function getWebGLContext (canvas) {
     const isWebGL2 = !!gl;
     if (!isWebGL2)
         gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
-
     let halfFloat;
     let supportLinearFiltering;
     if (isWebGL2) {
@@ -110,9 +122,7 @@ function getWebGLContext (canvas) {
         halfFloat = gl.getExtension('OES_texture_half_float');
         supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
     }
-
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
     const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat.HALF_FLOAT_OES;
     let formatRGBA;
     let formatRG;
@@ -130,8 +140,6 @@ function getWebGLContext (canvas) {
         formatRG = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
         formatR = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
     }
-
-  
     return {
         gl,
         ext: {
@@ -143,10 +151,7 @@ function getWebGLContext (canvas) {
         }
     };
 }
-//====================================================================================================================
-//
-//====================================================================================================================
-
+// returns the webgl rentering formats ----------------------------------------------------------------------
 function getSupportedFormat (gl, internalFormat, format, type)
 {
     if (!supportRenderTextureFormat(gl, internalFormat, format, type))
@@ -161,16 +166,12 @@ function getSupportedFormat (gl, internalFormat, format, type)
                 return null;
         }
     }
-
     return {
         internalFormat,
         format
     }
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
+} 
+// checksif the texture format is supported ----------------------------------------------------------------------
 function supportRenderTextureFormat (gl, internalFormat, format, type) {
     let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -187,8 +188,16 @@ function supportRenderTextureFormat (gl, internalFormat, format, type) {
     let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     return status == gl.FRAMEBUFFER_COMPLETE;
 }
+//====================================================================================================================
+
+
+
+
+
+
 
 //====================================================================================================================
+// starts the gui
 //====================================================================================================================
 function startGUI () {
     var gui = new dat.GUI({ width: 300 });
@@ -227,9 +236,8 @@ function isMobile () {
     return /Mobi|Android/i.test(navigator.userAgent);
 }
 //====================================================================================================================
-//
+// Functions for capturing to file
 //====================================================================================================================
-
 function captureScreenshot () {
     let res = getResolution(config.CAPTURE_RESOLUTION);
     let target = createFBO(res.width, res.height, ext.formatRGBA.internalFormat, ext.formatRGBA.format, ext.halfFloatTexType, gl.NEAREST);
@@ -243,9 +251,7 @@ function captureScreenshot () {
     downloadURI('fluid.png', datauri);
     URL.revokeObjectURL(datauri);
 }
-//====================================================================================================================
-//
-//====================================================================================================================
+//---------------------------------------------------------------------------------------------------------------------
 function framebufferToTexture (target) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
     let length = target.width * target.height * 4;
@@ -253,10 +259,7 @@ function framebufferToTexture (target) {
     gl.readPixels(0, 0, target.width, target.height, gl.RGBA, gl.FLOAT, texture);
     return texture;
 }
-//====================================================================================================================
-//
-//====================================================================================================================
-
+//---------------------------------------------------------------------------------------------------------------------
 function normalizeTexture (texture, width, height) {
     let result = new Uint8Array(texture.length);
     let id = 0;
@@ -272,17 +275,11 @@ function normalizeTexture (texture, width, height) {
     }
     return result;
 }
-//====================================================================================================================
-//
-//====================================================================================================================
-
+//---------------------------------------------------------------------------------------------------------------------
 function clamp01 (input) {
     return Math.min(Math.max(input, 0), 1);
 }
-//====================================================================================================================
-//
-//====================================================================================================================
-
+//---------------------------------------------------------------------------------------------------------------------
 function textureToCanvas (texture, width, height) {
     let captureCanvas = document.createElement('canvas');
     let ctx = captureCanvas.getContext('2d');
@@ -295,10 +292,7 @@ function textureToCanvas (texture, width, height) {
 
     return captureCanvas;
 }
-//====================================================================================================================
-//
-//====================================================================================================================
-
+//---------------------------------------------------------------------------------------------------------------------
 function downloadURI (filename, uri) {
     let link = document.createElement('a');
     link.download = filename;
@@ -1123,10 +1117,11 @@ function initSunraysFramebuffers () {
     sunrays     = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering);
     sunraysTemp = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering);
 }
-//====================================================================================================================
-//
-//====================================================================================================================
 
+
+//====================================================================================================================
+//  creates a frame buffer object of specific size and returns the object
+//====================================================================================================================
 function createFBO (w, h, internalFormat, format, type, param) {
     gl.activeTexture(gl.TEXTURE0);
     let texture = gl.createTexture();
@@ -1160,10 +1155,13 @@ function createFBO (w, h, internalFormat, format, type, param) {
         }
     };
 }
-//====================================================================================================================
-//
-//====================================================================================================================
 
+//====================================================================================================================
+// creates a set of two framebuffers. 
+//  read -> fbo1
+//  write -> fbo2
+// swap
+//====================================================================================================================
 function createDoubleFBO (w, h, internalFormat, format, type, param) {
     let fbo1 = createFBO(w, h, internalFormat, format, type, param);
     let fbo2 = createFBO(w, h, internalFormat, format, type, param);
@@ -1192,8 +1190,9 @@ function createDoubleFBO (w, h, internalFormat, format, type, param) {
         }
     }
 }
+
 //====================================================================================================================
-//
+// 
 //====================================================================================================================
 
 function resizeFBO (target, w, h, internalFormat, format, type, param) {
@@ -1219,9 +1218,9 @@ function resizeDoubleFBO (target, w, h, internalFormat, format, type, param) {
     return target;
 }
 //====================================================================================================================
+//  creates a texture from URL
 //
 //====================================================================================================================
-
 function createTextureAsync (url) {
     let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -1241,7 +1240,6 @@ function createTextureAsync (url) {
             return id;
         }
     };
-
     let image = new Image();
     image.onload = () => {
         obj.width = image.width;
@@ -1250,7 +1248,6 @@ function createTextureAsync (url) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
     };
     image.src = url;
-
     return obj;
 }
 //====================================================================================================================
