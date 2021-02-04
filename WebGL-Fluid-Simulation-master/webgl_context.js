@@ -1,5 +1,7 @@
+export const canvas = document.getElementsByTagName('canvas')[0];
+export const { gl, ext } = getWebGLContext(canvas);
 
-export function getWebGLContext(canvas) {
+function getWebGLContext(canvas) {
     const params = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
 
     let gl = canvas.getContext('webgl2', params);
@@ -80,3 +82,40 @@ function supportRenderTextureFormat(gl, internalFormat, format, type) {
 }
 //====================================================================================================================
 
+//====================================================================================================================
+
+export function correctDeltaX(delta) {
+    let aspectRatio = canvas.width / canvas.height;
+    if (aspectRatio < 1) delta *= aspectRatio;
+    return delta;
+}
+//====================================================================================================================
+//
+//====================================================================================================================
+
+export function correctDeltaY(delta) {
+    let aspectRatio = canvas.width / canvas.height;
+    if (aspectRatio > 1) delta /= aspectRatio;
+    return delta;
+}
+//====================================================================================================================
+//
+//====================================================================================================================
+
+
+export function getResolution(resolution) {
+    let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
+    if (aspectRatio < 1)
+        aspectRatio = 1.0 / aspectRatio;
+
+    let min = Math.round(resolution);
+    let max = Math.round(resolution * aspectRatio);
+
+    if (gl.drawingBufferWidth > gl.drawingBufferHeight)
+        return { width: max, height: min };
+    else
+        return { width: min, height: max };
+}
+//====================================================================================================================
+//
+//====================================================================================================================
