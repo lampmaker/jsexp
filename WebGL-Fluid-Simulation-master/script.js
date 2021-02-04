@@ -621,14 +621,21 @@ function applyBloom(source, destination) {
     let last = destination;
 
     gl.disable(gl.BLEND);
+
     bloomPrefilterProgram.bind();
     let knee = config.BLOOM_THRESHOLD * config.BLOOM_SOFT_KNEE + 0.0001;
     let curve0 = config.BLOOM_THRESHOLD - knee;
     let curve1 = knee * 2;
     let curve2 = 0.25 / knee;
+
+    bloomPrefilterProgram.uniformsc.curve.set([curve0, curve1, curve2]);
+    bloomPrefilterProgram.uniformsc.threshold.set(config.BLOOM_THRESHOLD);
+    bloomPrefilterProgram.uniformsc.uTexture.set(source.attach(0));
+    /*
     gl.uniform3f(bloomPrefilterProgram.uniforms.curve, curve0, curve1, curve2);
     gl.uniform1f(bloomPrefilterProgram.uniforms.threshold, config.BLOOM_THRESHOLD);
     gl.uniform1i(bloomPrefilterProgram.uniforms.uTexture, source.attach(0));
+    */
     blit(last);
 
     bloomBlurProgram.bind();
