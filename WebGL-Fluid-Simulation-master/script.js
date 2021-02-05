@@ -29,15 +29,12 @@ import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap
 import { Material, Program, blit } from '/webgl_programs.js'
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
 import {
-    baseVertexShader,
-    blurVertexShader, blurShader,
-    copyShader, clearShader,
-    colorShader, checkerboardShader, displayShaderSource,
-    bloomPrefilterShader, bloomBlurShader, bloomFinalShader,
-    sunraysMaskShader, sunraysShader, splatShader,
-    advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader,
+    baseVertexShader, blurVertexShader, blurShader, copyShader, clearShader, colorShader, checkerboardShader, displayShaderSource,
     environmentShader
 } from '/shaders.js'
+import { bloomPrefilterShader, bloomBlurShader, bloomFinalShader, sunraysMaskShader, sunraysShader, splatShader, } from '/shaders_effects.js'
+import { advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader, } from '/shaders_fluid.js'
+
 import { startGUI, isMobile, pointers } from './gui.js';
 
 // Simulation section
@@ -437,13 +434,13 @@ function drawCheckerboard(target) {
 function drawDisplay(target) {
     let width = target == null ? gl.drawingBufferWidth : target.width;
     let height = target == null ? gl.drawingBufferHeight : target.height;
-
-    environmentProgram.bind();
-    environmentProgram.uniforms.uSource.set(environmentTexture);
-    environmentProgram.uniforms.uEnvironment.set(environmentTexture);
-    blit(target);
-    return;
-
+    /*
+        environmentProgram.bind();
+        environmentProgram.uniforms.uSource.set(environmentTexture);
+        environmentProgram.uniforms.uEnvironment.set(environmentTexture);
+        blit(target);
+        //    return;
+    */
 
     displayMaterial.bind();
     if (config.SHADING)

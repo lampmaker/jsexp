@@ -3,18 +3,6 @@ import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap
 import { Material, Program, blit } from '/webgl_programs.js'
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
-import {
-    baseVertexShader,
-    blurVertexShader, blurShader,
-    copyShader, clearShader,
-    colorShader, checkerboardShader, displayShaderSource,
-    bloomPrefilterShader, bloomBlurShader, bloomFinalShader,
-    sunraysMaskShader, sunraysShader, splatShader,
-    advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader
-} from '/shaders.js'
-
-
-
 
 
 //====================================================================================================================
