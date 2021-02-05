@@ -35,7 +35,8 @@ import {
     colorShader, checkerboardShader, displayShaderSource,
     bloomPrefilterShader, bloomBlurShader, bloomFinalShader,
     sunraysMaskShader, sunraysShader, splatShader,
-    advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader
+    advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader,
+    environmentShader
 } from '/shaders.js'
 import { startGUI, isMobile, pointers } from './gui.js';
 
@@ -107,11 +108,13 @@ let bloom;
 let bloomFramebuffers = [];
 let sunrays;
 let sunraysTemp;
+let environment;
 
 let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
+let environmentTexture = createTextureAsync('BORDERS.png')     //MK MOD
 
 const blurProgram = new Program(blurVertexShader, blurShader);
-
+const environmentProgram = new Program(baseVertexShader, environmentShader);  //MK MOD
 const clearProgram = new Program(baseVertexShader, clearShader);
 const colorProgram = new Program(baseVertexShader, colorShader);
 const checkerboardProgram = new Program(baseVertexShader, checkerboardShader);
@@ -227,14 +230,18 @@ update();
 //====================================================================================================================
 
 function update() {
+
     const dt = calcDeltaTime();
     if (resizeCanvas())
         initFramebuffers();
+
     updateColors(dt);
     applyInputs();
     if (!config.PAUSED)
         step(dt);
+
     render(null);
+
     requestAnimationFrame(update);
 }
 //====================================================================================================================
@@ -300,10 +307,16 @@ function step(dt) {
     gl.disable(gl.BLEND);
 
     //----------------------------------- CURL   input: velocity output -> velocity
+
+
+
+
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     curlProgram.uniforms.uVelocity.set(velocity.read.attach(0));
     blit(curl);
+
+
 
     vorticityProgram.bind();
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
@@ -325,6 +338,9 @@ function step(dt) {
     blit(pressure.write);
     pressure.swap();
 
+
+
+
     pressureProgram.bind();
     pressureProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     pressureProgram.uniforms.uDivergence.set(divergence.attach(0));
@@ -341,6 +357,9 @@ function step(dt) {
     blit(velocity.write);
     velocity.swap();
 
+
+
+
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     if (!ext.supportLinearFiltering)
@@ -353,6 +372,9 @@ function step(dt) {
     blit(velocity.write);
     velocity.swap();
 
+
+
+
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([dye.texelSizeX, dye.texelSizeY]);
     advectionProgram.uniforms.uVelocity.set(velocity.read.attach(0));
@@ -360,6 +382,9 @@ function step(dt) {
     advectionProgram.uniforms.dissipation.set(config.DENSITY_DISSIPATION);
     blit(dye.write);
     dye.swap();
+
+
+
 }
 //====================================================================================================================
 //
@@ -413,6 +438,13 @@ function drawDisplay(target) {
     let width = target == null ? gl.drawingBufferWidth : target.width;
     let height = target == null ? gl.drawingBufferHeight : target.height;
 
+    environmentProgram.bind();
+    environmentProgram.uniforms.uSource.set(environmentTexture);
+    environmentProgram.uniforms.uEnvironment.set(environmentTexture);
+    blit(target);
+    return;
+
+
     displayMaterial.bind();
     if (config.SHADING)
         displayMaterial.uniforms.texelSize.set([1.0 / width, 1.0 / height]);
@@ -425,6 +457,9 @@ function drawDisplay(target) {
     }
     if (config.SUNRAYS)
         displayMaterial.uniforms.uSunrays.set(sunrays.attach(3));
+
+
+
     blit(target);
 }
 //====================================================================================================================

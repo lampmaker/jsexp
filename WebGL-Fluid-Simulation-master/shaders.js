@@ -350,6 +350,24 @@ export const splatShader = compileShader(gl.FRAGMENT_SHADER, `
 //
 //====================================================================================================================
 
+export const environmentShader = compileShader(gl.FRAGMENT_SHADER, `
+    precision highp float;
+    precision highp sampler2D;
+
+    varying vec2 vUv;
+    uniform sampler2D uSource;
+    uniform sampler2D uEnvironment;
+
+    void main () {
+        vec4 tex= texture2D(uEnvironment,vUv);
+        vec4 outPut=texture2D(uSource, vUv);
+        gl_FragColor = outPut; //vec4(outPut.r  , outPut.g , outPut.b , 1.0);
+    }`,
+);
+//====================================================================================================================
+//
+//====================================================================================================================
+
 export const advectionShader = compileShader(gl.FRAGMENT_SHADER, `
     precision highp float;
     precision highp sampler2D;
@@ -483,10 +501,10 @@ export const vorticityShader = compileShader(gl.FRAGMENT_SHADER, `
         
 
         vec2 velocity = texture2D(uVelocity, vUv).xy;
-        velocity.x+=.1;
+     //   velocity.x+=.1;
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
-        if (vB.y< 0.5 && vL.x < 0.5) { velocity*=-1.0;}        
+    //    if (vB.y< 0.5 && vL.x < 0.5) { velocity*=-1.0;}        
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }
 `);
