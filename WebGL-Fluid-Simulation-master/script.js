@@ -508,6 +508,7 @@ function blur(target, temp, iterations) {
         blurProgram.uniforms.uTexture.set(temp.attach(0));
         blit(target);
     }
+
 }
 
 function splatPointer(pointer) {

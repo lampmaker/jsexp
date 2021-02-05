@@ -376,7 +376,7 @@ export const advectionShader = compileShader(gl.FRAGMENT_SHADER, `
         return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
     }
 
-    void main () {
+    void main () {    
     #ifdef MANUAL_FILTERING
         vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize;
         vec4 result = bilerp(uSource, coord, dyeTexelSize);
@@ -411,12 +411,13 @@ export const divergenceShader = compileShader(gl.FRAGMENT_SHADER, `
         float B = texture2D(uVelocity, vB).y;
 
         vec2 C = texture2D(uVelocity, vUv).xy;
+        
         if (vL.x < 0.0) { L = -L; }
         if (vR.x > 1.0) { R = -R; }
         if (vT.y > 1.0) { T = -T; }
         if (vB.y < 0.0) { B = -B; }
 
-        if (vB.y< 0.5 && vL.x < 0.5) {L=-L; B=-B;}
+       //if (vB.y< 0.5 && vL.x < 0.5) {L=-L; B=-B;}
 
         
         float div = 0.5 * (R - L + T - B);
@@ -444,7 +445,7 @@ export const curlShader = compileShader(gl.FRAGMENT_SHADER, `
         float T = texture2D(uVelocity, vT).x;
         float B = texture2D(uVelocity, vB).x;
 
-        if (vB.y< 0.5 && vL.x < 0.5) {L=0.0; B=0.0;}
+       // if (vB.y< 0.5 && vL.x < 0.5) {L=0.0; B=0.0;}
 
         float vorticity = R - L - T + B;        
         gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
@@ -479,8 +480,10 @@ export const vorticityShader = compileShader(gl.FRAGMENT_SHADER, `
         force /= length(force) + 0.0001;
         force *= curl * C;
         force.y *= -1.0;
+        
 
         vec2 velocity = texture2D(uVelocity, vUv).xy;
+        velocity.x+=.1;
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
         if (vB.y< 0.5 && vL.x < 0.5) { velocity*=-1.0;}        
@@ -508,12 +511,11 @@ export const pressureShader = compileShader(gl.FRAGMENT_SHADER, `
         float R = texture2D(uPressure, vR).x;
         float T = texture2D(uPressure, vT).x;
         float B = texture2D(uPressure, vB).x;
-        float C = texture2D(uPressure, vUv).x;
-        if (vB.y< 0.5 && vL.x < 0.5) {L=0.0; B=0.0;}
+        float C = texture2D(uPressure, vUv).x;       
         float divergence = texture2D(uDivergence, vUv).x;
         float pressure = (L + R + B + T - divergence) * 0.25;
         gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);
-        if (vB.y< 0.5 && vL.x < 0.5) {  gl_FragColor = vec4(0, 0.0, 0.0, 1.0);}
+       //if (vB.y< 0.5 && vL.x < 0.5) {  gl_FragColor = vec4(pressure/10.0, 0.0, 0.0, 1.0);}
     }
 `);
 //====================================================================================================================
@@ -540,7 +542,7 @@ export const gradientSubtractShader = compileShader(gl.FRAGMENT_SHADER, `
         vec2 velocity = texture2D(uVelocity, vUv).xy;
         velocity.xy -= vec2(R - L, T - B);
         gl_FragColor = vec4(velocity, 0.0, 1.0);
-        if (vB.y< 0.5 && vL.x < 0.5) {  gl_FragColor = vec4(0, 0.0, 0.0, 1.0);}
+      //  if (vB.y< 0.5 && vL.x < 0.5) {  gl_FragColor = vec4(0, 0.0, 0.0, 1.0);}
     }
 `);
 //====================================================================================================================
