@@ -28,7 +28,7 @@ var uniformType = {
     m4: 35676,//(FLOAT_MAT4), and
     s2d: 35678//(SAMPLER_2D).
 }
-
+//--------------------------------------------------------------------------------------------------------------------
 export class Material {
     constructor(vertexShader, fragmentShaderSource) {
         this.vertexShader = vertexShader;
@@ -66,11 +66,43 @@ export class Program {
         this.uniforms = {};
         this.program = createProgram(vertexShader, fragmentShader);
         this.uniforms = getUniforms(this.program);
-        this.uniformsc = getUniformsc(this.program);
     }
     //------------------
     bind() {
         gl.useProgram(this.program);
+    }
+}
+//--------------------------------------------------------------------------------------------------------------------
+export class Uniform {
+    constructor(type, location, name) {
+        this.type = type;
+        this.loc = location;
+        this.name = name;
+    }
+    set(data) {
+        switch (this.type) {
+            case uniformType.i:
+            case uniformType.s2d:
+                gl.uniform1i(this.loc, data);
+                break;
+            case uniformType.f:
+                gl.uniform1f(this.loc, data);
+                break;
+            case uniformType.v2:
+                gl.uniform2f(this.loc, data[0], data[1],);
+                break;
+            case uniformType.v3:
+                gl.uniform3f(this.loc, data[0], data[1], data[2]);
+                break;
+            case uniformType.v4:
+                gl.uniform4f(this.loc, data[0], data[1], data[2], data[3]);
+                break;
+            case uniformType.s2:
+                gl.uniform(this.loc, data[0], data[1], data[2], data[3]);
+            default:
+                console.log("Uniform conversion unknown type:", this.type, this.name)
+                break;
+        }
     }
 }
 //--------------------------------------------------------------------------------------------------------------------
@@ -86,24 +118,13 @@ export function createProgram(vertexShader, fragmentShader) {
     return program;
 }
 //--------------------------------------------------------------------------------------------------------------------
+
 export function getUniforms(program) {
     let uniforms = [];
     let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < uniformCount; i++) {
         let uniform = gl.getActiveUniform(program, i)
-        let uniformName = uniform.name;
-        console.log(uniform);
-        uniforms[uniformName] = gl.getUniformLocation(program, uniformName);
-    }
-
-    return uniforms;
-}
-export function getUniformsc(program) {
-    let uniforms = [];
-    let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-    for (let i = 0; i < uniformCount; i++) {
-        let uniform = gl.getActiveUniform(program, i)
-        uniforms[uniform.name] = new Uniform(uniform.type, gl.getUniformLocation(program, uniform.name));
+        uniforms[uniform.name] = new Uniform(uniform.type, gl.getUniformLocation(program, uniform.name), uniform.name);
     }
 
     return uniforms;
@@ -133,30 +154,37 @@ export function addKeywords(source, keywords) {  // keywords = DEFINES in webgl 
 
 // trying new option for uniforms. 
 
-export class Uniform {
-    constructor(type, location) {
-        this.type = type;
-        this.loc = location;
-    }
-    set(data) {
-        switch (this.type) {
-            case uniformType.i:
-                gl.uniform1i(this.loc, data[0]);
-                break;
-            case uniformType.f:
-                gl.uniform1f(this.loc, data[0]);
-                break;
-            case uniformType.v2:
-                gl.uniform2f(this.loc, data[0], data[1],);
-                break;
-            case uniformType.v3:
-                gl.uniform3f(this.loc, data[0], data[1], data[2]);
-                break;
-            case uniformType.v4:
-                gl.uniform4f(this.loc, data[0], data[1], data[2], data[3]);
-                break;
-        }
-    }
-}
 
-//bloomPrefilterProgram.uniforms.curve.set(curve0, curve1, curve2);
+//====================================================================================================================
+// MK Wat doet dit?     
+/*
+ wat betekent =>   
+
+
+*/
+//====================================================================================================================
+export const blit = (() => {
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(0);
+
+    return (target, clear = false) => {
+        if (target == null) {
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        }
+        else {
+            gl.viewport(0, 0, target.width, target.height);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+        }
+        if (clear) {
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        }
+        // CHECK_FRAMEBUFFER_STATUS();
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+    }
+})();

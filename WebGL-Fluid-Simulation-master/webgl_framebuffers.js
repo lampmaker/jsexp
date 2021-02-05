@@ -1,4 +1,16 @@
 import { gl, ext } from './webgl_context.js';
+import { Material, Program, blit } from '/webgl_programs.js'
+import {
+    baseVertexShader,
+    blurVertexShader, blurShader,
+    copyShader, clearShader,
+    colorShader, checkerboardShader, displayShaderSource,
+    bloomPrefilterShader, bloomBlurShader, bloomFinalShader,
+    sunraysMaskShader, sunraysShader, splatShader,
+    advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader
+} from '/shaders.js'
+
+const copyProgram = new Program(baseVertexShader, copyShader);
 //====================================================================================================================
 //  creates a frame buffer object of specific size and returns the object
 //====================================================================================================================
@@ -78,7 +90,7 @@ export function createDoubleFBO(w, h, internalFormat, format, type, param) {
 export function resizeFBO(target, w, h, internalFormat, format, type, param) {
     let newFBO = createFBO(w, h, internalFormat, format, type, param);
     copyProgram.bind();
-    gl.uniform1i(copyProgram.uniforms.uTexture, target.attach(0));
+    copyProgram.uniforms.uTexture.set(target.attach(0));
     blit(newFBO);
     return newFBO;
 }
