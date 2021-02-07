@@ -145,8 +145,10 @@ export const displayShaderSource = `
     uniform sampler2D uBloom;
     uniform sampler2D uSunrays;
     uniform sampler2D uDithering;
+    uniform sampler2D uEnvironment;
     uniform vec2 ditherScale;
     uniform vec2 texelSize;
+    
 
     vec3 linearToGamma (vec3 color) {
         color = max(color, vec3(0));
@@ -155,6 +157,7 @@ export const displayShaderSource = `
 
     void main () {
         vec3 c = texture2D(uTexture, vUv).rgb;
+        float env = texture2D(uEnvironment, vUv).r;
 
     #ifdef SHADING
         vec3 lc = texture2D(uTexture, vL).rgb;
@@ -191,9 +194,11 @@ export const displayShaderSource = `
         bloom = linearToGamma(bloom);
         c += bloom;
     #endif
-
+        
         float a = max(c.r, max(c.g, c.b));
-        gl_FragColor = vec4(c, a);
+        //gl_FragColor = vec4(c, a)+env;
+       
+        gl_FragColor =  env * vec4(c, a); ;
     }
 `;
 
@@ -206,14 +211,11 @@ export const environmentShader = compileShader(gl.FRAGMENT_SHADER, `
     precision highp float;
     precision highp sampler2D;
 
-    varying vec2 vUv;
-    uniform sampler2D uSource;
+    varying vec2 vUv;        
     uniform sampler2D uEnvironment;
 
     void main () {
-        vec4 tex= texture2D(uEnvironment,vUv);
-        vec4 outPut=texture2D(uSource, vUv);
-        gl_FragColor = outPut; //vec4(outPut.r  , outPut.g , outPut.b , 1.0);
+        gl_FragColor = texture2D(uEnvironment,vUv);
     }`,
 );
 //====================================================================================================================

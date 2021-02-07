@@ -101,8 +101,6 @@ export function correctDeltaY(delta) {
 //====================================================================================================================
 //
 //====================================================================================================================
-
-
 export function getResolution(resolution) {
     let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
     if (aspectRatio < 1)

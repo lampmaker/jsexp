@@ -72,10 +72,7 @@ export const divergenceShader = compileShader(gl.FRAGMENT_SHADER, `
         if (vR.x > 1.0) { R = -R; }
         if (vT.y > 1.0) { T = -T; }
         if (vB.y < 0.0) { B = -B; }
-
-       //if (vB.y< 0.5 && vL.x < 0.5) {L=-L; B=-B;}
-
-        
+               
         float div = 0.5 * (R - L + T - B);
         gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
     }
@@ -100,9 +97,7 @@ export const curlShader = compileShader(gl.FRAGMENT_SHADER, `
         float R = texture2D(uVelocity, vR).y;
         float T = texture2D(uVelocity, vT).x;
         float B = texture2D(uVelocity, vB).x;
-
-       // if (vB.y< 0.5 && vL.x < 0.5) {L=0.0; B=0.0;}
-
+       
         float vorticity = R - L - T + B;        
         gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
     }
@@ -122,27 +117,39 @@ export const vorticityShader = compileShader(gl.FRAGMENT_SHADER, `
     varying vec2 vB;
     uniform sampler2D uVelocity;
     uniform sampler2D uCurl;
+    uniform sampler2D uEnvironment;
     uniform float curl;
     uniform float dt;
 
     void main () {
-        float L = texture2D(uCurl, vL).x;
-        float R = texture2D(uCurl, vR).x;
-        float T = texture2D(uCurl, vT).x;
-        float B = texture2D(uCurl, vB).x;
-        float C = texture2D(uCurl, vUv).x;
+        float L = texture2D(uCurl, vL).r;
+        float R = texture2D(uCurl, vR).r;
+        float T = texture2D(uCurl, vT).r;
+        float B = texture2D(uCurl, vB).r;
+        float C = texture2D(uCurl, vUv).r;
         
         vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
         force /= length(force) + 0.0001;
         force *= curl * C;
         force.y *= -1.0;
         
-
-        vec2 velocity = texture2D(uVelocity, vUv).xy;
-     //   velocity.x+=.1;
+        
+        vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
-    //    if (vB.y< 0.5 && vL.x < 0.5) { velocity*=-1.0;}        
+
+        float env= texture2D(uEnvironment, vUv).g;     
+        
+
+        float block=0.0;
+        if (vUv.y < 0.5 && vUv.x < 0.5) { block+=1.0;}        
+        if (vUv.x < 0.25) { block-=1.0; };
+     //   if (env > 0.0000) block+=1.0;
+
+        if (block > 0.0)  velocity*=-1.0;      
+     
+
+
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }
 `);

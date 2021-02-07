@@ -105,13 +105,14 @@ let bloom;
 let bloomFramebuffers = [];
 let sunrays;
 let sunraysTemp;
-let environment;
+let environment_sim;
+let environment_dye;
 
 let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
-let environmentTexture = createTextureAsync('BORDERS.png')     //MK MOD
+let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
 
 const blurProgram = new Program(blurVertexShader, blurShader);
-const environmentProgram = new Program(baseVertexShader, environmentShader);  //MK MOD
+const environmentProgram = new Program(baseVertexShader, environmentShader);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader);
 const colorProgram = new Program(baseVertexShader, colorShader);
 const checkerboardProgram = new Program(baseVertexShader, checkerboardShader);
@@ -134,8 +135,11 @@ const displayMaterial = new Material(baseVertexShader, displayShaderSource);
 //  wordt aangeroepen bij resize  
 //====================================================================================================================
 export function initFramebuffers() {
-    let simRes = getResolution(config.SIM_RESOLUTION);
+
+    let simRes = getResolution(config.SIM_RESOLUTION);   // width,height in pixels.
     let dyeRes = getResolution(config.DYE_RESOLUTION);
+    console.log("Sim resolution (w,h):", simRes.width, simRes.height);
+    console.log("Dye resolution (w,h):", dyeRes.width, dyeRes.height);
 
     const texType = ext.halfFloatTexType;
     const rgba = ext.formatRGBA;
@@ -159,8 +163,13 @@ export function initFramebuffers() {
     curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
 
+    environment_sim = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+    environment_dye = createFBO(dyeRes.width, dyeRes.height, r.internalFormat, r.format, texType, gl.NEAREST)
     initBloomFramebuffers();
     initSunraysFramebuffers();
+
+
+
 }
 //====================================================================================================================
 //
@@ -233,13 +242,24 @@ function update() {
         initFramebuffers();
 
     updateColors(dt);
+
     applyInputs();
-    if (!config.PAUSED)
-        step(dt);
 
-    render(null);
+    var viewenv = true;         // set to true to view environment texture.  For debugging purposes
+    if (viewenv) {
+        environmentProgram.bind();
+        environmentProgram.uniforms.uEnvironment.set(environmentTexture);
+        blit(null);
+        requestAnimationFrame(update);
+    }
+    else {
+        if (!config.PAUSED) step(dt);
+        render(null);
+        requestAnimationFrame(update);
+    }
 
-    requestAnimationFrame(update);
+
+
 }
 //====================================================================================================================
 //
@@ -303,10 +323,6 @@ function applyInputs() {
 function step(dt) {
     gl.disable(gl.BLEND);
 
-    //----------------------------------- CURL   input: velocity output -> velocity
-
-
-
 
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
@@ -314,10 +330,10 @@ function step(dt) {
     blit(curl);
 
 
-
     vorticityProgram.bind();
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
+    vorticityProgram.uniforms.uEnvironment.set(environment_sim);
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
     vorticityProgram.uniforms.curl.set(config.CURL);
     vorticityProgram.uniforms.dt.set(dt);
@@ -356,12 +372,14 @@ function step(dt) {
 
 
 
-
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);
+
+
+
     advectionProgram.uniforms.uVelocity.set(velocityId);
     advectionProgram.uniforms.uSource.set(velocityId);
     advectionProgram.uniforms.dt.set(dt);
@@ -434,18 +452,16 @@ function drawCheckerboard(target) {
 function drawDisplay(target) {
     let width = target == null ? gl.drawingBufferWidth : target.width;
     let height = target == null ? gl.drawingBufferHeight : target.height;
-    /*
-        environmentProgram.bind();
-        environmentProgram.uniforms.uSource.set(environmentTexture);
-        environmentProgram.uniforms.uEnvironment.set(environmentTexture);
-        blit(target);
-        //    return;
-    */
+
 
     displayMaterial.bind();
+    displayMaterial.uniforms.uEnvironment.set(environmentTexture);
+    displayMaterial.uniforms.uTexture.set(dye.read.attach(0));
+
+
     if (config.SHADING)
         displayMaterial.uniforms.texelSize.set([1.0 / width, 1.0 / height]);
-    displayMaterial.uniforms.uTexture.set(dye.read.attach(0));
+
     if (config.BLOOM) {
         displayMaterial.uniforms.uBloom.set(bloom.attach(1));
         displayMaterial.uniforms.uDithering.set(ditheringTexture.attach(2));
@@ -458,6 +474,8 @@ function drawDisplay(target) {
 
 
     blit(target);
+
+
 }
 //====================================================================================================================
 //
