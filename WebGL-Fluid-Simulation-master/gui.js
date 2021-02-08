@@ -1,9 +1,9 @@
-import { config, initFramebuffers, updateKeywords, splatStack, render } from './script.js';
+import { config, initFramebuffers } from './script.js';
 import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
 
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
-
+import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, splatStack, updateKeywords } from '/render_dye.js'
 
 //====================================================================================================================
 // starts the gui
@@ -52,7 +52,7 @@ export function isMobile() {
 function captureScreenshot() {
     let res = getResolution(config.CAPTURE_RESOLUTION);
     let target = createFBO(res.width, res.height, ext.formatRGBA.internalFormat, ext.formatRGBA.format, ext.halfFloatTexType, gl.NEAREST);
-    render(target);
+    renderDye(target);
 
     let texture = framebufferToTexture(target);
     texture = normalizeTexture(texture, target.width, target.height);

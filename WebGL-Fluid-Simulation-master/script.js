@@ -39,7 +39,7 @@ import { startGUI, isMobile, pointers } from './gui.js';
 
 
 
-import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateColors, applyInputs, multipleSplats } from '/render_dye.js'
+import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, updateKeywords } from '/render_dye.js'
 
 // Simulation section
 
@@ -75,7 +75,7 @@ export let config = {
 }
 
 
-export let splatStack = [];
+
 
 
 if (isMobile()) {
@@ -108,26 +108,17 @@ let curl;            // 1 per point
 let pressure;        // 1 per point
 
 
-let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
-let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
-const blurProgram = new Program(blurVertexShader, blurShader, true);
+export let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
+
 const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);
-const colorProgram = new Program(baseVertexShader, colorShader, true);
-const checkerboardProgram = new Program(baseVertexShader, checkerboardShader, true);
-const bloomPrefilterProgram = new Program(baseVertexShader, bloomPrefilterShader, true);
-const bloomBlurProgram = new Program(baseVertexShader, bloomBlurShader, true);
-const bloomFinalProgram = new Program(baseVertexShader, bloomFinalShader, true);
-const sunraysMaskProgram = new Program(baseVertexShader, sunraysMaskShader, true);
-const sunraysProgram = new Program(baseVertexShader, sunraysShader, true);
-
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
 const divergenceProgram = new Program(baseVertexShader, divergenceShader, true);
 const curlProgram = new Program(baseVertexShader, curlShader, true);
 const vorticityProgram = new Program(baseVertexShader, vorticityShader, true);
 const pressureProgram = new Program(baseVertexShader, pressureShader, true);
 const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader, true);
-const displayMaterial = new Program(baseVertexShader, displayShaderSource, false);
+
 
 //====================================================================================================================
 //  Initialisatie van alle framebuffers. 
@@ -158,16 +149,7 @@ export function initFramebuffers() {
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
 }
 
-//====================================================================================================================
-//  Keywords (=defines)
-//====================================================================================================================
-export function updateKeywords() {
-    let displayKeywords = [];
-    if (config.SHADING) displayKeywords.push("SHADING");
-    if (config.BLOOM) displayKeywords.push("BLOOM");
-    if (config.SUNRAYS) displayKeywords.push("SUNRAYS");
-    displayMaterial.setKeywords(displayKeywords);
-}
+
 
 //====================================================================================================================
 //====================================================================================================================
@@ -176,10 +158,7 @@ export function updateKeywords() {
 //====================================================================================================================
 updateKeywords();
 initFramebuffers();
-
-
 let lastUpdateTime = Date.now();
-
 update();
 
 //====================================================================================================================
@@ -190,10 +169,7 @@ update();
 function update() {
     const dt = calcDeltaTime();
     if (resizeCanvas()) initFramebuffers();
-    updateColors(dt);
-
-    applyInputs(velocity);
-
+    updateDye(dt, velocity);
     var viewenv = false;         // set to true to view environment texture.  For debugging purposes
     if (viewenv) {
         environmentProgram.bind();
@@ -203,17 +179,13 @@ function update() {
     }
     else {
         if (!config.PAUSED) step(dt);
-        render(null);
+        renderDye(null);
         requestAnimationFrame(update);
     }
-
-
-
 }
 //====================================================================================================================
-//
+//  helper functions
 //====================================================================================================================
-
 function calcDeltaTime() {
     let now = Date.now();
     let dt = (now - lastUpdateTime) / 1000;
@@ -221,7 +193,6 @@ function calcDeltaTime() {
     lastUpdateTime = now;
     return dt;
 }
-
 function resizeCanvas() {
     let width = scaleByPixelRatio(canvas.clientWidth);
     let height = scaleByPixelRatio(canvas.clientHeight);
@@ -233,22 +204,20 @@ function resizeCanvas() {
     return false;
 }
 
-
+//====================================================================================================================
 //====================================================================================================================
 //
+//  Main fluid simulation. 
+//
 //====================================================================================================================
-
-
-
+//====================================================================================================================
 function step(dt) {
     gl.disable(gl.BLEND);
-
 
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     curlProgram.uniforms.uVelocity.set(velocity.read.attach(0));
     blit(curl);
-
 
     vorticityProgram.bind();
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
@@ -271,9 +240,6 @@ function step(dt) {
     blit(pressure.write);
     pressure.swap();
 
-
-
-
     pressureProgram.bind();
     pressureProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     pressureProgram.uniforms.uDivergence.set(divergence.attach(0));
@@ -291,14 +257,12 @@ function step(dt) {
     velocity.swap();
 
 
-
+    // the next section deforms the dye based on the velocity
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);
-
-
 
     advectionProgram.uniforms.uVelocity.set(velocityId);
     advectionProgram.uniforms.uSource.set(velocityId);
@@ -306,9 +270,6 @@ function step(dt) {
     advectionProgram.uniforms.dissipation.set(config.VELOCITY_DISSIPATION);
     blit(velocity.write);
     velocity.swap();
-
-
-
 
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([dye.texelSizeX, dye.texelSizeY]);
@@ -318,167 +279,8 @@ function step(dt) {
     blit(dye.write);
     dye.swap();
 
-
-
 }
 //====================================================================================================================
 //
 //====================================================================================================================
-
-export function render(target) {
-    if (config.BLOOM)
-        applyBloom(dye.read, bloom);
-    if (config.SUNRAYS) {
-        applySunrays(dye.read, dye.write, sunrays);
-        blur(sunrays, sunraysTemp, 1);
-    }
-
-    if (target == null || !config.TRANSPARENT) {
-        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.BLEND);
-    }
-    else {
-        gl.disable(gl.BLEND);
-    }
-
-    if (!config.TRANSPARENT)
-        drawColor(target, normalizeColor(config.BACK_COLOR));
-    if (target == null && config.TRANSPARENT)
-        drawCheckerboard(target);
-    drawDisplay(target);
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function drawColor(target, color) {
-    colorProgram.bind();
-    colorProgram.uniforms.color.set([color.r, color.g, color.b, 1]);
-    blit(target);
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function drawCheckerboard(target) {
-    checkerboardProgram.bind();
-    checkerboardProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
-    blit(target);
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function drawDisplay(target) {
-    let width = target == null ? gl.drawingBufferWidth : target.width;
-    let height = target == null ? gl.drawingBufferHeight : target.height;
-
-
-    displayMaterial.bind();
-    displayMaterial.uniforms.uEnvironment.set(environmentTexture);
-    displayMaterial.uniforms.uTexture.set(dye.read.attach(0));
-
-
-    if (config.SHADING)
-        displayMaterial.uniforms.texelSize.set([1.0 / width, 1.0 / height]);
-
-    if (config.BLOOM) {
-        displayMaterial.uniforms.uBloom.set(bloom.attach(1));
-        displayMaterial.uniforms.uDithering.set(ditheringTexture.attach(2));
-        let scale = getTextureScale(ditheringTexture, width, height);
-        displayMaterial.uniforms.ditherScale.set([scale.x, scale.y]);
-    }
-    if (config.SUNRAYS)
-        displayMaterial.uniforms.uSunrays.set(sunrays.attach(3));
-
-
-
-    blit(target);
-
-
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function applyBloom(source, destination) {
-    if (bloomFramebuffers.length < 2)
-        return;
-
-    let last = destination;
-
-    gl.disable(gl.BLEND);
-
-    bloomPrefilterProgram.bind();
-    let knee = config.BLOOM_THRESHOLD * config.BLOOM_SOFT_KNEE + 0.0001;
-    let curve0 = config.BLOOM_THRESHOLD - knee;
-    let curve1 = knee * 2;
-    let curve2 = 0.25 / knee;
-
-    bloomPrefilterProgram.uniforms.curve.set([curve0, curve1, curve2]);
-    bloomPrefilterProgram.uniforms.threshold.set(config.BLOOM_THRESHOLD);
-    bloomPrefilterProgram.uniforms.uTexture.set(source.attach(0));
-
-    blit(last);
-
-    bloomBlurProgram.bind();
-    for (let i = 0; i < bloomFramebuffers.length; i++) {
-        let dest = bloomFramebuffers[i];
-        bloomBlurProgram.uniforms.texelSize.set([last.texelSizeX, last.texelSizeY]);
-        bloomBlurProgram.uniforms.uTexture.set(last.attach(0));
-        blit(dest);
-        last = dest;
-    }
-
-    gl.blendFunc(gl.ONE, gl.ONE);
-    gl.enable(gl.BLEND);
-
-    for (let i = bloomFramebuffers.length - 2; i >= 0; i--) {
-        let baseTex = bloomFramebuffers[i];
-        bloomBlurProgram.uniforms.texelSize.set([last.texelSizeX, last.texelSizeY]);
-        bloomBlurProgram.uniforms.uTexture.set(last.attach(0));
-        gl.viewport(0, 0, baseTex.width, baseTex.height);
-        blit(baseTex);
-        last = baseTex;
-    }
-
-    gl.disable(gl.BLEND);
-    bloomFinalProgram.bind();
-    bloomFinalProgram.uniforms.texelSize.set([last.texelSizeX, last.texelSizeY]);
-    bloomFinalProgram.uniforms.uTexture.set(last.attach(0));
-    bloomFinalProgram.uniforms.intensity.set(config.BLOOM_INTENSITY);
-    blit(destination);
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function applySunrays(source, mask, destination) {
-    gl.disable(gl.BLEND);
-    sunraysMaskProgram.bind();
-    sunraysMaskProgram.uniforms.uTexture.set(source.attach(0));
-    blit(mask);
-
-    sunraysProgram.bind();
-    sunraysProgram.uniforms.weight.set(config.SUNRAYS_WEIGHT);
-    sunraysProgram.uniforms.uTexture.set(mask.attach(0));
-    blit(destination);
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function blur(target, temp, iterations) {
-    blurProgram.bind();
-    for (let i = 0; i < iterations; i++) {
-        blurProgram.uniforms.texelSize.set([target.texelSizeX, 0.0]);
-        blurProgram.uniforms.uTexture.set(target.attach(0));
-        blit(temp);
-        blurProgram.uniforms.texelSize.set([0.0, target.texelSizeY]);
-        blurProgram.uniforms.uTexture.set(temp.attach(0));
-        blit(target);
-    }
-
-}
-
 
