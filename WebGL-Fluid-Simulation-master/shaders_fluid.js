@@ -131,7 +131,7 @@ export const vorticityShader = `
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
         float env= texture2D(uEnvironment, vUv).g;     
-        if (env < 1.0)  velocity*=-1.0;      
+        if (env < 1.0)  velocity*=0.0;      
 
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }
