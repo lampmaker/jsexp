@@ -1,5 +1,5 @@
 
-import { config, initFramebuffers, dye, environmentTexture } from './script.js';
+import { config, initFramebuffers, dye, environmentTexture, environmentProgram } from './script.js';
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
 import { Program, blit } from '/webgl_programs.js'
@@ -117,7 +117,6 @@ function applyInputs(vel) {
             splatPointer(p, vel);
         }
     });
-
 }
 
 function splatPointer(pointer, vel) {
@@ -256,7 +255,9 @@ function applySunrays(source, mask, destination) {
     blit(destination);
 }
 
-
+//====================================================================================================================
+//
+//====================================================================================================================
 export function renderDye(target) {
     if (config.BLOOM)
         applyBloom(dye.read, bloom);
@@ -264,7 +265,6 @@ export function renderDye(target) {
         applySunrays(dye.read, dye.write, sunrays);
         blur(sunrays, sunraysTemp, 1);
     }
-
     if (target == null || !config.TRANSPARENT) {
         gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.enable(gl.BLEND);
@@ -304,16 +304,10 @@ function drawCheckerboard(target) {
 function drawDisplay(target) {
     let width = target == null ? gl.drawingBufferWidth : target.width;
     let height = target == null ? gl.drawingBufferHeight : target.height;
-
-
     displayMaterial.bind();
-    displayMaterial.uniforms.uEnvironment.set(environmentTexture);
     displayMaterial.uniforms.uTexture.set(dye.read.attach(0));
-
-
     if (config.SHADING)
         displayMaterial.uniforms.texelSize.set([1.0 / width, 1.0 / height]);
-
     if (config.BLOOM) {
         displayMaterial.uniforms.uBloom.set(bloom.attach(1));
         displayMaterial.uniforms.uDithering.set(ditheringTexture.attach(2));
@@ -322,10 +316,10 @@ function drawDisplay(target) {
     }
     if (config.SUNRAYS)
         displayMaterial.uniforms.uSunrays.set(sunrays.attach(3));
-
-
-
     blit(target);
-
-
+    /*
+        environmentProgram.bind();
+        environmentProgram.uniforms.uEnvironment.set(environmentTexture.attach(2))
+        blit(target);
+        */
 }

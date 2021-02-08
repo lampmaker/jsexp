@@ -1,6 +1,6 @@
 
 //====================================================================================================================
-export const baseVertexShader =  `
+export const baseVertexShader = `
     precision highp float;
 
     attribute vec2 aPosition;
@@ -24,7 +24,7 @@ export const baseVertexShader =  `
 //
 //====================================================================================================================
 
-export const blurVertexShader =  `
+export const blurVertexShader = `
     precision highp float;
 
     attribute vec2 aPosition;
@@ -65,7 +65,7 @@ export const blurShader = `
 //
 //====================================================================================================================
 
-export const copyShader =  `
+export const copyShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -143,7 +143,6 @@ export const displayShaderSource = `
     uniform sampler2D uBloom;
     uniform sampler2D uSunrays;
     uniform sampler2D uDithering;
-    uniform sampler2D uEnvironment;
     uniform vec2 ditherScale;
     uniform vec2 texelSize;
     
@@ -155,8 +154,7 @@ export const displayShaderSource = `
 
     void main () {
         vec3 c = texture2D(uTexture, vUv).rgb;
-        float env = texture2D(uEnvironment, vUv).r;
-
+    
     #ifdef SHADING
         vec3 lc = texture2D(uTexture, vL).rgb;
         vec3 rc = texture2D(uTexture, vR).rgb;
@@ -194,9 +192,9 @@ export const displayShaderSource = `
     #endif
         
         float a = max(c.r, max(c.g, c.b));
-        //gl_FragColor = vec4(c, a)+env;
+        
        
-        gl_FragColor =  env * vec4(c, a); ;
+        gl_FragColor =  vec4(c, a); ;
     }
 `
 
@@ -205,13 +203,11 @@ export const displayShaderSource = `
 //
 //====================================================================================================================
 
-export const environmentShader =  `
+export const environmentShader = `
     precision highp float;
     precision highp sampler2D;
-
     varying vec2 vUv;        
     uniform sampler2D uEnvironment;
-
     void main () {
         gl_FragColor = texture2D(uEnvironment,vUv);
     }`

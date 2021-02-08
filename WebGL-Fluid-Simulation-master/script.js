@@ -108,9 +108,9 @@ let curl;            // 1 per point
 let pressure;        // 1 per point
 
 
-export let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
+export let environmentTexture = createTextureAsync('BORDERS.png')     //MK MO_simD
 
-const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
+export const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
 const divergenceProgram = new Program(baseVertexShader, divergenceShader, true);
@@ -222,7 +222,7 @@ function step(dt) {
     vorticityProgram.bind();
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
-    vorticityProgram.uniforms.uEnvironment.set(environmentTexture);
+    vorticityProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
     vorticityProgram.uniforms.curl.set(config.CURL);
     vorticityProgram.uniforms.dt.set(dt);

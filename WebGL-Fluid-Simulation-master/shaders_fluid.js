@@ -10,29 +10,31 @@ export const advectionShader = `
     varying vec2 vUv;
     uniform sampler2D uVelocity;
     uniform sampler2D uSource;
+    uniform sampler2D uEnvironment;
     uniform vec2 texelSize;
     uniform vec2 dyeTexelSize;
     uniform float dt;
     uniform float dissipation;
+    
 
     vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
         vec2 st = uv / tsize - 0.5;
-
         vec2 iuv = floor(st);
         vec2 fuv = fract(st);
-
         vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
         vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
         vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
         vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
-
         return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
     }
 
     void main () {    
         vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
         vec4 result = texture2D(uSource, coord);
-        float decay = 1.0 + dissipation * dt;
+        float env= texture2D(uEnvironment, vUv).g;    
+        float d=dissipation;       
+       // if (env <  1.0 ) d=10 .0;
+        float decay = 1.0 + d * dt;
         gl_FragColor = result / decay;
     }`
 
@@ -128,18 +130,8 @@ export const vorticityShader = `
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
-
         float env= texture2D(uEnvironment, vUv).g;     
-        
-
-        float block=0.0;
-        if (vUv.y < 0.5 && vUv.x < 0.5) { block+=1.0;}        
-        if (vUv.x < 0.25) { block-=1.0; };
-     //   if (env > 0.0000) block+=1.0;
-
-     //   if (block > 0.0)  velocity*=-1.0;      
-     
-
+        if (env < 1.0)  velocity*=-1.0;      
 
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }
