@@ -26,7 +26,7 @@ SOFTWARE.
 
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
-import { Material, Program, blit } from '/webgl_programs.js'
+import { Program, blit } from '/webgl_programs.js'
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
 import {
     baseVertexShader, blurVertexShader, blurShader, copyShader, clearShader, colorShader, checkerboardShader, displayShaderSource,
@@ -111,25 +111,25 @@ let environment_dye;
 let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
 let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
 
-const blurProgram = new Program(blurVertexShader, blurShader);
-const environmentProgram = new Program(baseVertexShader, environmentShader);  //MK MO_simD
-const clearProgram = new Program(baseVertexShader, clearShader);
-const colorProgram = new Program(baseVertexShader, colorShader);
-const checkerboardProgram = new Program(baseVertexShader, checkerboardShader);
-const bloomPrefilterProgram = new Program(baseVertexShader, bloomPrefilterShader);
-const bloomBlurProgram = new Program(baseVertexShader, bloomBlurShader);
-const bloomFinalProgram = new Program(baseVertexShader, bloomFinalShader);
-const sunraysMaskProgram = new Program(baseVertexShader, sunraysMaskShader);
-const sunraysProgram = new Program(baseVertexShader, sunraysShader);
-const splatProgram = new Program(baseVertexShader, splatShader);
-const advectionProgram = new Program(baseVertexShader, advectionShader);
-const divergenceProgram = new Program(baseVertexShader, divergenceShader);
-const curlProgram = new Program(baseVertexShader, curlShader);
-const vorticityProgram = new Program(baseVertexShader, vorticityShader);
-const pressureProgram = new Program(baseVertexShader, pressureShader);
-const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader);
+const blurProgram = new Program(blurVertexShader, blurShader,true);
+const environmentProgram = new Program(baseVertexShader, environmentShader,true);  //MK MO_simD
+const clearProgram = new Program(baseVertexShader, clearShader,true);
+const colorProgram = new Program(baseVertexShader, colorShader,true);
+const checkerboardProgram = new Program(baseVertexShader, checkerboardShader,true);
+const bloomPrefilterProgram = new Program(baseVertexShader, bloomPrefilterShader,true);
+const bloomBlurProgram = new Program(baseVertexShader, bloomBlurShader,true);
+const bloomFinalProgram = new Program(baseVertexShader, bloomFinalShader,true);
+const sunraysMaskProgram = new Program(baseVertexShader, sunraysMaskShader,true);
+const sunraysProgram = new Program(baseVertexShader, sunraysShader,true);
+const splatProgram = new Program(baseVertexShader, splatShader,true);
+const advectionProgram = new Program(baseVertexShader, advectionShader,true);
+const divergenceProgram = new Program(baseVertexShader, divergenceShader,true);
+const curlProgram = new Program(baseVertexShader, curlShader,true);
+const vorticityProgram = new Program(baseVertexShader, vorticityShader,true);
+const pressureProgram = new Program(baseVertexShader, pressureShader,true);
+const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader,true);
 
-const displayMaterial = new Material(baseVertexShader, displayShaderSource);
+const displayMaterial = new Program(baseVertexShader, displayShaderSource,false);
 
 //====================================================================================================================
 //  wordt aangeroepen bij resize  
@@ -245,7 +245,7 @@ function update() {
 
     applyInputs();
 
-    var viewenv = true;         // set to true to view environment texture.  For debugging purposes
+    var viewenv = false;         // set to true to view environment texture.  For debugging purposes
     if (viewenv) {
         environmentProgram.bind();
         environmentProgram.uniforms.uEnvironment.set(environmentTexture);

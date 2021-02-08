@@ -1,6 +1,6 @@
 import { config, initFramebuffers, updateKeywords, splatStack, render } from './script.js';
 import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
-import { Material, Program, blit } from '/webgl_programs.js'
+
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
 

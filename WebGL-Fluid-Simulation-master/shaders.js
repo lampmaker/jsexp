@@ -1,8 +1,6 @@
 
 //====================================================================================================================
-import { compileShader } from '/webgl_programs.js'
-import { gl, ext } from './webgl_context.js';
-export const baseVertexShader = compileShader(gl.VERTEX_SHADER, `
+export const baseVertexShader =  `
     precision highp float;
 
     attribute vec2 aPosition;
@@ -21,12 +19,12 @@ export const baseVertexShader = compileShader(gl.VERTEX_SHADER, `
         vB = vUv - vec2(0.0, texelSize.y);
         gl_Position = vec4(aPosition, 0.0, 1.0);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const blurVertexShader = compileShader(gl.VERTEX_SHADER, `
+export const blurVertexShader =  `
     precision highp float;
 
     attribute vec2 aPosition;
@@ -42,12 +40,12 @@ export const blurVertexShader = compileShader(gl.VERTEX_SHADER, `
         vR = vUv + texelSize * offset;
         gl_Position = vec4(aPosition, 0.0, 1.0);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const blurShader = compileShader(gl.FRAGMENT_SHADER, `
+export const blurShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -62,12 +60,12 @@ export const blurShader = compileShader(gl.FRAGMENT_SHADER, `
         sum += texture2D(uTexture, vR) * 0.35294117;
         gl_FragColor = sum;
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const copyShader = compileShader(gl.FRAGMENT_SHADER, `
+export const copyShader =  `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -77,12 +75,12 @@ export const copyShader = compileShader(gl.FRAGMENT_SHADER, `
     void main () {
         gl_FragColor = texture2D(uTexture, vUv);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const clearShader = compileShader(gl.FRAGMENT_SHADER, `
+export const clearShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -93,12 +91,12 @@ export const clearShader = compileShader(gl.FRAGMENT_SHADER, `
     void main () {
         gl_FragColor = value * texture2D(uTexture, vUv);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const colorShader = compileShader(gl.FRAGMENT_SHADER, `
+export const colorShader = `
     precision mediump float;
 
     uniform vec4 color;
@@ -106,12 +104,12 @@ export const colorShader = compileShader(gl.FRAGMENT_SHADER, `
     void main () {
         gl_FragColor = color;
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const checkerboardShader = compileShader(gl.FRAGMENT_SHADER, `
+export const checkerboardShader = `
     precision highp float;
     precision highp sampler2D;
 
@@ -127,7 +125,7 @@ export const checkerboardShader = compileShader(gl.FRAGMENT_SHADER, `
         v = v * 0.1 + 0.8;
         gl_FragColor = vec4(vec3(v), 1.0);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
@@ -200,14 +198,14 @@ export const displayShaderSource = `
        
         gl_FragColor =  env * vec4(c, a); ;
     }
-`;
+`
 
 
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const environmentShader = compileShader(gl.FRAGMENT_SHADER, `
+export const environmentShader =  `
     precision highp float;
     precision highp sampler2D;
 
@@ -216,6 +214,5 @@ export const environmentShader = compileShader(gl.FRAGMENT_SHADER, `
 
     void main () {
         gl_FragColor = texture2D(uEnvironment,vUv);
-    }`,
-);
+    }`
 //====================================================================================================================

@@ -1,11 +1,9 @@
-import { compileShader } from '/webgl_programs.js'
-import { gl, ext } from './webgl_context.js';
 
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const bloomPrefilterShader = compileShader(gl.FRAGMENT_SHADER, `
+export const bloomPrefilterShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -22,12 +20,12 @@ export const bloomPrefilterShader = compileShader(gl.FRAGMENT_SHADER, `
         c *= max(rq, br - threshold) / max(br, 0.0001);
         gl_FragColor = vec4(c, 0.0);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const bloomBlurShader = compileShader(gl.FRAGMENT_SHADER, `
+export const bloomBlurShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -46,12 +44,12 @@ export const bloomBlurShader = compileShader(gl.FRAGMENT_SHADER, `
         sum *= 0.25;
         gl_FragColor = sum;
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const bloomFinalShader = compileShader(gl.FRAGMENT_SHADER, `
+export const bloomFinalShader =  `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -71,12 +69,12 @@ export const bloomFinalShader = compileShader(gl.FRAGMENT_SHADER, `
         sum *= 0.25;
         gl_FragColor = sum * intensity;
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const sunraysMaskShader = compileShader(gl.FRAGMENT_SHADER, `
+export const sunraysMaskShader = `
     precision highp float;
     precision highp sampler2D;
 
@@ -89,12 +87,12 @@ export const sunraysMaskShader = compileShader(gl.FRAGMENT_SHADER, `
         c.a = 1.0 - min(max(br * 20.0, 0.0), 0.8);
         gl_FragColor = c;
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const sunraysShader = compileShader(gl.FRAGMENT_SHADER, `
+export const sunraysShader =  `
     precision highp float;
     precision highp sampler2D;
 
@@ -127,12 +125,12 @@ export const sunraysShader = compileShader(gl.FRAGMENT_SHADER, `
 
         gl_FragColor = vec4(color * Exposure, 0.0, 0.0, 1.0);
     }
-`);
+`
 //====================================================================================================================
 //
 //====================================================================================================================
 
-export const splatShader = compileShader(gl.FRAGMENT_SHADER, `
+export const splatShader =  `
     precision highp float;
     precision highp sampler2D;
 
@@ -150,4 +148,4 @@ export const splatShader = compileShader(gl.FRAGMENT_SHADER, `
         vec3 base = texture2D(uTarget, vUv).xyz;
         gl_FragColor = vec4(base + splat, 1.0);
     }
-`);
+`

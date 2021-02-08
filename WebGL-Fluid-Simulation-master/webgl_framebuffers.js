@@ -1,5 +1,5 @@
 import { gl, ext } from './webgl_context.js';
-import { Material, Program, blit } from '/webgl_programs.js'
+import { Program, blit } from '/webgl_programs.js'
 import { baseVertexShader, copyShader, } from '/shaders.js'
 
 

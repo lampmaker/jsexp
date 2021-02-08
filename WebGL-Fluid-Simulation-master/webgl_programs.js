@@ -29,21 +29,32 @@ var uniformType = {
     s2d: 35678//(SAMPLER_2D).
 }
 //--------------------------------------------------------------------------------------------------------------------
-export class Material {
-    constructor(vertexShader, fragmentShaderSource) {
-        this.vertexShader = vertexShader;
+//======================================================================================================================
+//
+// Creates a program with vertexShadersOUrce and fragmentshadersource.
+//  if isfixed, the fragmetnshader gets compiled immediately.  Otherwise, setKeywords will have to be executed first.
+//  // allows for different programs with diffeerent defines (=keywords)
+//======================================================================================================================
+export class Program {
+    constructor(vertexShaderSource, fragmentShaderSource, isfixed) {
+        this.vertexShader = compileShader(gl.VERTEX_SHADER,vertexShaderSource);
         this.fragmentShaderSource = fragmentShaderSource;
         this.programs = [];
         this.activeProgram = null;
         this.uniforms = [];
+        if (isfixed) {
+            this.setKeywords();
+        }
     }
     //------------------
     setKeywords(keywords) {
         let hash = 0;
-        for (let i = 0; i < keywords.length; i++)
+        if (keywords!=null) {
+       for (let i = 0; i < keywords.length; i++)
             hash += hashCode(keywords[i]);
-
-        let program = this.programs[hash];
+        }
+    let program = this.programs[hash];
+        
         if (program == null) {
             let fragmentShader = compileShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource, keywords);
             program = createProgram(this.vertexShader, fragmentShader);
@@ -56,11 +67,14 @@ export class Material {
         this.activeProgram = program;
     }
     //------------------
-    bind() {
+    bind() {        
         gl.useProgram(this.activeProgram);
     }
 }
+/*
 //--------------------------------------------------------------------------------------------------------------------
+// class containing program, shaders, uniforms. 
+//
 export class Program {
     constructor(vertexShader, fragmentShader) {
         this.uniforms = {};
@@ -72,7 +86,10 @@ export class Program {
         gl.useProgram(this.program);
     }
 }
+*/
 //--------------------------------------------------------------------------------------------------------------------
+// class containing uniforms, makes it easy to set uniforms, knows which type the uniform is.
+//
 export class Uniform {
     constructor(type, location, name) {
         this.type = type;
@@ -106,7 +123,7 @@ export class Uniform {
     }
 }
 //--------------------------------------------------------------------------------------------------------------------
-export function createProgram(vertexShader, fragmentShader) {
+export function createProgram(vertexShader, fragmentShader, compile) {
     let program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
@@ -114,7 +131,6 @@ export function createProgram(vertexShader, fragmentShader) {
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS))
         console.trace(gl.getProgramInfoLog(program));
-
     return program;
 }
 //--------------------------------------------------------------------------------------------------------------------
@@ -130,16 +146,13 @@ export function getUniforms(program) {
     return uniforms;
 }
 //--------------------------------------------------------------------------------------------------------------------
-export function compileShader(type, source, keywords) {    // keywords = DEFINES in webgl code
+function compileShader(type, source, keywords) {    // keywords = DEFINES in webgl code
     source = addKeywords(source, keywords);
-
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
         console.trace(gl.getShaderInfoLog(shader));
-
     return shader;
 };
 //--------------------------------------------------------------------------------------------------------------------
