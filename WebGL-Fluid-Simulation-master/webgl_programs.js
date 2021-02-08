@@ -171,12 +171,9 @@ export function addKeywords(source, keywords) {  // keywords = DEFINES in webgl 
 
 
 //====================================================================================================================
-// MK Wat doet dit?     
-/*
- wat betekent =>   
+// rendert het actieve programma naar de target.  als target=null, rendert naar de target FBO
 
-
-*/
+//
 //====================================================================================================================
 
 export function blit(target, clear = false) {
@@ -186,7 +183,6 @@ export function blit(target, clear = false) {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(0);
-
 
     if (target == null) {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -200,6 +196,5 @@ export function blit(target, clear = false) {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
-    // CHECK_FRAMEBUFFER_STATUS();
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 };

@@ -37,6 +37,10 @@ import { advectionShader, divergenceShader, curlShader, vorticityShader, pressur
 
 import { startGUI, isMobile, pointers } from './gui.js';
 
+
+
+import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateColors, applyInputs, multipleSplats } from '/render_dye.js'
+
 // Simulation section
 
 
@@ -77,6 +81,7 @@ export let splatStack = [];
 if (isMobile()) {
     config.DYE_RESOLUTION = 512;
 }
+
 if (!ext.supportLinearFiltering) {
     config.DYE_RESOLUTION = 512;
     config.SHADING = false;
@@ -91,30 +96,23 @@ if (!ext.supportLinearFiltering) {
 startGUI();
 
 
+//====================================================================================================================
+//  Global variables.
 
 //====================================================================================================================
-//
-//====================================================================================================================
 
-let dye;            // rgba  -> 4 bytes per point
+export let dye;            // rgba  -> 4 bytes per point
 let velocity;       // rg -> 2 per point
 let divergence;      // 1 per point
 let curl;            // 1 per point
 let pressure;        // 1 per point
-let bloom;
-let bloomFramebuffers = [];
-let sunrays;
-let sunraysTemp;
-let environment_sim;
-let environment_dye;
+
 
 let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
 let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
-
 const blurProgram = new Program(blurVertexShader, blurShader, true);
 const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);
-
 const colorProgram = new Program(baseVertexShader, colorShader, true);
 const checkerboardProgram = new Program(baseVertexShader, checkerboardShader, true);
 const bloomPrefilterProgram = new Program(baseVertexShader, bloomPrefilterShader, true);
@@ -122,101 +120,47 @@ const bloomBlurProgram = new Program(baseVertexShader, bloomBlurShader, true);
 const bloomFinalProgram = new Program(baseVertexShader, bloomFinalShader, true);
 const sunraysMaskProgram = new Program(baseVertexShader, sunraysMaskShader, true);
 const sunraysProgram = new Program(baseVertexShader, sunraysShader, true);
-const splatProgram = new Program(baseVertexShader, splatShader, true);
+
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
 const divergenceProgram = new Program(baseVertexShader, divergenceShader, true);
 const curlProgram = new Program(baseVertexShader, curlShader, true);
 const vorticityProgram = new Program(baseVertexShader, vorticityShader, true);
 const pressureProgram = new Program(baseVertexShader, pressureShader, true);
 const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader, true);
-
 const displayMaterial = new Program(baseVertexShader, displayShaderSource, false);
 
 //====================================================================================================================
-//  wordt aangeroepen bij resize  
+//  Initialisatie van alle framebuffers. 
+//  wordt aangeroepen bij resize
 //====================================================================================================================
 export function initFramebuffers() {
-
     let simRes = getResolution(config.SIM_RESOLUTION);   // width,height in pixels.
     let dyeRes = getResolution(config.DYE_RESOLUTION);
     console.log("Sim resolution (w,h):", simRes.width, simRes.height);
     console.log("Dye resolution (w,h):", dyeRes.width, dyeRes.height);
-
     const texType = ext.halfFloatTexType;
     const rgba = ext.formatRGBA;
     const rg = ext.formatRG;
     const r = ext.formatR;
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
-
     gl.disable(gl.BLEND);
+    if (dye == null) dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+    else dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
 
-    if (dye == null)
-        dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-    else
-        dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-
-    if (velocity == null)
-        velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
-    else
-        velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
+    if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
+    else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
 
     divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-
-    environment_sim = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-    environment_dye = createFBO(dyeRes.width, dyeRes.height, r.internalFormat, r.format, texType, gl.NEAREST)
     initBloomFramebuffers();
     initSunraysFramebuffers();
-
-
-
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function initBloomFramebuffers() {
-    let res = getResolution(config.BLOOM_RESOLUTION);
-
-    const texType = ext.halfFloatTexType;
-    const rgba = ext.formatRGBA;
-    const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
-
-    bloom = createFBO(res.width, res.height, rgba.internalFormat, rgba.format, texType, filtering);
-
-    bloomFramebuffers.length = 0;
-    for (let i = 0; i < config.BLOOM_ITERATIONS; i++) {
-        let width = res.width >> (i + 1);
-        let height = res.height >> (i + 1);
-
-        if (width < 2 || height < 2) break;
-
-        let fbo = createFBO(width, height, rgba.internalFormat, rgba.format, texType, filtering);
-        bloomFramebuffers.push(fbo);
-    }
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function initSunraysFramebuffers() {
-    let res = getResolution(config.SUNRAYS_RESOLUTION);
-
-    const texType = ext.halfFloatTexType;
-    const r = ext.formatR;
-    const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
-
-    sunrays = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering);
-    sunraysTemp = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering);
+    multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
 }
 
-
-
 //====================================================================================================================
-//
+//  Keywords (=defines)
 //====================================================================================================================
-
 export function updateKeywords() {
     let displayKeywords = [];
     if (config.SHADING) displayKeywords.push("SHADING");
@@ -225,26 +169,30 @@ export function updateKeywords() {
     displayMaterial.setKeywords(displayKeywords);
 }
 
+//====================================================================================================================
+//====================================================================================================================
+//  CODE START
+//====================================================================================================================
+//====================================================================================================================
 updateKeywords();
 initFramebuffers();
-multipleSplats(parseInt(Math.random() * 20) + 5);
+
 
 let lastUpdateTime = Date.now();
-let colorUpdateTimer = 0.0;
+
 update();
+
 //====================================================================================================================
+// 
+//  Main loop
 //
 //====================================================================================================================
-
 function update() {
-
     const dt = calcDeltaTime();
-    if (resizeCanvas())
-        initFramebuffers();
-
+    if (resizeCanvas()) initFramebuffers();
     updateColors(dt);
 
-    applyInputs();
+    applyInputs(velocity);
 
     var viewenv = false;         // set to true to view environment texture.  For debugging purposes
     if (viewenv) {
@@ -284,37 +232,8 @@ function resizeCanvas() {
     }
     return false;
 }
-//====================================================================================================================
-//
-//====================================================================================================================
 
-function updateColors(dt) {
-    if (!config.COLORFUL) return;
 
-    colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
-    if (colorUpdateTimer >= 1) {
-        colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
-        pointers.forEach(p => {
-            p.color = generateColor();
-        });
-    }
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function applyInputs() {
-    if (splatStack.length > 0)
-        multipleSplats(splatStack.pop());
-
-    pointers.forEach(p => {
-        if (p.moved) {
-            p.moved = false;
-            splatPointer(p);
-        }
-    });
-
-}
 //====================================================================================================================
 //
 //====================================================================================================================
@@ -334,7 +253,7 @@ function step(dt) {
     vorticityProgram.bind();
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
-    vorticityProgram.uniforms.uEnvironment.set(environment_sim);
+    vorticityProgram.uniforms.uEnvironment.set(environmentTexture);
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
     vorticityProgram.uniforms.curl.set(config.CURL);
     vorticityProgram.uniforms.dt.set(dt);
@@ -562,52 +481,4 @@ function blur(target, temp, iterations) {
 
 }
 
-function splatPointer(pointer) {
-    let dx = pointer.deltaX * config.SPLAT_FORCE;
-    let dy = pointer.deltaY * config.SPLAT_FORCE;
-    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color);
-}
 
-function multipleSplats(amount) {
-    for (let i = 0; i < amount; i++) {
-        const color = generateColor();
-        color.r *= 10.0;
-        color.g *= 10.0;
-        color.b *= 10.0;
-        const x = Math.random();
-        const y = Math.random();
-        const dx = 1000 * (Math.random() - 0.5);
-        const dy = 1000 * (Math.random() - 0.5);
-        splat(x, y, dx, dy, color);
-    }
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function splat(x, y, dx, dy, color) {
-    splatProgram.bind();
-    splatProgram.uniforms.uTarget.set(velocity.read.attach(0));
-    splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
-    splatProgram.uniforms.point.set([x, y]);
-    splatProgram.uniforms.color.set([dx, dy, 0.0]);
-    splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
-    blit(velocity.write);
-    velocity.swap();
-
-    splatProgram.uniforms.uTarget.set(dye.read.attach(0));
-    splatProgram.uniforms.color.set([color.r, color.g, color.b]);
-
-    blit(dye.write);
-    dye.swap();
-}
-//====================================================================================================================
-//
-//====================================================================================================================
-
-function correctRadius(radius) {
-    let aspectRatio = canvas.width / canvas.height;
-    if (aspectRatio > 1)
-        radius *= aspectRatio;
-    return radius;
-}
