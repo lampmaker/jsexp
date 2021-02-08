@@ -111,25 +111,26 @@ let environment_dye;
 let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
 let environmentTexture = createTextureAsync('BORDERS2.png')     //MK MO_simD
 
-const blurProgram = new Program(blurVertexShader, blurShader,true);
-const environmentProgram = new Program(baseVertexShader, environmentShader,true);  //MK MO_simD
-const clearProgram = new Program(baseVertexShader, clearShader,true);
-const colorProgram = new Program(baseVertexShader, colorShader,true);
-const checkerboardProgram = new Program(baseVertexShader, checkerboardShader,true);
-const bloomPrefilterProgram = new Program(baseVertexShader, bloomPrefilterShader,true);
-const bloomBlurProgram = new Program(baseVertexShader, bloomBlurShader,true);
-const bloomFinalProgram = new Program(baseVertexShader, bloomFinalShader,true);
-const sunraysMaskProgram = new Program(baseVertexShader, sunraysMaskShader,true);
-const sunraysProgram = new Program(baseVertexShader, sunraysShader,true);
-const splatProgram = new Program(baseVertexShader, splatShader,true);
-const advectionProgram = new Program(baseVertexShader, advectionShader,true);
-const divergenceProgram = new Program(baseVertexShader, divergenceShader,true);
-const curlProgram = new Program(baseVertexShader, curlShader,true);
-const vorticityProgram = new Program(baseVertexShader, vorticityShader,true);
-const pressureProgram = new Program(baseVertexShader, pressureShader,true);
-const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader,true);
+const blurProgram = new Program(blurVertexShader, blurShader, true);
+const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
+const clearProgram = new Program(baseVertexShader, clearShader, true);
 
-const displayMaterial = new Program(baseVertexShader, displayShaderSource,false);
+const colorProgram = new Program(baseVertexShader, colorShader, true);
+const checkerboardProgram = new Program(baseVertexShader, checkerboardShader, true);
+const bloomPrefilterProgram = new Program(baseVertexShader, bloomPrefilterShader, true);
+const bloomBlurProgram = new Program(baseVertexShader, bloomBlurShader, true);
+const bloomFinalProgram = new Program(baseVertexShader, bloomFinalShader, true);
+const sunraysMaskProgram = new Program(baseVertexShader, sunraysMaskShader, true);
+const sunraysProgram = new Program(baseVertexShader, sunraysShader, true);
+const splatProgram = new Program(baseVertexShader, splatShader, true);
+const advectionProgram = new Program(baseVertexShader, advectionShader, true);
+const divergenceProgram = new Program(baseVertexShader, divergenceShader, true);
+const curlProgram = new Program(baseVertexShader, curlShader, true);
+const vorticityProgram = new Program(baseVertexShader, vorticityShader, true);
+const pressureProgram = new Program(baseVertexShader, pressureShader, true);
+const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader, true);
+
+const displayMaterial = new Program(baseVertexShader, displayShaderSource, false);
 
 //====================================================================================================================
 //  wordt aangeroepen bij resize  

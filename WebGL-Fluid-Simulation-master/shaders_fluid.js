@@ -40,7 +40,7 @@ export const advectionShader = `
 //
 //====================================================================================================================
 
-export const divergenceShader =  `
+export const divergenceShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -72,7 +72,7 @@ export const divergenceShader =  `
 //
 //====================================================================================================================
 
-export const curlShader =  `
+export const curlShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -137,7 +137,7 @@ export const vorticityShader = `
         if (vUv.x < 0.25) { block-=1.0; };
      //   if (env > 0.0000) block+=1.0;
 
-        if (block > 0.0)  velocity*=-1.0;      
+     //   if (block > 0.0)  velocity*=-1.0;      
      
 
 
@@ -148,7 +148,7 @@ export const vorticityShader = `
 //
 //====================================================================================================================
 
-export const pressureShader =  `
+export const pressureShader = `
     precision mediump float;
     precision mediump sampler2D;
 

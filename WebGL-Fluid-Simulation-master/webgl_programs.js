@@ -28,19 +28,20 @@ var uniformType = {
     m4: 35676,//(FLOAT_MAT4), and
     s2d: 35678//(SAMPLER_2D).
 }
-//--------------------------------------------------------------------------------------------------------------------
+
 //======================================================================================================================
 //
 // Creates a program with vertexShadersOUrce and fragmentshadersource.
 //  if isfixed, the fragmetnshader gets compiled immediately.  Otherwise, setKeywords will have to be executed first.
-//  // allows for different programs with diffeerent defines (=keywords)
+//  allows for different programs with diffeerent defines (=keywords)
+//  if the keywprds/defines are changed, a new program is created.  the program of existing defines/keywords is reused.
 //======================================================================================================================
 export class Program {
     constructor(vertexShaderSource, fragmentShaderSource, isfixed) {
-        this.vertexShader = compileShader(gl.VERTEX_SHADER,vertexShaderSource);
+        this.vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource);
         this.fragmentShaderSource = fragmentShaderSource;
         this.programs = [];
-        this.activeProgram = null;
+        this.program = null;
         this.uniforms = [];
         if (isfixed) {
             this.setKeywords();
@@ -49,28 +50,27 @@ export class Program {
     //------------------
     setKeywords(keywords) {
         let hash = 0;
-        if (keywords!=null) {
-       for (let i = 0; i < keywords.length; i++)
-            hash += hashCode(keywords[i]);
+        if (keywords != null) {
+            for (let i = 0; i < keywords.length; i++)
+                hash += hashCode(keywords[i]);
         }
-    let program = this.programs[hash];
-        
-        if (program == null) {
+        let tprogram = this.programs[hash];
+        if (tprogram == null) {
             let fragmentShader = compileShader(gl.FRAGMENT_SHADER, this.fragmentShaderSource, keywords);
-            program = createProgram(this.vertexShader, fragmentShader);
-            this.programs[hash] = program;
+            tprogram = createProgram(this.vertexShader, fragmentShader);
+            this.programs[hash] = tprogram;
+            console.log("New program created")
         }
-
-        if (program == this.activeProgram) return;
-
-        this.uniforms = getUniforms(program);
-        this.activeProgram = program;
+        if (tprogram == this.program) return;
+        this.uniforms = getUniforms(tprogram);
+        this.program = tprogram;
     }
     //------------------
-    bind() {        
-        gl.useProgram(this.activeProgram);
+    bind() {
+        gl.useProgram(this.program);
     }
 }
+
 /*
 //--------------------------------------------------------------------------------------------------------------------
 // class containing program, shaders, uniforms. 
@@ -145,7 +145,10 @@ export function getUniforms(program) {
 
     return uniforms;
 }
-//--------------------------------------------------------------------------------------------------------------------
+//=======================================================================================================================
+//
+// Compiles the sshader and adds the keywords (defines) first. 
+//=======================================================================================================================
 function compileShader(type, source, keywords) {    // keywords = DEFINES in webgl code
     source = addKeywords(source, keywords);
     const shader = gl.createShader(type);
@@ -165,7 +168,6 @@ export function addKeywords(source, keywords) {  // keywords = DEFINES in webgl 
     return keywordsString + source;
 }
 
-// trying new option for uniforms. 
 
 
 //====================================================================================================================
@@ -176,7 +178,8 @@ export function addKeywords(source, keywords) {  // keywords = DEFINES in webgl 
 
 */
 //====================================================================================================================
-export const blit = (() => {
+
+export function blit(target, clear = false) {
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
@@ -184,20 +187,19 @@ export const blit = (() => {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(0);
 
-    return (target, clear = false) => {
-        if (target == null) {
-            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        }
-        else {
-            gl.viewport(0, 0, target.width, target.height);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
-        }
-        if (clear) {
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-        }
-        // CHECK_FRAMEBUFFER_STATUS();
-        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+
+    if (target == null) {
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
-})();
+    else {
+        gl.viewport(0, 0, target.width, target.height);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+    }
+    if (clear) {
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+    // CHECK_FRAMEBUFFER_STATUS();
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+};
