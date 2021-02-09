@@ -33,7 +33,7 @@ export const advectionShader = `
         vec4 result = texture2D(uSource, coord);
         float env= texture2D(uEnvironment, vUv).g;    
         float d=dissipation;       
-       // if (env <  1.0 ) d=10 .0;
+        if (env ==  1.0 ) d=10.0;
         float decay = 1.0 + d * dt;
         gl_FragColor = result / decay;
     }`
@@ -52,6 +52,7 @@ export const divergenceShader = `
     varying highp vec2 vT;
     varying highp vec2 vB;
     uniform sampler2D uVelocity;
+    uniform int wall;
 
     void main () {
         float L = texture2D(uVelocity, vL).x;
@@ -60,13 +61,21 @@ export const divergenceShader = `
         float B = texture2D(uVelocity, vB).y;
 
         vec2 C = texture2D(uVelocity, vUv).xy;
-        
-        if (vL.x < 0.0) { L = -L; }
-        if (vR.x > 1.0) { R = -R; }
-        if (vT.y > 1.0) { T = -T; }
-        if (vB.y < 0.0) { B = -B; }
-               
+        if (wall!=0) {
+            if (vL.x < 0.0) { L = -L; }
+            if (vR.x > 1.0) { R = -R; }
+            if (vT.y > 1.0) { T = -T; }
+            if (vB.y < 0.0) { B = -B; }
+        }
+    
         float div = 0.5 * (R - L + T - B);
+        if (wall==0) {            
+            div=0.0;
+            if (vL.x < 0.0) { L = R; }
+            if (vR.x > 1.0) { R = L; }
+            if (vT.y > 1.0) { T = B; }
+            if (vB.y < 0.0) { B = T; }
+        }
         gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
     }
 `
@@ -126,12 +135,15 @@ export const vorticityShader = `
         force *= curl * C;
         force.y *= -1.0;
         
-        
+        vec2 Fc=vUv-vec2(0.5,0.5);
+        force+=vec2(Fc.y,Fc.x)*100.0;
+
+
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
         float env= texture2D(uEnvironment, vUv).g;     
-        if (env < 1.0)  velocity*=0.0;      
+       if (env == 1.0)  velocity*=0.0;      
 
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }

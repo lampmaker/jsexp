@@ -49,7 +49,7 @@ resizeCanvas();
 export let config = {
     SIM_RESOLUTION: 128,
     DYE_RESOLUTION: 1024,
-    CAPTURE_RESOLUTION: 512,
+    CAPTURE_RESOLUTION: 2048,
     DENSITY_DISSIPATION: 1,
     VELOCITY_DISSIPATION: 0.2,
     PRESSURE: 0.8,
@@ -62,6 +62,7 @@ export let config = {
     COLORFUL: true,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
+    WALL:true,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
     BLOOM: true,
@@ -110,7 +111,7 @@ let curl;            // 1 per point
 let pressure;        // 1 per point
 
 
-export let environmentTexture = createTextureAsync('BORDERS.png')     //MK MO_simD
+export let environmentTexture = createTextureAsync('turtle.png')     //MK MO_simD
 
 export const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);
@@ -234,6 +235,7 @@ function step(dt) {
     divergenceProgram.bind();
     divergenceProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     divergenceProgram.uniforms.uVelocity.set(velocity.read.attach(0));
+    divergenceProgram.uniforms.wall.set(config.WALL);
     blit(divergence);
 
     clearProgram.bind();
@@ -262,6 +264,7 @@ function step(dt) {
     // the next section deforms the dye based on the velocity
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
+    advectionProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);
