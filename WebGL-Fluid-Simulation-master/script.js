@@ -54,6 +54,7 @@ export let config = {
     VELOCITY_DISSIPATION: 0.2,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
+    SPEED:1.0,
     CURL: 30,
     SPLAT_RADIUS: 0.25,
     SPLAT_FORCE: 6000,
@@ -72,6 +73,7 @@ export let config = {
     SUNRAYS: true,
     SUNRAYS_RESOLUTION: 196,
     SUNRAYS_WEIGHT: 1.0,
+    
 }
 
 
@@ -191,7 +193,7 @@ function calcDeltaTime() {
     let dt = (now - lastUpdateTime) / 1000;
     dt = Math.min(dt, 0.016666);
     lastUpdateTime = now;
-    return dt;
+    return dt* config.SPEED;
 }
 function resizeCanvas() {
     let width = scaleByPixelRatio(canvas.clientWidth);

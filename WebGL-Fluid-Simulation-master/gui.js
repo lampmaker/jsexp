@@ -20,6 +20,8 @@ export function startGUI() {
     gui.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
     gui.add(config, 'COLORFUL').name('colorful');
     gui.add(config, 'PAUSED').name('paused').listen();
+    gui.add(config, 'SPEED',0.0,1.0).name('speed');
+    let advanced=gui.addFolder('Advanced')
 
     gui.add({
         fun: () => {
