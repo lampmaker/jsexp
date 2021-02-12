@@ -114,7 +114,7 @@ let curl;            // 1 per point
 let pressure;        // 1 per point
 
 
-export let environmentTexture = createTextureAsync('turtle.png')     //MK MO_simD
+export let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
 
 export const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);

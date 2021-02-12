@@ -140,7 +140,7 @@ export const vorticityShader = `
         vec2 Px= vUv - vec2(0.5,0.5);  
         force += Px * (extradForce.r*10.0);        
     
-        force += vec2(Px.y, -Px.x) * (extradForce.g * length(Px) *100.0 );
+        force += vec2(Px.y, -Px.x) * (extradForce.g * length(Px) *20.0 );
 
 
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
