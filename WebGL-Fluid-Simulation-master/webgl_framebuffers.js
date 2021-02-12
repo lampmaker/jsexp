@@ -108,6 +108,7 @@ export function resizeDoubleFBO(target, w, h, internalFormat, format, type, para
 //====================================================================================================================
 export function createTextureAsync(url) {
     let texture = gl.createTexture();
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

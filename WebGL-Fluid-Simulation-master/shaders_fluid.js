@@ -122,6 +122,8 @@ export const vorticityShader = `
     uniform sampler2D uEnvironment;
     uniform float curl;
     uniform float dt;
+    uniform vec2 extForce;
+    uniform vec2 extradForce;
 
     void main () {
         float L = texture2D(uCurl, vL).r;
@@ -133,17 +135,19 @@ export const vorticityShader = `
         vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
         force /= length(force) + 0.0001;
         force *= curl * C;
-        force.y *= -1.0;
-        
-        vec2 Fc=vUv-vec2(0.5,0.5);
-        force+=vec2(Fc.y,Fc.x)*100.0;
+
+        force+=extForce;
+        vec2 Px= vUv - vec2(0.5,0.5);  
+        force += Px * (extradForce.r*10.0);        
+    
+        force += vec2(Px.y, -Px.x) * (extradForce.g * length(Px) *100.0 );
 
 
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
         float env= texture2D(uEnvironment, vUv).g;     
-       if (env == 1.0)  velocity*=0.0;      
+        if (env == 1.0)  velocity*=0.0;      
 
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }

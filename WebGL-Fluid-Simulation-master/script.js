@@ -54,7 +54,7 @@ export let config = {
     VELOCITY_DISSIPATION: 0.2,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
-    SPEED:1.0,
+    SPEED: 1.0,
     CURL: 30,
     SPLAT_RADIUS: 0.25,
     SPLAT_FORCE: 6000,
@@ -62,7 +62,7 @@ export let config = {
     COLORFUL: true,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
-    WALL:true,
+    WALL: true,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
     BLOOM: true,
@@ -74,7 +74,10 @@ export let config = {
     SUNRAYS: true,
     SUNRAYS_RESOLUTION: 196,
     SUNRAYS_WEIGHT: 1.0,
-    
+    FORCEX: 0.0,
+    FORCEY: 0.0,
+    FORCER: 0.0, // radial
+    FORCEA: 0.0 // axial
 }
 
 
@@ -194,7 +197,7 @@ function calcDeltaTime() {
     let dt = (now - lastUpdateTime) / 1000;
     dt = Math.min(dt, 0.016666);
     lastUpdateTime = now;
-    return dt* config.SPEED;
+    return dt * config.SPEED;
 }
 function resizeCanvas() {
     let width = scaleByPixelRatio(canvas.clientWidth);
@@ -223,6 +226,8 @@ function step(dt) {
     blit(curl);
 
     vorticityProgram.bind();
+    vorticityProgram.uniforms.extForce.set([config.FORCEX, config.FORCEY]);
+    vorticityProgram.uniforms.extradForce.set([config.FORCER, config.FORCEA]);
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
     vorticityProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
