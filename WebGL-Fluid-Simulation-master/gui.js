@@ -28,6 +28,7 @@ export function startGUI() {
     gui.add(config, 'CURL', 0, 50).name('vorticity').step(1);
 
     let paintfolder = gui.addFolder('Paint');
+    paintfolder.add(config, 'DRAWMODE', { 'DYE': 0, 'BLOCK': 1 })
     paintfolder.addColor(config, 'COL1').name('picker color');
     paintfolder.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
     paintfolder.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);

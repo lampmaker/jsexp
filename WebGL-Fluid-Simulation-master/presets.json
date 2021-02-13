@@ -19,6 +19,7 @@
                 "SHADING": true,
                 "COLORFUL": true,
                 "COLORPICKER": false,
+                "DRAWMODE": "DYE",
                 "PAUSED": false,
                 "SPEED": 1,
                 "WALL": true,

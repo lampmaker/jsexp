@@ -93,7 +93,7 @@ export function updateDye(dt, vel) {
 
 function updateColors(dt) {
     if (!config.COLORFUL) return;
-
+    if (config.COLORPICKER) return;
     colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
     if (colorUpdateTimer >= 1) {
         colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
@@ -143,24 +143,41 @@ export function multipleSplats(amount, vel) {
 //====================================================================================================================
 
 function splat(x, y, dx, dy, color, vel) {
-    splatProgram.bind();
-    splatProgram.uniforms.uTarget.set(vel.read.attach(0));
-    splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
-    splatProgram.uniforms.point.set([x, y]);
-    splatProgram.uniforms.color.set([dx, dy, 0.0]);
-    splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
-    blit(vel.write);
-    vel.swap();
+    if (config.DRAWMODE == "DYE" || config.DRAWMODE == null) {
+        splatProgram.bind();
+        splatProgram.uniforms.uTarget.set(vel.read.attach(0));
+        splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
+        splatProgram.uniforms.point.set([x, y]);
+        splatProgram.uniforms.color.set([dx, dy, 0.0]);
+        splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
+        blit(vel.write);
+        vel.swap();
 
-    splatProgram.uniforms.uTarget.set(dye.read.attach(0));
-    splatProgram.uniforms.color.set([color.r, color.g, color.b]);
+        splatProgram.uniforms.uTarget.set(dye.read.attach(0));
+        splatProgram.uniforms.color.set([color.r, color.g, color.b]);
 
-    blit(dye.write);
-    dye.swap();
+        blit(dye.write);
+        dye.swap();
+    }
+    /*    if (config.DRAWMODE == BLOCK) {
+    
+            splatProgram.bind();
+            splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
+            splatProgram.uniforms.point.set([x, y]);
+            splatProgram.uniforms.color.set(config.COL1);
+            splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
+            splatProgram.uniforms.uTarget.set(environmentTexture.attach(2));
+            splatProgram.uniforms.color.set([color.r, color.g, color.b]);
+            blit(dye.write);
+    }
+    */
 }
 //====================================================================================================================
 //
 //====================================================================================================================
+
+
+
 
 function correctRadius(radius) {
     let aspectRatio = canvas.width / canvas.height;

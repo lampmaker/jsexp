@@ -60,7 +60,7 @@ export let config = {
     SPLAT_FORCE: 6000,
     SHADING: true,
     COLORFUL: true,
-
+    DRAWMODE: 0,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
     WALL: true,
@@ -118,7 +118,7 @@ let velocity;       // rg -> 2 per point
 let divergence;      // 1 per point
 let curl;            // 1 per point
 let pressure;        // 1 per point
-
+let environment; // 
 
 export let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
 
@@ -153,12 +153,22 @@ export function initFramebuffers() {
     if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
     else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
 
+    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+
+
     divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     initBloomFramebuffers();
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
+
+    environmentProgram.bind();
+    environmentProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
+    blit(environment.write);
+    environment.swap();
+
 }
 
 
@@ -182,18 +192,12 @@ function update() {
     const dt = calcDeltaTime();
     if (resizeCanvas()) initFramebuffers();
     updateDye(dt, velocity);
-    var viewenv = false;         // set to true to view environment texture.  For debugging purposes
-    if (viewenv) {
-        environmentProgram.bind();
-        environmentProgram.uniforms.uEnvironment.set(environmentTexture);
-        blit(null);
-        requestAnimationFrame(update);
-    }
-    else {
-        if (!config.PAUSED) step(dt);
-        renderDye(null);
-        requestAnimationFrame(update);
-    }
+    var viewenv = true;         // set to true to view environment texture.  For debugging purposes
+
+    if (!config.PAUSED) step(dt);
+    renderDye(null);
+    requestAnimationFrame(update);
+
 }
 //====================================================================================================================
 //  helper functions
