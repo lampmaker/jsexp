@@ -149,9 +149,9 @@ export function initFramebuffers() {
     if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
     else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
 
-    //if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
-    //else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
-    environment = createFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    //environment = createFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
 
     divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
@@ -160,6 +160,13 @@ export function initFramebuffers() {
     initBloomFramebuffers();
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
+
+
+
+    copyProgram.bind();
+    copyProgram.uniforms.uTexture.set(environmentTexture.attach(1));
+    blit(environment.write);
+    environment.swap();
 
 }
 
@@ -185,6 +192,8 @@ function update() {
     if (resizeCanvas()) initFramebuffers();
     updateDye(dt, velocity);
     var viewenv = true;         // set to true to view environment texture.  For debugging purposes
+
+
 
     if (!config.PAUSED) step(dt);
     renderDye(null);
@@ -223,9 +232,9 @@ function step(dt) {
     gl.disable(gl.BLEND);
 
     copyProgram.bind();
-    copyProgram.uniforms.uTexture.set(environmentTexture.attach(0));
-    blit(environment);
-
+    copyProgram.uniforms.uTexture.set(environmentTexture.attach(1));
+    blit(environment.write);
+    environment.swap();
 
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
@@ -238,7 +247,7 @@ function step(dt) {
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
-    vorticityProgram.uniforms.uEnvironment.set(environment.attach(2));
+    vorticityProgram.uniforms.uEnvironment.set(environment.read.attach(3));
 
 
     vorticityProgram.uniforms.curl.set(config.CURL);
@@ -283,7 +292,7 @@ function step(dt) {
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);
-    advectionProgram.uniforms.uEnvironment.set(environment.attach(2));
+    advectionProgram.uniforms.uEnvironment.set(environment.read.attach(3));
     advectionProgram.uniforms.uVelocity.set(velocityId);
     advectionProgram.uniforms.uSource.set(velocityId);
     advectionProgram.uniforms.dt.set(dt);
