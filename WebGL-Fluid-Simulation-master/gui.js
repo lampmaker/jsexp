@@ -1,9 +1,9 @@
-import { config, initFramebuffers } from './script.js';
+import { config, initFramebuffers, environment } from './script.js';
 import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
 
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
-import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, splatStack, updateKeywords } from '/render_dye.js'
+import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, splatStack, updateKeywords, loadBlock } from '/render_dye.js'
 
 
 
@@ -34,6 +34,7 @@ export function startGUI() {
     paintfolder.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
     paintfolder.add(config, 'COLORFUL').name('colorful');
     paintfolder.add(config, 'COLORPICKER').name('Colorpicker');
+    paintfolder.add(config, 'loadBlock').name('load');
 
     gui.add(config, 'PAUSED').name('paused').listen();
     gui.add(config, 'SPEED', 0.0, 1.0).name('speed');

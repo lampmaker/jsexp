@@ -1,14 +1,13 @@
 
-import { config, dye, environmentTexture, environment } from './script.js';
-import { gl, ext, canvas, getResolution, } from './webgl_context.js';
+import { config, dye, environment } from './script.js';
+import { gl, ext, canvas, getResolution } from './webgl_context.js';
 import { generateColor, normalizeColor, getTextureScale, wrap } from '/utils.js';
 import { Program, blit } from '/webgl_programs.js'
-import { createFBO, createTextureAsync, } from '/webgl_framebuffers.js'
+import { createFBO, createTextureAsync, copyProgram } from '/webgl_framebuffers.js'
 import { baseVertexShader, blurVertexShader, blurShader, colorShader, checkerboardShader, displayShaderSource } from '/shaders.js'
 import { bloomPrefilterShader, bloomBlurShader, bloomFinalShader, sunraysMaskShader, sunraysShader, splatShader, } from '/shaders_effects.js'
 
 import { pointers } from './gui.js';
-
 
 export let bloom;
 export let bloomFramebuffers = [];
@@ -102,7 +101,20 @@ function updateColors(dt) {
         });
     }
 }
+//====================================================================================================================
+//
+//====================================================================================================================
 
+function activateblock(data) {
+    copyProgram.bind();
+    copyProgram.uniforms.uTexture.set(data.attach(0));
+    blit(environment.write);
+    environment.swap();
+}
+
+export function loadBlock() {
+    createTextureAsync('hart.png', activateblock)
+}
 //====================================================================================================================
 //
 //====================================================================================================================

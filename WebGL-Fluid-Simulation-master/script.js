@@ -36,7 +36,7 @@ import { startGUI, isMobile, pointers } from './gui.js';
 
 
 
-import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, updateKeywords } from '/render_dye.js'
+import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, updateKeywords, loadBlock } from '/render_dye.js'
 
 // Simulation section
 
@@ -80,6 +80,7 @@ export let config = {
     COL1: { r: 255, g: 0, b: 0 },
     COL2: { r: 0, g: 255, b: 0 },
     COL3: { r: 0, g: 0, b: 255 },
+    loadBlock: loadBlock
 
 }
 
@@ -126,7 +127,7 @@ const vorticityProgram = new Program(baseVertexShader, vorticityShader, true);
 const pressureProgram = new Program(baseVertexShader, pressureShader, true);
 const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader, true);
 
-export let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
+
 
 //====================================================================================================================
 //  Initialisatie van alle framebuffers. 
@@ -161,10 +162,7 @@ export function initFramebuffers() {
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
 
-    copyProgram.bind();
-    copyProgram.uniforms.uTexture.set(environmentTexture.attach(3));
-    blit(environment.write);
-    environment.swap();
+
 
 
 }
