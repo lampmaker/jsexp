@@ -5,11 +5,21 @@ import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
 import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, splatStack, updateKeywords } from '/render_dye.js'
 
+
+
+function getPresetJSON(url) {
+    var Httpreq = new XMLHttpRequest(); // a new request
+    Httpreq.open("GET", url, false);
+    Httpreq.send(null);
+    return JSON.parse(Httpreq.responseText);
+}
+
 //====================================================================================================================
 // starts the gui
 //====================================================================================================================
 export function startGUI() {
-    var gui = new dat.GUI({ width: 300 });
+    var gui = new dat.GUI({ width: 300, load: getPresetJSON('presets.json'), preset: 'Preset1' });
+    gui.remember(config);
     gui.add(config, 'DYE_RESOLUTION', { '8192': 8192, '4096': 4096, '2048': 2048, '1024': 1024, '512': 512, '256': 256, '128': 128 }).name('Dye resolution (pixels)').onFinishChange(initFramebuffers);
     gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256, '512': 512, '1024': 1024, '2048': 2048, }).name('sim resolution (pixels)').onFinishChange(initFramebuffers);
     gui.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion');
