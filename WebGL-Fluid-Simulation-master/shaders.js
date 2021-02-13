@@ -199,18 +199,3 @@ export const displayShaderSource = `
 `
 
 
-//====================================================================================================================
-//
-//====================================================================================================================
-
-export const environmentShader = `
-    precision highp float;
-    precision highp sampler2D;
-
-    varying vec2 vUv;        
-    uniform sampler2D uEnvironment;    
-    void main () {        
-        gl_FragColor = texture2D(uEnvironment,vUv);                
-    }`
-//====================================================================================================================
-

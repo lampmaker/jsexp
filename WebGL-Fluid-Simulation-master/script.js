@@ -27,11 +27,8 @@ SOFTWARE.
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
 import { Program, blit } from '/webgl_programs.js'
-import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
-import {
-    baseVertexShader, blurVertexShader, blurShader, copyShader, clearShader, colorShader, checkerboardShader, displayShaderSource,
-    environmentShader
-} from '/shaders.js'
+import { copyProgram, createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
+import { baseVertexShader, blurVertexShader, blurShader, copyShader, clearShader, colorShader, checkerboardShader, displayShaderSource } from '/shaders.js'
 import { bloomPrefilterShader, bloomBlurShader, bloomFinalShader, sunraysMaskShader, sunraysShader, splatShader, } from '/shaders_effects.js'
 import { advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader, } from '/shaders_fluid.js'
 
@@ -122,7 +119,6 @@ let environment; //
 
 let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
 
-const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
 const divergenceProgram = new Program(baseVertexShader, divergenceShader, true);
@@ -153,8 +149,9 @@ export function initFramebuffers() {
     if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
     else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
 
-    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
-    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    //if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    //else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    environment = createFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
 
     divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
@@ -163,7 +160,6 @@ export function initFramebuffers() {
     initBloomFramebuffers();
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
-
 
 }
 
@@ -226,10 +222,10 @@ function resizeCanvas() {
 function step(dt) {
     gl.disable(gl.BLEND);
 
-    environmentProgram.bind();
-    environmentProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
-    blit(environment.write);
-    environment.swap();
+    copyProgram.bind();
+    copyProgram.uniforms.uTexture.set(environmentTexture.attach(0));
+    blit(environment);
+
 
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
@@ -241,11 +237,10 @@ function step(dt) {
     vorticityProgram.uniforms.extradForce.set([config.FORCER, config.FORCEA]);
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
-
-    vorticityProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
-    //vorticityProgram.uniforms.uEnvironment.set(environment.read.attach(0));
-
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
+    vorticityProgram.uniforms.uEnvironment.set(environment.attach(2));
+
+
     vorticityProgram.uniforms.curl.set(config.CURL);
     vorticityProgram.uniforms.dt.set(dt);
     blit(velocity.write);
@@ -284,13 +279,11 @@ function step(dt) {
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
 
-    advectionProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
-    //advectionProgram.uniforms.uEnvironment.set(environment.read.attach(0));
 
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);
-
+    advectionProgram.uniforms.uEnvironment.set(environment.attach(2));
     advectionProgram.uniforms.uVelocity.set(velocityId);
     advectionProgram.uniforms.uSource.set(velocityId);
     advectionProgram.uniforms.dt.set(dt);

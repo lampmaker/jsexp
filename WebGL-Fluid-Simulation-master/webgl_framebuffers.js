@@ -3,7 +3,7 @@ import { Program, blit } from '/webgl_programs.js'
 import { baseVertexShader, copyShader, } from '/shaders.js'
 
 
-const copyProgram = new Program(baseVertexShader, copyShader, true);
+export const copyProgram = new Program(baseVertexShader, copyShader, true);
 //====================================================================================================================
 //  creates a frame buffer object of specific size and returns the object
 //====================================================================================================================
