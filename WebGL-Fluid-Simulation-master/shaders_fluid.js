@@ -33,7 +33,7 @@ export const advectionShader = `
         vec4 result = texture2D(uSource, coord);
         float env= texture2D(uEnvironment, vUv).g;    
         float d=dissipation;       
-        if (env ==  1.0 ) d=10.0;
+        if (env ==  1.0 ) d = 10.0;
         float decay = 1.0 + d * dt;
         gl_FragColor = result / decay;
     }`

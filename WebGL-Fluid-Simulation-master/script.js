@@ -120,9 +120,9 @@ let curl;            // 1 per point
 let pressure;        // 1 per point
 let environment; // 
 
-export let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
+let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
 
-export const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
+const environmentProgram = new Program(baseVertexShader, environmentShader, true);  //MK MO_simD
 const clearProgram = new Program(baseVertexShader, clearShader, true);
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
 const divergenceProgram = new Program(baseVertexShader, divergenceShader, true);
@@ -153,21 +153,17 @@ export function initFramebuffers() {
     if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
     else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
 
-    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-
+    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
 
     divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+
     initBloomFramebuffers();
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
 
-    environmentProgram.bind();
-    environmentProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
-    blit(environment.write);
-    environment.swap();
 
 }
 
@@ -230,6 +226,11 @@ function resizeCanvas() {
 function step(dt) {
     gl.disable(gl.BLEND);
 
+    environmentProgram.bind();
+    environmentProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
+    blit(environment.write);
+    environment.swap();
+
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     curlProgram.uniforms.uVelocity.set(velocity.read.attach(0));
@@ -240,7 +241,10 @@ function step(dt) {
     vorticityProgram.uniforms.extradForce.set([config.FORCER, config.FORCEA]);
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
+
     vorticityProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
+    //vorticityProgram.uniforms.uEnvironment.set(environment.read.attach(0));
+
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
     vorticityProgram.uniforms.curl.set(config.CURL);
     vorticityProgram.uniforms.dt.set(dt);
@@ -279,7 +283,10 @@ function step(dt) {
     // the next section deforms the dye based on the velocity
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
+
     advectionProgram.uniforms.uEnvironment.set(environmentTexture.attach(2));
+    //advectionProgram.uniforms.uEnvironment.set(environment.read.attach(0));
+
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);

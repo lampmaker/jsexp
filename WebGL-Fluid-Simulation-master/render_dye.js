@@ -1,13 +1,13 @@
 
-import { config, initFramebuffers, dye, environmentTexture, environmentProgram } from './script.js';
-import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
-import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from '/utils.js';
+import { config, dye } from './script.js';
+import { gl, ext, canvas, getResolution, } from './webgl_context.js';
+import { generateColor, normalizeColor, getTextureScale, wrap } from '/utils.js';
 import { Program, blit } from '/webgl_programs.js'
-import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from '/webgl_framebuffers.js'
-import { baseVertexShader, blurVertexShader, blurShader, copyShader, clearShader, colorShader, checkerboardShader, displayShaderSource } from '/shaders.js'
+import { createFBO, createTextureAsync, } from '/webgl_framebuffers.js'
+import { baseVertexShader, blurVertexShader, blurShader, colorShader, checkerboardShader, displayShaderSource } from '/shaders.js'
 import { bloomPrefilterShader, bloomBlurShader, bloomFinalShader, sunraysMaskShader, sunraysShader, splatShader, } from '/shaders_effects.js'
-import { advectionShader, divergenceShader, curlShader, vorticityShader, pressureShader, gradientSubtractShader, } from '/shaders_fluid.js'
-import { startGUI, isMobile, pointers } from './gui.js';
+
+import { pointers } from './gui.js';
 
 
 export let bloom;
@@ -334,9 +334,6 @@ function drawDisplay(target) {
     if (config.SUNRAYS)
         displayMaterial.uniforms.uSunrays.set(sunrays.attach(3));
     blit(target);
-    /*
-        environmentProgram.bind();
-        environmentProgram.uniforms.uEnvironment.set(environmentTexture.attach(2))
-        blit(target);
-        */
+
+
 }
