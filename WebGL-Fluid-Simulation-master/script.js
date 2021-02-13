@@ -47,25 +47,26 @@ import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffer
 resizeCanvas();
 
 export let config = {
-    SIM_RESOLUTION: 128,
+    SIM_RESOLUTION: 256,
     DYE_RESOLUTION: 1024,
-    CAPTURE_RESOLUTION: 2048,
-    DENSITY_DISSIPATION: 1,
+    CAPTURE_RESOLUTION: 8192,
+    DENSITY_DISSIPATION: .1,
     VELOCITY_DISSIPATION: 0.2,
-    PRESSURE: 0.8,
+    PRESSURE: 1,
     PRESSURE_ITERATIONS: 20,
     SPEED: 1.0,
-    CURL: 30,
+    CURL: 5,
     SPLAT_RADIUS: 0.25,
     SPLAT_FORCE: 6000,
     SHADING: true,
     COLORFUL: true,
+
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
     WALL: true,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
-    BLOOM: true,
+    BLOOM: false,
     BLOOM_ITERATIONS: 8,
     BLOOM_RESOLUTION: 256,
     BLOOM_INTENSITY: 0.8,
@@ -77,7 +78,12 @@ export let config = {
     FORCEX: 0.0,
     FORCEY: 0.0,
     FORCER: 0.0, // radial
-    FORCEA: 0.0 // axial
+    FORCEA: 0.0, // axial
+    COLORPICKER: false,
+    COL1: { r: 255, g: 0, b: 0 },
+    COL2: { r: 0, g: 255, b: 0 },
+    COL3: { r: 0, g: 0, b: 255 },
+
 }
 
 
