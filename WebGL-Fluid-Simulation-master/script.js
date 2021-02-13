@@ -115,9 +115,8 @@ let velocity;       // rg -> 2 per point
 let divergence;      // 1 per point
 let curl;            // 1 per point
 let pressure;        // 1 per point
-let environment; // 
+export let environment; // 
 
-let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
 
 const clearProgram = new Program(baseVertexShader, clearShader, true);
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
@@ -127,6 +126,7 @@ const vorticityProgram = new Program(baseVertexShader, vorticityShader, true);
 const pressureProgram = new Program(baseVertexShader, pressureShader, true);
 const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader, true);
 
+export let environmentTexture = createTextureAsync('hart.png')     //MK MO_simD
 
 //====================================================================================================================
 //  Initialisatie van alle framebuffers. 
@@ -161,12 +161,11 @@ export function initFramebuffers() {
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
 
-
-
     copyProgram.bind();
-    copyProgram.uniforms.uTexture.set(environmentTexture.attach(1));
+    copyProgram.uniforms.uTexture.set(environmentTexture.attach(3));
     blit(environment.write);
     environment.swap();
+
 
 }
 
@@ -188,14 +187,13 @@ update();
 //
 //====================================================================================================================
 function update() {
+
     const dt = calcDeltaTime();
     if (resizeCanvas()) initFramebuffers();
+
     updateDye(dt, velocity);
-    var viewenv = true;         // set to true to view environment texture.  For debugging purposes
-
-
-
     if (!config.PAUSED) step(dt);
+
     renderDye(null);
     requestAnimationFrame(update);
 
@@ -231,11 +229,6 @@ function resizeCanvas() {
 function step(dt) {
     gl.disable(gl.BLEND);
 
-    copyProgram.bind();
-    copyProgram.uniforms.uTexture.set(environmentTexture.attach(1));
-    blit(environment.write);
-    environment.swap();
-
     curlProgram.bind();
     curlProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     curlProgram.uniforms.uVelocity.set(velocity.read.attach(0));
@@ -247,9 +240,7 @@ function step(dt) {
     vorticityProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     vorticityProgram.uniforms.uVelocity.set(velocity.read.attach(0));
     vorticityProgram.uniforms.uCurl.set(curl.attach(1));
-    vorticityProgram.uniforms.uEnvironment.set(environment.read.attach(3));
-
-
+    vorticityProgram.uniforms.uEnvironment.set(environment.read.attach(2));
     vorticityProgram.uniforms.curl.set(config.CURL);
     vorticityProgram.uniforms.dt.set(dt);
     blit(velocity.write);
@@ -287,18 +278,17 @@ function step(dt) {
     // the next section deforms the dye based on the velocity
     advectionProgram.bind();
     advectionProgram.uniforms.texelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
-
-
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([velocity.texelSizeX, velocity.texelSizeY]);
     let velocityId = velocity.read.attach(0);
-    advectionProgram.uniforms.uEnvironment.set(environment.read.attach(3));
+    advectionProgram.uniforms.uEnvironment.set(environment.read.attach(2));
     advectionProgram.uniforms.uVelocity.set(velocityId);
     advectionProgram.uniforms.uSource.set(velocityId);
     advectionProgram.uniforms.dt.set(dt);
     advectionProgram.uniforms.dissipation.set(config.VELOCITY_DISSIPATION);
     blit(velocity.write);
     velocity.swap();
+
 
     if (!ext.supportLinearFiltering)
         advectionProgram.uniforms.dyeTexelSize.set([dye.texelSizeX, dye.texelSizeY]);

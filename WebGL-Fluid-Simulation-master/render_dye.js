@@ -1,5 +1,5 @@
 
-import { config, dye } from './script.js';
+import { config, dye, environmentTexture, environment } from './script.js';
 import { gl, ext, canvas, getResolution, } from './webgl_context.js';
 import { generateColor, normalizeColor, getTextureScale, wrap } from '/utils.js';
 import { Program, blit } from '/webgl_programs.js'
@@ -143,34 +143,34 @@ export function multipleSplats(amount, vel) {
 //====================================================================================================================
 
 function splat(x, y, dx, dy, color, vel) {
-    if (config.DRAWMODE == "DYE" || config.DRAWMODE == null) {
+    if (config.DRAWMODE == 1) {
+        splatProgram.bind();
+        splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
+        splatProgram.uniforms.point.set([x, y]);
+        splatProgram.uniforms.color.set(config.COL1);
+        splatProgram.uniforms.multiplier.set(0);
+        splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
+        splatProgram.uniforms.uTarget.set(environment.read.attach(0));
+        splatProgram.uniforms.color.set([config.COL1.r / 255.0, config.COL1.g / 255.0, config.COL1.b / 255.0]);
+        blit(environment.write);
+        environment.swap();
+    }
+    else {  // paint dye
         splatProgram.bind();
         splatProgram.uniforms.uTarget.set(vel.read.attach(0));
         splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
         splatProgram.uniforms.point.set([x, y]);
         splatProgram.uniforms.color.set([dx, dy, 0.0]);
+        splatProgram.uniforms.multiplier.set(1);
         splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
         blit(vel.write);
         vel.swap();
-
         splatProgram.uniforms.uTarget.set(dye.read.attach(0));
         splatProgram.uniforms.color.set([color.r, color.g, color.b]);
-
         blit(dye.write);
         dye.swap();
     }
-    /*    if (config.DRAWMODE == BLOCK) {
-    
-            splatProgram.bind();
-            splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
-            splatProgram.uniforms.point.set([x, y]);
-            splatProgram.uniforms.color.set(config.COL1);
-            splatProgram.uniforms.radius.set(correctRadius(config.SPLAT_RADIUS / 100.0));
-            splatProgram.uniforms.uTarget.set(environmentTexture.attach(2));
-            splatProgram.uniforms.color.set([color.r, color.g, color.b]);
-            blit(dye.write);
-    }
-    */
+
 }
 //====================================================================================================================
 //

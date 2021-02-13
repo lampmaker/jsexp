@@ -49,7 +49,7 @@ export const bloomBlurShader = `
 //
 //====================================================================================================================
 
-export const bloomFinalShader =  `
+export const bloomFinalShader = `
     precision mediump float;
     precision mediump sampler2D;
 
@@ -92,7 +92,7 @@ export const sunraysMaskShader = `
 //
 //====================================================================================================================
 
-export const sunraysShader =  `
+export const sunraysShader = `
     precision highp float;
     precision highp sampler2D;
 
@@ -130,7 +130,7 @@ export const sunraysShader =  `
 //
 //====================================================================================================================
 
-export const splatShader =  `
+export const splatShader = `
     precision highp float;
     precision highp sampler2D;
 
@@ -140,12 +140,19 @@ export const splatShader =  `
     uniform vec3 color;
     uniform vec2 point;
     uniform float radius;
+    uniform int multiplier;
 
-    void main () {
+    void main () {        
         vec2 p = vUv - point.xy;
         p.x *= aspectRatio;
-        vec3 splat = exp(-dot(p, p) / radius) * color;
-        vec3 base = texture2D(uTarget, vUv).xyz;
-        gl_FragColor = vec4(base + splat, 1.0);
+        vec3 base =  texture2D(uTarget, vUv).rgb;
+        if (multiplier==1){
+            vec3 splat = exp(-dot(p, p) / radius) * color;    
+            gl_FragColor = vec4(base  + splat, 1.0);
+        } 
+        else {                      
+            if (length(p) < radius*10.0) base = color;           
+            gl_FragColor = vec4(base, 1.0);
+        }
     }
 `
