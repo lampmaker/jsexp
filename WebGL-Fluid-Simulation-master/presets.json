@@ -22,7 +22,7 @@
                 "COLORPICKER": false,
                 "PAUSED": false,
                 "SPEED": 1,
-                "WALL": 0,
+                "WALL": 2,
                 "FORCEX": 0,
                 "FORCEY": 0,
                 "FORCER": 0,

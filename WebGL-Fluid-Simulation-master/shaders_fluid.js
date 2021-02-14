@@ -60,20 +60,15 @@ export const divergenceShader = `
         float T = texture2D(uVelocity, vT).y;
         float B = texture2D(uVelocity, vB).y;
 
-        //if (wall!=1) { //block
-            if (vL.x < 0.0) { L = -L; }
-            if (vR.x > 1.0) { R = -R; }
-            if (vT.y > 1.0) { T = -T; }
-            if (vB.y < 0.0) { B = -B; }
-       // }
+        if (vL.x < 0.0) { L = -L; }
+        if (vR.x > 1.0) { R = -R; }
+        if (vT.y > 1.0) { T = -T; }
+        if (vB.y < 0.0) { B = -B; }
     
-        float div = 0.5 * (R - L + T - B);
-        
+        float div = 0.5 * (R - L + T - B);       
         if (wall==1) {            //free
-            //div=0.0;
-      //       if ((vL.x < 0.0)||      (vR.x > 1.0)||  (vT.y > 1.0) || (vB.y < 0.0) )div=0.0;
-        }
-      
+    //       if ((vL.x < 0.0)||      (vR.x > 1.0)||  (vT.y > 1.0) || (vB.y < 0.0) )div=0.0;
+        }      
         gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
     }
 `
@@ -97,7 +92,6 @@ export const curlShader = `
         float R = texture2D(uVelocity, vR).y;
         float T = texture2D(uVelocity, vT).x;
         float B = texture2D(uVelocity, vB).x;
-       
         float vorticity = R - L - T + B;        
         gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
     }
@@ -128,26 +122,19 @@ export const vorticityShader = `
         float R = texture2D(uCurl, vR).r;
         float T = texture2D(uCurl, vT).r;
         float B = texture2D(uCurl, vB).r;
-        float C = texture2D(uCurl, vUv).r;
-        
+        float C = texture2D(uCurl, vUv).r;       
         vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
         force /= length(force) + 0.0001;
         force *= curl * C;
-
         force+=extForce;
         vec2 Px= vUv - vec2(0.5,0.5);  
         force += Px * (extradForce.r*10.0);        
         force += vec2(Px.y, -Px.x) * (extradForce.g * length(Px) *20.0 );
-
-        force+=vec2(1.0-Px.y*Px.y,0.0)*10.0;;
-
-
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
         velocity = min(max(velocity, -1000.0), 1000.0);
         float env= texture2D(uEnvironment, vUv).g;     
         if (env == 1.0)  velocity*=-1.0;      
-
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }
 `
@@ -175,8 +162,7 @@ export const pressureShader = `
         float C = texture2D(uPressure, vUv).x;       
         float divergence = texture2D(uDivergence, vUv).x;
         float pressure = (L + R + B + T - divergence) * 0.25;
-        gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);
-       //if (vB.y< 0.5 && vL.x < 0.5) {  gl_FragColor = vec4(pressure/10.0, 0.0, 0.0, 1.0);}
+        gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);       
     }
 `
 //====================================================================================================================
@@ -202,7 +188,6 @@ export const gradientSubtractShader = `
         float B = texture2D(uPressure, vB).x;        
         vec2 velocity = texture2D(uVelocity, vUv).xy;
         velocity.xy -= vec2(R - L, T - B);
-        gl_FragColor = vec4(velocity, 0.0, 1.0);
-      //  if (vB.y< 0.5 && vL.x < 0.5) {  gl_FragColor = vec4(0, 0.0, 0.0, 1.0);}
+        gl_FragColor = vec4(velocity, 0.0, 1.0);      
     }
 `
