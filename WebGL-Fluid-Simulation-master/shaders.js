@@ -17,7 +17,7 @@ export const baseVertexShader = `
         vR = vUv + vec2(texelSize.x, 0.0);
         vT = vUv + vec2(0.0, texelSize.y);
         vB = vUv - vec2(0.0, texelSize.y);
-        gl_Position = vec4(aPosition, 0.0, 1.0);
+         gl_Position = vec4(aPosition, 0.0, 1.0);
     }
 `
 //====================================================================================================================

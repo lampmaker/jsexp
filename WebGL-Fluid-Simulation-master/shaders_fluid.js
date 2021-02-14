@@ -60,22 +60,20 @@ export const divergenceShader = `
         float T = texture2D(uVelocity, vT).y;
         float B = texture2D(uVelocity, vB).y;
 
-        vec2 C = texture2D(uVelocity, vUv).xy;
-        if (wall!=0) {
+        //if (wall!=1) { //block
             if (vL.x < 0.0) { L = -L; }
             if (vR.x > 1.0) { R = -R; }
             if (vT.y > 1.0) { T = -T; }
             if (vB.y < 0.0) { B = -B; }
-        }
+       // }
     
         float div = 0.5 * (R - L + T - B);
-        if (wall==0) {            
-            div=0.0;
-            if (vL.x < 0.0) { L = R; }
-            if (vR.x > 1.0) { R = L; }
-            if (vT.y > 1.0) { T = B; }
-            if (vB.y < 0.0) { B = T; }
+        
+        if (wall==1) {            //free
+            //div=0.0;
+      //       if ((vL.x < 0.0)||      (vR.x > 1.0)||  (vT.y > 1.0) || (vB.y < 0.0) )div=0.0;
         }
+      
         gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
     }
 `
@@ -139,8 +137,9 @@ export const vorticityShader = `
         force+=extForce;
         vec2 Px= vUv - vec2(0.5,0.5);  
         force += Px * (extradForce.r*10.0);        
-    
         force += vec2(Px.y, -Px.x) * (extradForce.g * length(Px) *20.0 );
+
+        force+=vec2(1.0-Px.y*Px.y,0.0)*10.0;;
 
 
         vec2 velocity = texture2D(uVelocity, vUv).xy;     

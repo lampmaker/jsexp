@@ -51,7 +51,7 @@ export function initBloomFramebuffers() {
     const rgba = ext.formatRGBA;
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
 
-    bloom = createFBO(res.width, res.height, rgba.internalFormat, rgba.format, texType, filtering);
+    bloom = createFBO(res.width, res.height, rgba.internalFormat, rgba.format, texType, filtering, config.WALL);
 
     bloomFramebuffers.length = 0;
     for (let i = 0; i < config.BLOOM_ITERATIONS; i++) {
@@ -60,7 +60,7 @@ export function initBloomFramebuffers() {
 
         if (width < 2 || height < 2) break;
 
-        let fbo = createFBO(width, height, rgba.internalFormat, rgba.format, texType, filtering);
+        let fbo = createFBO(width, height, rgba.internalFormat, rgba.format, texType, filtering, config.WALL);
         bloomFramebuffers.push(fbo);
     }
 }
@@ -75,8 +75,8 @@ export function initSunraysFramebuffers() {
     const r = ext.formatR;
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
 
-    sunrays = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering);
-    sunraysTemp = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering);
+    sunrays = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering, config.WALL);
+    sunraysTemp = createFBO(res.width, res.height, r.internalFormat, r.format, texType, filtering, config.WALL);
 }
 
 

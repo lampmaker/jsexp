@@ -7,16 +7,29 @@ export const copyProgram = new Program(baseVertexShader, copyShader, true);
 //====================================================================================================================
 //  creates a frame buffer object of specific size and returns the object
 //====================================================================================================================
-export function createFBO(w, h, internalFormat, format, type, param) {
+export function createFBO(w, h, internalFormat, format, type, param, wrap) {
     gl.activeTexture(gl.TEXTURE0);
     let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, param);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, param);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
+    console.log("Wrap:", wrap)
+    /*
+        if (wrap == 2) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        }
+        else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        }
+    
+    */
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
     let fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
@@ -47,9 +60,9 @@ export function createFBO(w, h, internalFormat, format, type, param) {
 //  write -> fbo2
 // swap
 //====================================================================================================================
-export function createDoubleFBO(w, h, internalFormat, format, type, param) {
-    let fbo1 = createFBO(w, h, internalFormat, format, type, param);
-    let fbo2 = createFBO(w, h, internalFormat, format, type, param);
+export function createDoubleFBO(w, h, internalFormat, format, type, param, wrap) {
+    let fbo1 = createFBO(w, h, internalFormat, format, type, param, wrap);
+    let fbo2 = createFBO(w, h, internalFormat, format, type, param, wrap);
 
     return {
         width: w,
@@ -80,8 +93,8 @@ export function createDoubleFBO(w, h, internalFormat, format, type, param) {
 // 
 //====================================================================================================================
 
-export function resizeFBO(target, w, h, internalFormat, format, type, param) {
-    let newFBO = createFBO(w, h, internalFormat, format, type, param);
+export function resizeFBO(target, w, h, internalFormat, format, type, param, wrap) {
+    let newFBO = createFBO(w, h, internalFormat, format, type, param, wrap);
     copyProgram.bind();
     copyProgram.uniforms.uTexture.set(target.attach(0));
     blit(newFBO);
@@ -91,11 +104,11 @@ export function resizeFBO(target, w, h, internalFormat, format, type, param) {
 //
 //====================================================================================================================
 
-export function resizeDoubleFBO(target, w, h, internalFormat, format, type, param) {
+export function resizeDoubleFBO(target, w, h, internalFormat, format, type, param, wrap) {
     if (target.width == w && target.height == h)
         return target;
-    target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param);
-    target.write = createFBO(w, h, internalFormat, format, type, param);
+    target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param, wrap);
+    target.write = createFBO(w, h, internalFormat, format, type, param, wrap);
     target.width = w;
     target.height = h;
     target.texelSizeX = 1.0 / w;

@@ -44,7 +44,7 @@ export function startGUI() {
         }
     }, 'fun').name('Random splats');
     let advanced = gui.addFolder('Advanced')
-    advanced.add(config, 'WALL').name('wall');
+    advanced.add(config, 'WALL', { 'BLOCK': 0, 'FREE': 1, 'WRAP': 2 }).name('wall').onFinishChange(initFramebuffers);
     advanced.add(config, 'FORCEX', -50, 50, 5).name('Force-X');
     advanced.add(config, 'FORCEY', -50, 50, 5).name('Force-Y');
     advanced.add(config, 'FORCER', -50, 50, 5).name('Force-R');

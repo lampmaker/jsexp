@@ -60,7 +60,7 @@ export let config = {
     DRAWMODE: 0,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
-    WALL: true,
+    WALL: 0,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
     BLOOM: false,
@@ -117,7 +117,7 @@ let divergence;      // 1 per point
 let curl;            // 1 per point
 let pressure;        // 1 per point
 export let environment; // 
-
+let wall;
 
 const clearProgram = new Program(baseVertexShader, clearShader, true);
 const advectionProgram = new Program(baseVertexShader, advectionShader, true);
@@ -134,34 +134,36 @@ const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractSha
 //  wordt aangeroepen bij resize
 //====================================================================================================================
 export function initFramebuffers() {
+
     let simRes = getResolution(config.SIM_RESOLUTION);   // width,height in pixels.
     let dyeRes = getResolution(config.DYE_RESOLUTION);
     console.log("Sim resolution (w,h):", simRes.width, simRes.height);
     console.log("Dye resolution (w,h):", dyeRes.width, dyeRes.height);
+    console.log("Wall:", config.WALL);
     const texType = ext.halfFloatTexType;
     const rgba = ext.formatRGBA;
     const rg = ext.formatRG;
     const r = ext.formatR;
     const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
     gl.disable(gl.BLEND);
-    if (dye == null) dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-    else dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+    if (dye == null) dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering, config.WALL);
+    else dye = resizeDoubleFBO(dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering, config.WALL);
 
-    if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
-    else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
+    if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering, config.WALL);
+    else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering, config.WALL);
 
-    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
-    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
+    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST, config.WALL);
+    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST, config.WALL);
     //environment = createFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
 
-    divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-    curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-    pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+    divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST, config.WALL);
+    curl = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST, config.WALL);
+    pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST, config.WALL);
 
     initBloomFramebuffers();
     initSunraysFramebuffers();
     multipleSplats(parseInt(Math.random() * 20) + 5, velocity);
-
+    wall = config.WALL;
 
 
 
@@ -214,6 +216,7 @@ function resizeCanvas() {
         canvas.height = height;
         return true;
     }
+    if (wall != config.WALL) return true;
     return false;
 }
 
