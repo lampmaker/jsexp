@@ -1,0 +1,71 @@
+{
+    "preset": "Preset1",
+    "closed": false,
+    "remembered": {
+        "Preset1": {
+            "0": {
+                "DYE_RESOLUTION": 1024,
+                "SIM_RESOLUTION": 256,
+                "DENSITY_DISSIPATION": 0.1,
+                "VELOCITY_DISSIPATION": 0.2,
+                "PRESSURE": 1,
+                "CURL": 5,
+                "DRAWMODE": "DYE",
+                "COL1": {
+                    "r": 255,
+                    "g": 0,
+                    "b": 0
+                },
+                "SPLAT_RADIUS": 0.25,
+                "SHADING": true,
+                "COLORFUL": true,
+                "COLORPICKER": false,
+                "PAUSED": false,
+                "SPEED": 1,
+                "WALL": 2,
+                "FORCEX": 0,
+                "FORCEY": 0,
+                "FORCER": 0,
+                "FORCEA": 0,
+                "BLOOM": false,
+                "BLOOM_INTENSITY": 0.8,
+                "BLOOM_THRESHOLD": 0.6,
+                "SUNRAYS": true,
+                "SUNRAYS_WEIGHT": 1,
+                "BACK_COLOR": {
+                    "r": 0,
+                    "g": 0,
+                    "b": 0
+                },
+                "TRANSPARENT": false
+            }
+        }
+    },
+    "folders": {
+        "Paint": {
+            "preset": "Default",
+            "closed": true,
+            "folders": {}
+        },
+        "Advanced": {
+            "preset": "Default",
+            "closed": false,
+            "folders": {}
+        },
+        "Bloom": {
+            "preset": "Default",
+            "closed": false,
+            "folders": {}
+        },
+        "Sunrays": {
+            "preset": "Default",
+            "closed": false,
+            "folders": {}
+        },
+        "Capture": {
+            "preset": "Default",
+            "closed": false,
+            "folders": {}
+        }
+    }
+}
