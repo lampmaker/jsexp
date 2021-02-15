@@ -126,6 +126,7 @@ export const vorticityShader = `
         vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
         force /= length(force) + 0.0001;
         force *= curl * C;
+        force.y*=-1.0;
         force+=extForce;
         vec2 Px= vUv - vec2(0.5,0.5);  
         force += Px * (extradForce.r*10.0);        
