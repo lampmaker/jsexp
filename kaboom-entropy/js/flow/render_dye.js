@@ -113,7 +113,7 @@ function activateblock(data) {
 }
 
 export function loadBlock() {
-    createTextureAsync('hart.png', activateblock)
+    createTextureAsync('/img/eik.svg', activateblock)
 }
 //====================================================================================================================
 //
