@@ -113,8 +113,20 @@ function activateblock(data) {
 }
 
 export function loadBlock() {
-    createTextureAsync('/img/eik.svg', activateblock)
+    createTextureAsync('./js/flow/eik.png', activateblock)
+
+
+
 }
+
+/*
+let input = "/img/boom.svg"
+new SvgToPngConverter().convertFromInput(input, function (imgData) {
+    // You now have your png data in base64 (imgData). 
+    // Do what ever you wish with it here.
+});
+*/
+
 //====================================================================================================================
 //
 //====================================================================================================================

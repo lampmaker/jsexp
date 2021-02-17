@@ -20,7 +20,7 @@ function getPresetJSON(url) {
 export function startGUI() {
     var gui = new dat.GUI({ width: 300, load: getPresetJSON('./js/flow/presets.json'), preset: 'Preset1' });
     gui.remember(config);
-    gui.add(config, 'DYE_RESOLUTION', { '8192': 8192, '4096': 4096, '2048': 2048, '1024': 1024, '512': 512, '256': 256, '128': 128 }).name('Dye resolution (pixels)').onFinishChange(initFramebuffers);
+    gui.add(config, 'DYE_RESOLUTION', { '16384': 16384, '8192': 8192, '4096': 4096, '2048': 2048, '1024': 1024, '512': 512, '256': 256, '128': 128 }).name('Dye resolution (pixels)').onFinishChange(initFramebuffers);
     gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256, '512': 512, '1024': 1024, '2048': 2048, }).name('sim resolution (pixels)').onFinishChange(initFramebuffers);
     gui.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion');
     gui.add(config, 'VELOCITY_DISSIPATION', 0, 4.0).name('velocity diffusion');
