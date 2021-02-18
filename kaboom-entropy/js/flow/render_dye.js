@@ -113,7 +113,7 @@ function activateblock(data) {
 }
 
 export function loadBlock() {
-    createTextureAsync('./js/flow/eik.png', activateblock)
+    createTextureAsync('./js/flow/turtle.png', activateblock)
 
 
 
@@ -357,6 +357,7 @@ function drawDisplay(target) {
     }
     if (config.SUNRAYS)
         displayMaterial.uniforms.uSunrays.set(sunrays.attach(3));
+    displayMaterial.uniforms.uEnvironment.set(environment.read.attach(4));
     blit(target);
 
 
