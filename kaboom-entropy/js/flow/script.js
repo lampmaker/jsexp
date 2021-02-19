@@ -148,8 +148,8 @@ export function initFramebuffers() {
     if (velocity == null) velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering, config.WALL);
     else velocity = resizeDoubleFBO(velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering, config.WALL);
 
-    if (environment == null) environment = createDoubleFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST, config.WALL);
-    else environment = resizeDoubleFBO(environment, simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST, config.WALL);
+    if (environment == null) environment = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST, config.WALL);
+    else environment = resizeDoubleFBO(environment, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST, config.WALL);
     //environment = createFBO(simRes.width, simRes.height, rgba.internalFormat, rgba.format, texType, gl.NEAREST);
 
     divergence = createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST, config.WALL);

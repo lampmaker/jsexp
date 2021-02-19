@@ -4,6 +4,7 @@ import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap
 import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
 import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from './webgl_framebuffers.js'
 import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, splatStack, updateKeywords, loadBlock } from './render_dye.js'
+import { Font } from '../three/three.module.js';
 
 
 
@@ -257,7 +258,14 @@ function updatePointerDownData(pointer, id, posX, posY) {
     pointer.deltaX = 0;
     pointer.deltaY = 0;
     if (config.COLORPICKER) {
-        pointer.color = config.COL1;
+        var c = config.COL1;
+        if (config.DRAWMODE == 0) { // paint DYE
+            c.r *= 0.15;
+            c.g *= 0.15;
+            c.b *= 0.15;
+        }
+
+        pointer.color = c;
     }
     else
         pointer.color = generateColor();

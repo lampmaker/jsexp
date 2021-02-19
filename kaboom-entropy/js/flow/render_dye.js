@@ -98,6 +98,7 @@ function updateColors(dt) {
         colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
         pointers.forEach(p => {
             p.color = generateColor();
+
         });
     }
 }
@@ -167,7 +168,7 @@ export function multipleSplats(amount, vel) {
 //====================================================================================================================
 
 function splat(x, y, dx, dy, color, vel) {
-    if (config.DRAWMODE == 1) {
+    if (config.DRAWMODE == 1) { // block
         splatProgram.bind();
         splatProgram.uniforms.aspectRatio.set(canvas.width / canvas.height);
         splatProgram.uniforms.point.set([x, y]);

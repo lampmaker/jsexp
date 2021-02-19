@@ -134,9 +134,12 @@ export const vorticityShader = `
        
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
+
+        float env= texture2D(uEnvironment, vUv).r;      // environment textyre: red section sets speed decrease.  white = 
+        velocity  += -velocity*env;      
+        
         velocity = min(max(velocity, -1000.0), 1000.0);
-        float env= texture2D(uEnvironment, vUv).g;     
-        if (env == 1.0)  velocity*=-1.0;      
+        
         gl_FragColor = vec4(velocity, 0.0, 1.0);
     }
 `

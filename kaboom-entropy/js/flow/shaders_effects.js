@@ -155,8 +155,8 @@ export const splatShader = `
             if (length(p) < radius*10.0) base = color;           
             gl_FragColor = vec4(base, 1.0);
 
-            vec3 splat = exp(-dot(p, p) / radius) * color;    
-            gl_FragColor = vec4(base  + splat, 1.0);
+   //         vec3 splat = exp(-dot(p, p) / radius) * color;    
+   //         gl_FragColor = vec4(base  + splat, 1.0);
         }
     }
 `
