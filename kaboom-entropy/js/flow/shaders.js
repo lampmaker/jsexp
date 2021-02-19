@@ -194,7 +194,10 @@ export const displayShaderSource = `
         
         float a = max(c.r, max(c.g, c.b));
         float e = texture2D(uEnvironment, vUv).r;
-        if (e==1.0) c=vec3(0.0,0.0,0.0);
+        if (e==1.0) {
+            c=vec3(0.0,0.0,0.0);
+            a=0.0;
+        }
         gl_FragColor =  vec4(c, a); ;
     }
 `

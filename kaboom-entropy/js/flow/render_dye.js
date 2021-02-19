@@ -113,7 +113,7 @@ function activateblock(data) {
 }
 
 export function loadBlock() {
-    createTextureAsync('./js/flow/turtle.png', activateblock)
+    createTextureAsync('./js/flow/flow2.png', activateblock)
 
 
 
