@@ -30,10 +30,13 @@ export const advectionShader = `
 
     void main () {    
         vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
-        vec4 result = texture2D(uSource, coord);
-        float env= texture2D(uEnvironment, vUv).g;    
-        float d=dissipation;       
-   //     if (env ==  1.0 ) d = 10.0;
+        vec4 result = texture2D(uSource, coord);        
+        float env= texture2D(uEnvironment, vUv).r;      // environment textyre: green  section sets speed decrease.  white = 
+        if (env<0.0) env=0.0;
+      
+        float d = dissipation ;    
+        if (env==1.0)  d=10.0;  // doet uiteindelijk niet zoveel
+        //d*=env*200.0;
         float decay = 1.0 + d * dt;
         gl_FragColor = result / decay;
     }`
@@ -134,9 +137,12 @@ export const vorticityShader = `
        
         vec2 velocity = texture2D(uVelocity, vUv).xy;     
         velocity += force * dt;
-
         float env= texture2D(uEnvironment, vUv).r;      // environment textyre: red section sets speed decrease.  white = 
-        velocity  += -velocity*env;      
+        
+        if (env<0.0) env=0.0;
+        if (env>1.0) env=1.0;
+        //if (env==1.0) 
+        velocity -= velocity * 2.0 * env;
         
         velocity = min(max(velocity, -1000.0), 1000.0);
         

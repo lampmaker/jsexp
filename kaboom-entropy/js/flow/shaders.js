@@ -44,6 +44,17 @@ export const blurVertexShader = `
 //====================================================================================================================
 //
 //====================================================================================================================
+export const inverseShader = `
+    precision mediump float;
+    precision mediump sampler2D;
+
+    varying highp vec2 vUv;
+    uniform sampler2D uTexture;
+
+    void main () {
+        gl_FragColor = vec4(1.0,1.0,1.0,1.0)-texture2D(uTexture, vUv);
+}
+`
 
 export const blurShader = `
     precision mediump float;
@@ -193,12 +204,15 @@ export const displayShaderSource = `
     #endif
         
         float a = max(c.r, max(c.g, c.b));
-        float e = texture2D(uEnvironment, vUv).r;
+        float fade = 1.0-texture2D(uEnvironment, vUv).g;
+        /*
         if (e==1.0) {
             c=vec3(0.0,0.0,0.0);
             a=0.0;
         }
-        gl_FragColor =  vec4(c, a); ;
+*/
+        gl_FragColor =  vec4(c, a) *fade; ;   // disable for debugging
+        //gl_FragColor =  vec4(c, a) ;
     }
 `
 
