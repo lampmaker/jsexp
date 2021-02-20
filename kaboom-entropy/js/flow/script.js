@@ -76,6 +76,7 @@ export let config = {
     COL1: { r: 255, g: 0, b: 0 },
     COL2: { r: 0, g: 255, b: 0 },
     COL3: { r: 0, g: 0, b: 255 },
+    FILENAME: "flow2.png",
     loadBlock: loadBlock
 
 }

@@ -114,10 +114,7 @@ function activateblock(data) {
 }
 
 export function loadBlock() {
-    createTextureAsync('./js/flow/eik.png', activateblock)
-
-
-
+    createTextureAsync('./js/flow/' + config.FILENAME, activateblock)
 }
 
 /*

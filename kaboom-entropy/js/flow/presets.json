@@ -10,7 +10,7 @@
                 "VELOCITY_DISSIPATION": 0.2,
                 "PRESSURE": 1,
                 "CURL": 5,
-                "DRAWMODE": "DYE",
+                "DRAWMODE": 0,
                 "COL1": {
                     "r": 255,
                     "g": 0,
@@ -22,7 +22,7 @@
                 "COLORPICKER": false,
                 "PAUSED": false,
                 "SPEED": 1,
-                "WALL": 2,
+                "WALL": 0,
                 "FORCEX": 0,
                 "FORCEY": 0,
                 "FORCER": 0,
@@ -44,7 +44,7 @@
     "folders": {
         "Paint": {
             "preset": "Default",
-            "closed": true,
+            "closed": false,
             "folders": {}
         },
         "Advanced": {
@@ -54,12 +54,12 @@
         },
         "Bloom": {
             "preset": "Default",
-            "closed": false,
+            "closed": true,
             "folders": {}
         },
         "Sunrays": {
             "preset": "Default",
-            "closed": false,
+            "closed": true,
             "folders": {}
         },
         "Capture": {

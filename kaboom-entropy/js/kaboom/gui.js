@@ -1,12 +1,12 @@
-import { config, initFramebuffers, environment } from './script.js';
-import { generateColor, normalizeColor, scaleByPixelRatio, getTextureScale, wrap } from './utils.js';
 
-import { gl, ext, canvas, getResolution, correctDeltaX, correctDeltaY } from './webgl_context.js';
-import { createFBO, createDoubleFBO, resizeDoubleFBO, createTextureAsync, CHECK_FRAMEBUFFER_STATUS } from './webgl_framebuffers.js'
-import { initBloomFramebuffers, initSunraysFramebuffers, bloom, bloomFramebuffers, sunrays, sunraysTemp, updateDye, multipleSplats, renderDye, splatStack, updateKeywords, loadBlock } from './render_dye.js'
-import { Font } from '../three/three.module.js';
-
-
+let config = {
+    WIDTH: 1024,
+    HEIGHT: 1024,
+    COL1: { r: 255, g: 0, b: 0 },
+    BACK_COLOR: { r: 0, g: 0, b: 0 },
+    COL3: { r: 0, g: 0, b: 255 },
+    TRANSPARENT: false,
+}
 
 function getPresetJSON(url) {
     var Httpreq = new XMLHttpRequest(); // a new request
@@ -19,53 +19,16 @@ function getPresetJSON(url) {
 // starts the gui
 //====================================================================================================================
 export function startGUI() {
-    var gui = new dat.GUI({ width: 300, load: getPresetJSON('./js/flow/presets.json'), preset: 'Preset1' });
+    var gui = new dat.GUI({ width: 300, load: getPresetJSON('./js/kaboom/presets.json'), preset: 'Preset1' });
     gui.remember(config);
-    gui.add(config, 'DYE_RESOLUTION', { '16384': 16384, '8192': 8192, '4096': 4096, '2048': 2048, '1024': 1024, '512': 512, '256': 256, '128': 128 }).name('Dye resolution (pixels)').onFinishChange(initFramebuffers);
-    gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256, '512': 512, '1024': 1024, '2048': 2048, }).name('sim resolution (pixels)').onFinishChange(initFramebuffers);
-    gui.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion');
-    gui.add(config, 'VELOCITY_DISSIPATION', 0, 4.0).name('velocity diffusion');
-    gui.add(config, 'PRESSURE', 0.0, 1.0).name('pressure');
-    gui.add(config, 'CURL', 0, 50).name('vorticity').step(1);
-
-    let paintfolder = gui.addFolder('Paint');
-    paintfolder.add(config, 'DRAWMODE', { 'DYE': 0, 'BLOCK': 1 })
+    gui.add(config, 'WIDTH', 512, 4096, 512).name("Cancvas Width");
+    gui.add(config, 'HEIGHT', 512, 4096, 512).name("Cancvas Height");
     paintfolder.addColor(config, 'COL1').name('picker color');
-    paintfolder.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
-    paintfolder.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
-    paintfolder.add(config, 'COLORFUL').name('colorful');
-    paintfolder.add(config, 'COLORPICKER').name('Colorpicker');
-    paintfolder.add(config, 'FILENAME').name('filename');
-    paintfolder.add(config, 'loadBlock').name('load');
-
-    gui.add(config, 'PAUSED').name('paused').listen();
-    gui.add(config, 'SPEED', 0.0, 1.0).name('speed');
-    gui.add({
-        fun: () => {
-            splatStack.push(parseInt(Math.random() * 20) + 5);
-        }
-    }, 'fun').name('Random splats');
-    let advanced = gui.addFolder('Advanced')
-    advanced.add(config, 'WALL', { 'BLOCK': 0, 'FREE': 1, 'WRAP': 2 }).name('wall').onFinishChange(initFramebuffers);
-    advanced.add(config, 'FORCEX', -50, 50, 5).name('Force-X');
-    advanced.add(config, 'FORCEY', -50, 50, 5).name('Force-Y');
-    advanced.add(config, 'FORCER', -50, 50, 5).name('Force-R');
-    advanced.add(config, 'FORCEA', -50, 50, 5).name('Force-Axial');
-
-    let bloomFolder = gui.addFolder('Bloom');
-    bloomFolder.add(config, 'BLOOM').name('enabled').onFinishChange(updateKeywords);
-    bloomFolder.add(config, 'BLOOM_INTENSITY', 0.1, 2.0).name('intensity');
-    bloomFolder.add(config, 'BLOOM_THRESHOLD', 0.0, 1.0).name('threshold');
-
-    let sunraysFolder = gui.addFolder('Sunrays');
-    sunraysFolder.add(config, 'SUNRAYS').name('enabled').onFinishChange(updateKeywords);
-    sunraysFolder.add(config, 'SUNRAYS_WEIGHT', 0.3, 1.0).name('weight');
 
     let captureFolder = gui.addFolder('Capture');
     captureFolder.addColor(config, 'BACK_COLOR').name('background color');
     captureFolder.add(config, 'TRANSPARENT').name('transparent');
     captureFolder.add({ fun: captureScreenshot }, 'fun').name('take screenshot');
-
 }
 
 export function isMobile() {

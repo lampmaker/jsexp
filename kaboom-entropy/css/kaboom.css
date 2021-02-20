@@ -1,0 +1,29 @@
+body {
+    font-family:sans-serif;
+    background:#09438f;
+    color:#ffffff;
+    
+}
+
+header, footer, aside, nav {
+    display: block;
+    text-align:center;
+}
+
+/* 
+==============================
+*/
+.gradient-view
+{
+    border: 1px solid;
+}
+
+.gradient-dragger
+{
+    border: 1px solid;
+    width: 7px;
+    height: 8px;
+    position: absolute;
+    bottom: 10px;
+    cursor: auto;
+}
