@@ -157,7 +157,7 @@ export const displayShaderSource = `
     uniform sampler2D uEnvironment;
     uniform vec2 ditherScale;
     uniform vec2 texelSize;
-    
+    uniform int uMask;
 
     vec3 linearToGamma (vec3 color) {
         color = max(color, vec3(0));
@@ -205,6 +205,7 @@ export const displayShaderSource = `
         
         float a = max(c.r, max(c.g, c.b));
         float fade = 1.0-texture2D(uEnvironment, vUv).g;
+        if (uMask==0) fade=1.0;
         /*
         if (e==1.0) {
             c=vec3(0.0,0.0,0.0);

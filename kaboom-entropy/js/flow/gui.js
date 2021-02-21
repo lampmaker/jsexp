@@ -28,15 +28,19 @@ export function startGUI() {
     gui.add(config, 'PRESSURE', 0.0, 1.0).name('pressure');
     gui.add(config, 'CURL', 0, 50).name('vorticity').step(1);
 
+    let maskfolder = gui.addFolder('Mask');
+    maskfolder.add(config, 'MASK')
+    maskfolder.add(config, 'MASK_DISSIPATION', 0.0, 5.0, 0.1).name('Dissipation')
+    maskfolder.add(config, 'FILENAME').name('filename');
+    maskfolder.add(config, 'loadBlock').name('load');
     let paintfolder = gui.addFolder('Paint');
     paintfolder.add(config, 'DRAWMODE', { 'DYE': 0, 'BLOCK': 1 })
     paintfolder.addColor(config, 'COL1').name('picker color');
+
     paintfolder.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
     paintfolder.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
     paintfolder.add(config, 'COLORFUL').name('colorful');
     paintfolder.add(config, 'COLORPICKER').name('Colorpicker');
-    paintfolder.add(config, 'FILENAME').name('filename');
-    paintfolder.add(config, 'loadBlock').name('load');
 
     gui.add(config, 'PAUSED').name('paused').listen();
     gui.add(config, 'SPEED', 0.0, 1.0).name('speed');

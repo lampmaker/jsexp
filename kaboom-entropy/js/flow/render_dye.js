@@ -355,7 +355,9 @@ function drawDisplay(target) {
     }
     if (config.SUNRAYS)
         displayMaterial.uniforms.uSunrays.set(sunrays.attach(3));
+
     displayMaterial.uniforms.uEnvironment.set(environment.read.attach(4));
+    displayMaterial.uniforms.uMask.set(config.MASK);
     blit(target);
 
 

@@ -54,6 +54,8 @@ export let config = {
     SHADING: true,
     COLORFUL: true,
     DRAWMODE: 0,
+    MASK: false,
+    MASK_DISSIPATION: 10.0,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
     WALL: 0,
@@ -284,6 +286,7 @@ function step(dt) {
     advectionProgram.uniforms.uSource.set(velocityId);
     advectionProgram.uniforms.dt.set(dt);
     advectionProgram.uniforms.dissipation.set(config.VELOCITY_DISSIPATION);
+    advectionProgram.uniforms.dissipation_mask.set(config.MASK_DISSIPATION);
     blit(velocity.write);
     velocity.swap();
 

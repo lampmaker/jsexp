@@ -15,6 +15,7 @@ export const advectionShader = `
     uniform vec2 dyeTexelSize;
     uniform float dt;
     uniform float dissipation;
+    uniform float dissipation_mask;
     
 
     vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
@@ -35,8 +36,7 @@ export const advectionShader = `
         if (env<0.0) env=0.0;
       
         float d = dissipation ;    
-        if (env==1.0)  d=10.0;  // doet uiteindelijk niet zoveel
-        //d*=env*200.0;
+        if (env==1.0)  d=dissipation_mask;  // doet uiteindelijk niet zoveel
         float decay = 1.0 + d * dt;
         gl_FragColor = result / decay;
     }`
