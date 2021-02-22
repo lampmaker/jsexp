@@ -35,12 +35,14 @@ export function startGUI() {
     maskfolder.add(config, 'loadBlock').name('load');
     let paintfolder = gui.addFolder('Paint');
     paintfolder.add(config, 'DRAWMODE', { 'DYE': 0, 'BLOCK': 1 })
+    paintfolder.add(config, 'COLORPICKER',{'RANDOM':0,'DUAL':1,'SINGLE':2}).name('Colorpicker');
     paintfolder.addColor(config, 'COL1').name('picker color');
-
+    paintfolder.addColor(config, 'COL2').name('picker color 2');
     paintfolder.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius');
     paintfolder.add(config, 'SHADING').name('shading').onFinishChange(updateKeywords);
     paintfolder.add(config, 'COLORFUL').name('colorful');
-    paintfolder.add(config, 'COLORPICKER').name('Colorpicker');
+    
+    
 
     gui.add(config, 'PAUSED').name('paused').listen();
     gui.add(config, 'SPEED', 0.0, 1.0).name('speed');
@@ -252,6 +254,8 @@ window.addEventListener('keydown', e => {
 //
 //====================================================================================================================
 
+var colortoggle=false;
+
 function updatePointerDownData(pointer, id, posX, posY) {
     pointer.id = id;
     pointer.down = true;
@@ -262,18 +266,26 @@ function updatePointerDownData(pointer, id, posX, posY) {
     pointer.prevTexcoordY = pointer.texcoordY;
     pointer.deltaX = 0;
     pointer.deltaY = 0;
-    if (config.COLORPICKER) {
-        var c = config.COL1;
-        if (config.DRAWMODE == 0) { // paint DYE
-            c.r *= 0.15;
-            c.g *= 0.15;
-            c.b *= 0.15;
-        }
-
-        pointer.color = c;
+    if (config.DRAWMODE != 0) { //paint block
+        pointer.color = config.COL1;
+        return;
     }
-    else
+    if (config.COLORPICKER==0)  {
         pointer.color = generateColor();
+    }
+    else if (config.COLORPICKER==1) {
+        if (colortoggle) {
+            pointer.color = {r:config.COL2.r*0.15/255 , g:config.COL2.g*0.15/255, b:config.COL2.b*0.15/255}
+        }
+        else{
+            pointer.color = {r:config.COL1.r*0.15/255 , g:config.COL1.g*0.15/255, b:config.COL1.b*0.15/255}
+        }        
+        colortoggle=!colortoggle;
+    } 
+    else if (config.COLORPICKER==2) {        
+        pointer.color = {r:config.COL1.r*0.15/255 , g:config.COL1.g*0.15/255, b:config.COL1.b*0.15/255}
+    }
+
 }
 //====================================================================================================================
 //

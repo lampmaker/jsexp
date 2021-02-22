@@ -19,7 +19,7 @@
                 "SPLAT_RADIUS": 0.25,
                 "SHADING": true,
                 "COLORFUL": true,
-                "COLORPICKER": false,
+                "COLORPICKER": 0,
                 "PAUSED": false,
                 "SPEED": 1,
                 "WALL": 0,
