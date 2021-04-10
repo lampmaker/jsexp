@@ -1,10 +1,14 @@
 
-import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry ,updatebackgroundpos,updatebackground, updatelight} from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry, updatebackgroundpos, updatebackground, updatelight, getcanvas } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
 var gui, guiData, x, y;
 var loaded = false;
+
+
+var stream, mediaRecorder, recordedChunks = [], recbtn;
+
 
 //=================================================================================================================
 guiData = {
@@ -16,7 +20,7 @@ guiData = {
     repeatY: 0.008,
     rotation: 0.0,//Math.PI / 4, // positive is counter-clockwise
     curvesegments: 2,
-    scale:0.0,
+    scale: 0.0,
     color: '#CCAAAA',
     bevel: true,
     flat: false,
@@ -26,18 +30,21 @@ guiData = {
     resetview: false,
     _savejpg: saveasjpg,
     _export3D: export3D,
-    bgfilename:"wall1",
-    objectposx:0.0,
-    objectposy:0.0,
-    objectrot:0,
-    lightx:-500,
-    lighty:1000,
-    lightz:2000,
-    lightf:2,
-    spot:'#FFFFFF',
-    ambient:'#FFFFFF',
-    lighti:1.0,
-    flip:false
+    bgfilename: "wall1",
+    objectposx: 0.0,
+    objectposy: 0.0,
+    objectrot: 0,
+    lightx: -500,
+    lighty: 1000,
+    lightz: 2000,
+    lightf: 2,
+    spot: '#FFFFFF',
+    ambient: '#FFFFFF',
+    lighti: 1.0,
+    flip: false,
+    Start: record,
+    Frame: record_frame
+
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -57,16 +64,16 @@ function resetcam() {
 //=================================================================================================================
 function _updateUvTransform() {
     updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ] 
-    updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify,guiData.scale);
+    updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify, guiData.scale);
 }
-function _updatebackgroundpos(){
-    updatebackgroundpos(guiData.objectposx,guiData.objectposy,guiData.objectrot,guiData.flip);
+function _updatebackgroundpos() {
+    updatebackgroundpos(guiData.objectposx, guiData.objectposy, guiData.objectrot, guiData.flip);
 }
-function _updatebackground(){
+function _updatebackground() {
     updatebackground(guiData.bgfilename)
 }
-function _updatelight(){
-    updatelight(guiData.lightx,guiData.lighty,guiData.lightz,guiData.lightf,guiData.spot,guiData.ambient,guiData.lighti);
+function _updatelight() {
+    updatelight(guiData.lightx, guiData.lighty, guiData.lightz, guiData.lightf, guiData.spot, guiData.ambient, guiData.lighti);
 }
 
 //=================================================================================================================
@@ -74,7 +81,7 @@ $(function () {
     $.getJSON('/js/3Dviewer/presets.json', function (json) {
         //  console.log(json);
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
-          gui.remember(guiData);
+        gui.remember(guiData);
         gui.add(guiData, 'cwidth', 0, 4096, 128).name('width').onFinishChange(updatescreen);
         gui.add(guiData, 'cheight', 0, 4096, 128).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'maskfilename').name('File name');
@@ -92,29 +99,66 @@ $(function () {
         g1.add(guiData, 'simplify', 0.0, 5.0, 0.01).name('simplify').onChange(_updateUvTransform);
         g1.add(guiData, 'bevel', true).name('curve Bevel').onChange(_updateUvTransform);
         g1.add(guiData, 'flat').onChange(_updateUvTransform)
-        g1.add(guiData,'scale',0,1000).name('Scale to width (mm)').onChange(_updateUvTransform);
+        g1.add(guiData, 'scale', 0, 1000).name('Scale to width (mm)').onChange(_updateUvTransform);
 
-        var g2=gui.addFolder('Background')
-        g2.add(guiData,'bgfilename').name('Background texture').onFinishChange(_updatebackground);
+        var g2 = gui.addFolder('Background')
+        g2.add(guiData, 'bgfilename').name('Background texture').onFinishChange(_updatebackground);
         g2.add(guiData, 'objectposx', -500, 500).name('offset.x').onChange(_updatebackgroundpos);
         g2.add(guiData, 'objectposy', -500, 500).name('offset.y').onChange(_updatebackgroundpos);
         g2.add(guiData, 'objectrot', -180, 180).name('Rotation').onChange(_updatebackgroundpos);
         g2.add(guiData, 'flip').name('Flip').onChange(_updatebackgroundpos);
 
-        var g3=g2.addFolder('Light')
+        var g3 = g2.addFolder('Light')
         g3.add(guiData, 'lightx', -1000, 1000).name('x').onChange(_updatelight);
         g3.add(guiData, 'lighty', -1000, 1000).name('y').onChange(_updatelight);
         g3.add(guiData, 'lightz', 500, 4000).name('Z').onChange(_updatelight);
-        g3.add(guiData, 'lightf', 0,10).name('focus').onChange(_updatelight);
-        g3.addColor(guiData,'spot').onChange(_updatelight);
-        g3.addColor(guiData,'ambient').onChange(_updatelight);;
-        g3.add(guiData, 'lighti', 0,1,0.001).name('intensity').onChange(_updatelight);
+        g3.add(guiData, 'lightf', 0, 10).name('focus').onChange(_updatelight);
+        g3.addColor(guiData, 'spot').onChange(_updatelight);
+        g3.addColor(guiData, 'ambient').onChange(_updatelight);;
+        g3.add(guiData, 'lighti', 0, 1, 0.001).name('intensity').onChange(_updatelight);
 
         gui.add(guiData, 'resetview').name('Reset view').onChange(resetcam);
-    //    gui.add(guiData, '_savejpg').name('save jpeg');
+        //    gui.add(guiData, '_savejpg').name('save jpeg');
         gui.add(guiData, '_export3D').name('save as 3D');
+        var g4 = gui.addFolder('StopMotion Recorder')
+        recbtn = g4.add(guiData, 'Start');
+        g4.add(guiData, 'Frame');
     });
-    init();    
+    init();
+    //  mySvg = loadImage("beer.svg");
+    stream = getcanvas().captureStream(0 /*fps*/);
+    mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "video/webm; codecs=vp9"
+        //mimeType: "video/webm; codecs=h264"
+    });
+    mediaRecorder.ondataavailable = function (e) {
+        recordedChunks.push(event.data);
+        if (mediaRecorder.state === 'recording') {
+            // after stop data avilable event run one more time
+            mediaRecorder.stop();
+        }
+    }
+
+    mediaRecorder.onstop = function (event) {
+        console.log('stop');
+        var blob = new Blob(recordedChunks, {
+            type: "video/webm"
+        });
+        var url = URL.createObjectURL(blob);
+        //res(url);
+        window.open(url);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'test.webm';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    }
+
     _updateUvTransform();
     _updatecolor();
     _updatelight();
@@ -122,7 +166,6 @@ $(function () {
     _updatebackgroundpos();
     updatescreen();
     resetcam();
-
 
 });
 
@@ -132,33 +175,20 @@ function loadImage() {
     var s1 = '/models/';
     var url = s1.concat(guiData.maskfilename);
     if (guiData.maskfilename.split('.')[1] == null) {
-        url = s1.concat(guiData.maskfilename, '.svg')    
+        url = s1.concat(guiData.maskfilename, '.svg')
     }
-    loadSVG(url,guiData.maskfilename,function(){
+    loadSVG(url, guiData.maskfilename, function () {
         _updateUvTransform();
-        _updatecolor();        
+        _updatecolor();
         _updatebackgroundpos();
     });
-    
+
 }
 //========================================================================================================
 
 //=================================================================================================================
 //=================================================================================================================
 
-
-function record() {
-    if (mediaRecorder.state == 'recording') {
-        // after stop data avilable event run one more time
-        mediaRecorder.stop();
-        recbtn.name('RECORD');
-        return;
-    }
-    var recordedChunks = [];
-    mediaRecorder.start(40000);
-    console.log('start');
-    recbtn.name('STOP');
-}
 
 
 function makem3dfromsvg(data) {
@@ -311,4 +341,22 @@ function saveasjpg() {
         }
     },
         options);
+}
+
+
+function record() {
+    if (mediaRecorder.state == 'recording') {
+        // after stop data avilable event run one more time
+        mediaRecorder.stop();
+        recbtn.name('RECORD');
+        return;
+    }
+    var recordedChunks = [];
+    mediaRecorder.start();
+    console.log('start');
+    recbtn.name('STOP');
+}
+
+function record_frame() {
+    stream.getVideoTracks()[0].requestFrame();
 }

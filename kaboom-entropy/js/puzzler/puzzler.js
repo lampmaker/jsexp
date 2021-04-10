@@ -18,6 +18,9 @@ var vlines, lines;
 var border, borderpoints;
 var borderloaded = false;
 var phase = 0;
+
+
+
 //==================================================================
 var mouseboxEnum = {
     small: 10,
@@ -98,7 +101,7 @@ window.draw = draw;
 window.mousedown
 
 export function preload() {
-    //  mySvg = loadImage("beer.svg");
+
 }
 
 export function setup2() {
@@ -186,10 +189,7 @@ export function loadSVG(url, fn, density) {
             density = circum / MAXPOINTS;
         }
 
-
-
         points = spread_path(points, density);
-
         for (var k = 0; k < points.length; k++) {
             var x1 = (points[k].x - x0) * scale + mx / 2;
             var y1 = (points[k].y - y0) * scale + my / 2;

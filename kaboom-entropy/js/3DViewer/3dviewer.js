@@ -99,7 +99,7 @@ export function init() {
 
 
     // init object   ----------------------------------------------------------------------------------------------------
-    texture = new THREE.TextureLoader().load("img/plywood1.jpg");
+    texture = new THREE.TextureLoader().load("img/birchplywood.jpg");
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(0.0025, 0.005);
@@ -136,6 +136,10 @@ export function resize(width, height) {
     Renderer.setSize(canvasWidth, canvasHeight);
     Camera.aspect = canvasWidth / canvasHeight;
     Camera.updateProjectionMatrix();
+}
+
+export function getcanvas() {
+    return canvasQ.get(0);
 }
 //=======================================================================================================
 //=======================================================================================================
