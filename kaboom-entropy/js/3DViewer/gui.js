@@ -123,7 +123,7 @@ $(function () {
         var g4 = gui.addFolder('StopMotion Recorder')
         recbtn = g4.add(guiData, 'Start');
         g4.add(guiData, 'Frame');
-        g4.add(guiData, 'explode', 0, 100).onChange(_explodedView);
+        g4.add(guiData, 'explode', 0, 100, 0.01).onChange(_explodedView);
         g4.add({
             fun: () => {
                 _explode()

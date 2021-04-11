@@ -518,6 +518,7 @@ export function explodedview(ratio, func, h) {
         playback();
         return;
     }
+
     // ratio =0..100;  0..10: move down, 10..100: xy shift
     var distance = 0;
     var z_offset = 10
@@ -584,8 +585,8 @@ export function Explode() {
     for (var i = 0; i < Objects[0].children.length; i++) {
         //for (var i = 0; i < 3; i++) {
         var angle = Math.random() * Math.PI * 2;
-        var dx = Math.sin(angle) * 10;
-        var dy = Math.cos(angle) * 10;
+        var dx = Math.sin(angle) * 1;
+        var dy = Math.cos(angle) * 1;
         var part = Objects[0].children[i];
         var x = dx, y = dx;
         var cnt = 1000;
