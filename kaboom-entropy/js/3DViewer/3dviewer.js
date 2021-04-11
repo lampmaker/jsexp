@@ -509,12 +509,96 @@ function simplify(curve, points, threshold) {
 }
 
 
-export function explodedview(distance, r, h) {
+export function explodedview(ratio, func, h) {
+    if (func == 1) {
+        Explode();
+        return;
+    }
+    if (func == 2) {
+        playback();
+        return;
+    }
+    // ratio =0..100;  0..10: move down, 10..100: xy shift
+    var distance = 0;
+    var z_offset = 10
+    if (ratio > 10) {
+        distance = (ratio - 10) / 90;
+    }
+    else {
+        z_offset = ratio;
+    }
     for (var i = 0; i < Objects[0].children.length; i++) {
         var part = Objects[0].children[i]
         if (part.userData.set != null) {
-            part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, distance * part.userData.shiftedposition.z);
+            part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z_offset);
+            //   part.rotation.set(0, 0, distance);
             //   part.rotation.set(part.userData.rotation.);
         }
     }
+}
+
+// simple collision detection
+function rt(a, b) {
+    let d = [b];
+    let e = a.position.clone();
+    let f = a.geometry.vertices.length;
+    let g = a.position;
+    let h = a.matrix;
+    let i = a.geometry.vertices;
+    for (var vertexIndex = f - 1; vertexIndex >= 0; vertexIndex--) {
+        let localVertex = i[vertexIndex].clone();
+        let globalVertex = localVertex.applyMatrix4(h);
+        let directionVector = globalVertex.sub(g);
+
+        let ray = new THREE.Raycaster(e, directionVector.clone().normalize());
+        let collisionResults = ray.intersectObjects(d);
+        if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+            return true;
+        }
+    }
+    return false;
+}
+function ft(a, b) {
+    return rt(a, b) || rt(b, a) || (a.position.z == b.position.z && a.position.x == b.position.x && a.position.y == b.position.y)
+}
+// detects if object i colides with any other one.  
+function touchany(i) {
+    var part1 = Objects[0].children[i];
+    for (var j = 0; j < Objects[0].children.length; j++) {
+        if (i != j) {
+            var part2 = Objects[0].children[j];
+            var mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius
+            var p1 = new THREE.Vector3();
+            var p2 = new THREE.Vector3();
+            p1.addVectors(part1.geometry.boundingSphere.center, part1.position);
+            p2.addVectors(part2.geometry.boundingSphere.center, part2.position);
+            if (p1.distanceTo(p2) < mindistance) return true;
+            //if (ft(part, Objects[0].children[j])) return true
+        }
+    }
+    return false
+}
+
+
+export function Explode() {
+    for (var i = 0; i < Objects[0].children.length; i++) {
+        //for (var i = 0; i < 3; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var dx = Math.sin(angle) * 10;
+        var dy = Math.cos(angle) * 10;
+        var part = Objects[0].children[i];
+        var x = dx, y = dx;
+        var cnt = 1000;
+        while (touchany(i) && (cnt-- > 0)) {
+            var p2 = { x: part.position.x, y: part.position.y, z: part.position.z }
+            part.userData = { shiftedposition: p2, set: true }
+            part.position.set(x, y, part.position.z);
+            x += dx;
+            y += dy;
+        }
+    }
+}
+
+function playback() {
+
 }

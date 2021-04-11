@@ -124,6 +124,11 @@ $(function () {
         recbtn = g4.add(guiData, 'Start');
         g4.add(guiData, 'Frame');
         g4.add(guiData, 'explode', 0, 100).onChange(_explodedView);
+        g4.add({
+            fun: () => {
+                _explode()
+            }
+        }, 'fun').name('Auto explode');
     });
     init();
     //  mySvg = loadImage("beer.svg");
@@ -364,5 +369,9 @@ function record_frame() {
 }
 
 function _explodedView() {
-    explodedview(guiData.explode / 100, 0);
+    explodedview(guiData.explode, 0, 0);
+}
+
+function _explode() {
+    explodedview(0, 1, 0);
 }
