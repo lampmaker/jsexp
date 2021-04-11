@@ -1,32 +1,34 @@
 {
-  "preset": "wall20",
+  "preset": "Default",
   "remembered": {
     "Default": {
       "0": {
         "cwidth": 2048,
         "cheight": 2048,
-        "maskfilename": "olifant",
+        "maskfilename": "kever",
         "offsetX": 1,
         "offsetY": 0.5,
         "repeatX": 0.0035,
         "repeatY": 0.008,
         "rotation": 0,
         "color": "#CCAAAA",
-        "curvesegments": 10,
-        "simplify": 0,
-        "bevel": true,
+        "curvesegments": 2,
+        "simplify": 0.1,
+        "bevel": false,
         "flat": false,
-        "scale": 0,
+        "scale": 555.0567107750472,
         "bgfilename": "white",
-        "objectposx": -69.34124944960212,
-        "objectposy": 89.4197407716864,
+        "objectposx": 9.688090737240088,
+        "objectposy": 32.372400756143634,
         "objectrot": 0,
+        "flip": true,
         "lightx": -884.1520616287567,
         "lighty": 600.4233509036726,
         "lightz": 1131.2711246332638,
         "lightf": 9.149984341527972,
         "spot": "#7b7a7a",
         "ambient": "#bcbcbc",
+        "lighti": 1,
         "resetview": false
       }
     },
@@ -233,6 +235,11 @@
           "folders": {}
         }
       }
+    },
+    "StopMotion Recorder": {
+      "preset": "Default",
+      "closed": true,
+      "folders": {}
     }
   }
 }

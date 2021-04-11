@@ -1,5 +1,5 @@
 
-import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry, updatebackgroundpos, updatebackground, updatelight, getcanvas } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry, updatebackgroundpos, updatebackground, updatelight, getcanvas, explodedview } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
@@ -43,8 +43,8 @@ guiData = {
     lighti: 1.0,
     flip: false,
     Start: record,
-    Frame: record_frame
-
+    Frame: record_frame,
+    explode: 0
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -123,6 +123,7 @@ $(function () {
         var g4 = gui.addFolder('StopMotion Recorder')
         recbtn = g4.add(guiData, 'Start');
         g4.add(guiData, 'Frame');
+        g4.add(guiData, 'explode', 0, 100).onChange(_explodedView);
     });
     init();
     //  mySvg = loadImage("beer.svg");
@@ -358,5 +359,10 @@ function record() {
 }
 
 function record_frame() {
-    stream.getVideoTracks()[0].requestFrame();
+    resetpositions();
+    //    stream.getVideoTracks()[0].requestFrame();
+}
+
+function _explodedView() {
+    explodedview(guiData.explode / 100, 0);
 }

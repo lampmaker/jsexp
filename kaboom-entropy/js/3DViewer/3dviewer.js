@@ -1,6 +1,7 @@
-import * as THREE from '/js/three/three.module.js';
+import * as THREE from '/js/three/three.module.new.js';
 import { OrbitControls } from '/js/three/OrbitControls.js';
-import { SVGLoader } from '/js/three/SVGLoader.js';
+import { DragControls } from '/js/3DViewer/DragControls.js';
+import { SVGLoader } from '/js/three/SVGLoader.new.js';
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 import { SimplifyModifier } from '/js/three/SimplifyModifier.js';
 
@@ -15,7 +16,8 @@ var mMouseDown = false;
 // scene stuff
 var Renderer;
 var Scene;
-var Camera, controls, light0, light1;
+var Camera, orbitControls, dragControls, light0, light1;
+var Objects = [];
 var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture, tablematerial;
 var filename;
 // geometry through gui
@@ -49,9 +51,49 @@ export function init() {
     // init camera ----------------------------------------------------------------------------------------------------
     Camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
     Camera.position.set(0, 0, 700);
-    controls = new OrbitControls(Camera, Renderer.domElement);
-    controls.screenSpacePanning = true;
+    orbitControls = new OrbitControls(Camera, Renderer.domElement);
+    orbitControls.screenSpacePanning = true;
+    dragControls = new DragControls(Objects, Camera, Renderer.domElement);
+    dragControls.deactivate();
     resize(canvasWidth, canvasHeight);    //set everything right
+
+
+
+
+
+
+    document.addEventListener('keydown', (e) => {
+        if (e.keyCode === 17) {
+            dragControls.activate();
+        }
+    })
+
+    document.addEventListener('keyup', (e) => {
+        if (e.keyCode === 17) {
+            dragControls.deactivate();
+        }
+    })
+
+    dragControls.addEventListener('dragstart', function (event) {
+        // event.object.material[0].emissive.set(0xaaaaaa);
+        /*
+        if (event.object.userData.set == null) {
+            event.object.userData = { position: event.object.position, rotation: event.object.rotation, set: true }
+            console.log('origin position: ', event.object.position.x, event.object.position.y, event.object.position.z);
+        }
+        */
+    });
+
+
+    dragControls.addEventListener('dragend', function (event) {
+        //event.object.material[0].emissive.set(0x000000);
+        var p2 = { x: event.object.position.x, y: event.object.position.y, z: event.object.position.z }
+        event.object.userData = { shiftedposition: p2, set: true }
+    });
+
+
+
+
 
     // init background  ----------------------------------------------------------------------------------------------------
 
@@ -162,11 +204,13 @@ export function updateGeometry(c, b, f, s, sc) {
 
 export function updatebackgroundpos(x, y, r, f) {
     var S = Scene.getObjectByName('SVG');
-    S.position.set(x, y, S.position.z);
-    S.rotation.z = r * 3.141592 / 180;
-    if (f != cflip) {
-        cflip = f;
-        S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+    if (S != undefined) {
+        S.position.set(x, y, S.position.z);
+        S.rotation.z = r * 3.141592 / 180;
+        if (f != cflip) {
+            cflip = f;
+            S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+        }
     }
 }
 
@@ -200,13 +244,13 @@ export function updatelight(x, y, z, f, spc, bgc, int) {
 //=======================================================================================================
 
 export function resetview(cx, cy, cz) {
-    controls.reset();
+    orbitControls.reset();
     Camera.position.set(cx, cy, cz);
 
     Camera.updateProjectionMatrix();
 }
 export function freezeview(t) {
-    controls.enabled = !t
+    orbitControls.enabled = !t
 }
 //=======================================================================================================
 function getsizeandpos(geo) {
@@ -269,13 +313,15 @@ export function loadSVG(url, fn, whenready) {
                 curveSegments: csegments
             });
             var h = 1; var w = 1;
-            var uvs = SVGgeometry.faceVertexUvs[0];
-            uvs[0][0].set(0, h);
-            uvs[0][1].set(0, 0);
-            uvs[0][2].set(w, h);
-            uvs[1][0].set(0, 0);
-            uvs[1][1].set(w, 0);
-            uvs[1][2].set(w, h);
+            /*
+                        var uvs = SVGgeometry.faceVertexUvs[0];
+                        uvs[0][0].set(0, h);
+                        uvs[0][1].set(0, 0);
+                        uvs[0][2].set(w, h);
+                        uvs[1][0].set(0, 0);
+                        uvs[1][1].set(w, 0);
+                        uvs[1][2].set(w, h);
+            */
             console.log('geometry', SVGgeometry);
             SVGmesh = new THREE.Mesh(SVGgeometry, material);
             SVGmesh.scale.y *= -1;
@@ -302,6 +348,14 @@ export function loadSVG(url, fn, whenready) {
         SVGsubgroup.translateZ(-dims[5] + 1);
         SVGgroup.add(SVGsubgroup);
         Scene.add(SVGgroup);
+        Objects.push(SVGsubgroup);
+
+
+
+
+
+
+
         whenready();
     });
 }
@@ -452,4 +506,15 @@ function simplify(curve, points, threshold) {
     simplifySegment(0, curve.length - 1);
     result.push(curve[curve.length - 1]);
     return result;
+}
+
+
+export function explodedview(distance, r, h) {
+    for (var i = 0; i < Objects[0].children.length; i++) {
+        var part = Objects[0].children[i]
+        if (part.userData.set != null) {
+            part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, distance * part.userData.shiftedposition.z);
+            //   part.rotation.set(part.userData.rotation.);
+        }
+    }
 }
