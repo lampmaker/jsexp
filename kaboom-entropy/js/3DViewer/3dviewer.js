@@ -22,6 +22,10 @@ var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture, tablematerial;
 var filename;
 // geometry through gui
 var csegments, bevel, flat, csimplify, cscale, cflip;
+
+
+var animation;
+
 //=======================================================================================================
 //=======================================================================================================
 
@@ -57,10 +61,14 @@ export function init() {
     dragControls.deactivate();
     resize(canvasWidth, canvasHeight);    //set everything right
 
-
-
-
-
+    animation = {
+        speed: 0,
+        partindex: 0,
+        partratio: 0,
+        end_campos: new THREE.Vector3(0, 0, 700),
+        end_camrot: new THREE.Vector3(0, 0, 0),
+        movecam: true
+    }
 
     document.addEventListener('keydown', (e) => {
         if (e.keyCode === 17) {
@@ -109,7 +117,7 @@ export function init() {
         //	bump: tbump,
         depthWrite: false,
     });
-    var table = new THREE.PlaneGeometry(700, 700);
+    var table = new THREE.PlaneGeometry(1024, 1024);
     var tablemesh = new THREE.Mesh(table, tablematerial);
     tablemesh.name = "background";
     tablemesh.position.z = -2;
@@ -363,6 +371,7 @@ export function loadSVG(url, fn, whenready) {
 //=======================================================================================================
 //=======================================================================================================
 function animate() {
+    animateparts()
     requestAnimationFrame(animate);
     render();
 }
@@ -509,14 +518,19 @@ function simplify(curve, points, threshold) {
 }
 
 
-export function explodedview(ratio, func, h) {
+export function explodedview(ratio, func, h, f2) {
     if (func == 1) {
         Explode();
         return;
     }
     if (func == 2) {
-        playback();
+        animation.speed = h;
+        animation.movecam = f2;
         return;
+    }
+    if (func == 3) {
+        animation.end_campos.copy(Camera.position);
+        animation.end_camrot.copy(Camera.rotation);
     }
 
     // ratio =0..100;  0..10: move down, 10..100: xy shift
@@ -537,6 +551,8 @@ export function explodedview(ratio, func, h) {
         }
     }
 }
+
+
 
 // simple collision detection
 function rt(a, b) {
@@ -585,8 +601,8 @@ export function Explode() {
     for (var i = 0; i < Objects[0].children.length; i++) {
         //for (var i = 0; i < 3; i++) {
         var angle = Math.random() * Math.PI * 2;
-        var dx = Math.sin(angle) * 1;
-        var dy = Math.cos(angle) * 1;
+        var dx = Math.sin(angle) * 500;
+        var dy = Math.cos(angle) * 500;
         var part = Objects[0].children[i];
         var x = dx, y = dx;
         var cnt = 1000;
@@ -598,8 +614,67 @@ export function Explode() {
             y += dy;
         }
     }
+    animation.partindex = Objects[0].children.length - 1;
 }
 
-function playback() {
+function animatepart(i, ratio) {
+    if (i >= Objects[0].children.length) return;
+    if (i < 0) return;
+    var distance = 0;
+    var z_offset = 10
+    if (ratio > 10) {
+        distance = (ratio - 10) / 90;
+    }
+    else {
+        z_offset = ratio;
+    }
+    var part = Objects[0].children[i]
+    if (part.userData.set != null) part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z_offset);
+}
 
+
+function animateparts() {
+    if (animation.speed == 0) return;
+
+    if (animation.movecam) {
+        var totscale = (animation.partindex + animation.partratio / 100) / Objects[0].children.length;
+        var cp = new THREE.Vector3();
+        cp = animation.end_campos;//.addScaledVector(animation.end_campos.addScaledVector(Camera.position, -1), totscale);   // vector to end position
+        //cp = animation.end_campos.addScaledVector(animation.end_campos.addScaledVector(Camera.position, -1), totscale);   // vector to end position       
+        console.log(cp, Camera.position);
+        //Camera.position.set(cp.x, cp.y, cp.z);
+    }
+
+    if (animation.speed < 0) { //collapse
+        animation.partratio += animation.speed / 10;
+        if (animation.partratio <= 0) {
+            animatepart(animation.partindex, 0);
+            animation.partratio = 100  // for 
+            animation.partindex--;
+            if (animation.partindex <= 0) {
+                animation.partindex = 0;
+                animatepart(animation.partindex, 0);
+                animation.speed = 0; // ready                
+            }
+        }
+        else {
+            animatepart(animation.partindex, animation.partratio);
+        }
+    }
+    else {
+        animation.partratio += animation.speed / 10;
+        if (animation.partratio >= 100) {
+            animatepart(animation.partindex, 100);
+            animation.partratio = 0;  // for
+            animation.partindex++;
+            if (animation.partindex > Objects[0].children.length) {
+                animation.partindex = Objects[0].children.length - 1;
+                animatepart(animation.partindex, 100);
+                animation.speed = 0; // ready                
+            }
+        }
+        else {
+            animatepart(animation.partindex, animation.partratio);
+        }
+    }
 }

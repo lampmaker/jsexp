@@ -44,7 +44,9 @@ guiData = {
     flip: false,
     Start: record,
     Frame: record_frame,
-    explode: 0
+    explode: 0,
+    playbackspeed: 0,
+    movecam: false
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -129,6 +131,8 @@ $(function () {
                 _explode()
             }
         }, 'fun').name('Auto explode');
+        g4.add(guiData, 'movecam').name('move camera').onChange(_setcampos);
+        g4.add(guiData, 'playbackspeed', -100, 100, 1).onChange(_animate);
     });
     init();
     //  mySvg = loadImage("beer.svg");
@@ -374,4 +378,11 @@ function _explodedView() {
 
 function _explode() {
     explodedview(0, 1, 0);
+}
+function _animate() {
+    explodedview(0, 2, guiData.playbackspeed, guiData.movecam);
+}
+
+function _setcampos() {
+    explodedview(0, 3, 0, 0);
 }
