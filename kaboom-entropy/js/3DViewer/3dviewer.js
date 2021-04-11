@@ -67,6 +67,8 @@ export function init() {
         partratio: 0,
         end_campos: new THREE.Vector3(0, 0, 700),
         end_camrot: new THREE.Vector3(0, 0, 0),
+        start_campos: new THREE.Vector3(0, 0, 700),
+        start_camrot: new THREE.Vector3(0, 0, 0),
         movecam: true
     }
 
@@ -529,10 +531,13 @@ export function explodedview(ratio, func, h, f2) {
         return;
     }
     if (func == 3) {
+        animation.start_campos.copy(Camera.position);
+        animation.start_camrot.copy(Camera.rotation);
+    }
+    if (func == 4) {
         animation.end_campos.copy(Camera.position);
         animation.end_camrot.copy(Camera.rotation);
     }
-
     // ratio =0..100;  0..10: move down, 10..100: xy shift
     var distance = 0;
     var z_offset = 10
@@ -639,10 +644,11 @@ function animateparts() {
     if (animation.movecam) {
         var totscale = (animation.partindex + animation.partratio / 100) / Objects[0].children.length;
         var cp = new THREE.Vector3();
-        cp = animation.end_campos;//.addScaledVector(animation.end_campos.addScaledVector(Camera.position, -1), totscale);   // vector to end position
-        //cp = animation.end_campos.addScaledVector(animation.end_campos.addScaledVector(Camera.position, -1), totscale);   // vector to end position       
-        console.log(cp, Camera.position);
-        //Camera.position.set(cp.x, cp.y, cp.z);
+        var Camvector = new THREE.Vector3();
+        Camvector = animation.end_campos.addScaledVector(animation.start_campos, -1);
+        cp = animation.start_campos.addScaledVector(Camvector, totscale);
+        Camera.position.set(cp);
+
     }
 
     if (animation.speed < 0) { //collapse

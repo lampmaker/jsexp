@@ -47,6 +47,7 @@ guiData = {
     explode: 0,
     playbackspeed: 0,
     movecam: false
+
 };
 //=================================================================================================================
 //=================================================================================================================
@@ -132,6 +133,18 @@ $(function () {
             }
         }, 'fun').name('Auto explode');
         g4.add(guiData, 'movecam').name('move camera').onChange(_setcampos);
+        g4.add({
+            fun1: () => {
+                _explode()
+                explodedview(0, 3, 0, 0);
+            }
+        }, 'fun1').name('Set camera position 1');
+        g4.add({
+            fun2: () => {
+                _explode()
+                explodedview(0, 4, 0, 0);
+            }
+        }, 'fun2').name('Set camera position 2');
         g4.add(guiData, 'playbackspeed', -100, 100, 1).onChange(_animate);
     });
     init();
