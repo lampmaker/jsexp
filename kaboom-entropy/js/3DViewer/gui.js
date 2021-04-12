@@ -132,7 +132,7 @@ $(function () {
                 _explode()
             }
         }, 'fun').name('Auto explode');
-        g4.add(guiData, 'movecam').name('move camera').onChange(_setcampos);
+        g4.add(guiData, 'movecam').name('move camera').onChange(_animate);
         g4.add({
             fun1: () => {
                 _explode()

@@ -528,15 +528,22 @@ export function explodedview(ratio, func, h, f2) {
     if (func == 2) {
         animation.speed = h;
         animation.movecam = f2;
+        orbitControls.enabled = !f2;
         return;
     }
     if (func == 3) {
+        console.log(orbitControls)
         animation.start_campos.copy(Camera.position);
         animation.start_camrot.copy(Camera.rotation);
+        console.log("camera start:", animation.start_campos, animation.start_camrot)
+        console.log(orbitControls)
+        console.log("Camera:", Camera)
     }
     if (func == 4) {
         animation.end_campos.copy(Camera.position);
         animation.end_camrot.copy(Camera.rotation);
+        console.log("camera end:", animation.end_campos, animation.end_camrot)
+
     }
     // ratio =0..100;  0..10: move down, 10..100: xy shift
     var distance = 0;
@@ -639,15 +646,33 @@ function animatepart(i, ratio) {
 
 
 function animateparts() {
-    if (animation.speed == 0) return;
+    if (animation.speed == 0) {
+        return;
+    }
+
 
     if (animation.movecam) {
+
         var totscale = (animation.partindex + animation.partratio / 100) / Objects[0].children.length;
         var cp = new THREE.Vector3();
-        var Camvector = new THREE.Vector3();
-        Camvector = animation.end_campos.addScaledVector(animation.start_campos, -1);
-        cp = animation.start_campos.addScaledVector(Camvector, totscale);
-        Camera.position.set(cp);
+        cp.copy(animation.start_campos);
+        cp.addScaledVector(animation.end_campos, totscale);
+        cp.addScaledVector(animation.start_campos, -totscale);
+        //console.log("totscale, cam position:", totscale, cp);
+        var cr = new THREE.Vector3();
+        cr.copy(animation.start_camrot);
+        cr.addScaledVector(animation.end_camrot, totscale);
+        cr.addScaledVector(animation.start_camrot, -totscale);
+        //cr.copy(Camera.position);
+        //Camera.position.set(cr);
+        //  Camera.rotation.set(cr);
+        console.log("camera:", totscale, cp, cr)
+        //orbitControls.update();
+        Camera.position.copy(cp); // Set position like this
+        //  Camera.rotation.copy(cr); // Set position like this
+        //Camera.lookAt(new THREE.Vector3(0, 0, 0)); // Set look at coordinate like this
+
+
 
     }
 
@@ -657,6 +682,8 @@ function animateparts() {
             animatepart(animation.partindex, 0);
             animation.partratio = 100  // for 
             animation.partindex--;
+            if (animation.partindex < 0) animation.partindex = 0;
+            //if (Objects[0].children[animation.partindex].userData.set = null) animation.partindex--;
             if (animation.partindex <= 0) {
                 animation.partindex = 0;
                 animatepart(animation.partindex, 0);
