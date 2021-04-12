@@ -534,14 +534,18 @@ export function explodedview(ratio, func, h, f2) {
     if (func == 3) {
         console.log(orbitControls)
         animation.start_campos.copy(Camera.position);
-        animation.start_camrot.copy(Camera.rotation);
+        var vector = new THREE.Vector3(0, 0, -1);
+        vector.applyQuaternion(Camera.quaternion);
+        animation.start_camrot.copy(vector);
         console.log("camera start:", animation.start_campos, animation.start_camrot)
         console.log(orbitControls)
         console.log("Camera:", Camera)
     }
     if (func == 4) {
         animation.end_campos.copy(Camera.position);
-        animation.end_camrot.copy(Camera.rotation);
+        var vector = new THREE.Vector3(0, 0, -1);
+        vector.applyQuaternion(Camera.quaternion);
+        animation.end_camrot.copy(vector);
         console.log("camera end:", animation.end_campos, animation.end_camrot)
 
     }
@@ -632,16 +636,19 @@ export function Explode() {
 function animatepart(i, ratio) {
     if (i >= Objects[0].children.length) return;
     if (i < 0) return;
+    var splitratio = 50;
     var distance = 0;
-    var z_offset = 10
-    if (ratio > 10) {
-        distance = (ratio - 10) / 90;
+    var z_offset = 20;
+    var z = z_offset;
+    if (ratio > splitratio) {
+        distance = (ratio - splitratio) / (100 - splitratio);
     }
     else {
-        z_offset = ratio;
+        z = z_offset * ratio / splitratio;
     }
+    if (ratio > 95) z = 0;
     var part = Objects[0].children[i]
-    if (part.userData.set != null) part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z_offset);
+    if (part.userData.set != null) part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z);
 }
 
 
@@ -669,7 +676,7 @@ function animateparts() {
         console.log("camera:", totscale, cp, cr)
         //orbitControls.update();
         Camera.position.copy(cp); // Set position like this
-        //  Camera.rotation.copy(cr); // Set position like this
+        Camera.lookAt(cr); // Set position like this
         //Camera.lookAt(new THREE.Vector3(0, 0, 0)); // Set look at coordinate like this
 
 
