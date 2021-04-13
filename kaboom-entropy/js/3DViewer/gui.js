@@ -146,7 +146,7 @@ $(function () {
             }
         }, 'fun2').name('Set camera position 2');
         g4.add(guiData, 'playbackspeed', -100, 100, 1).onChange(_animate);
-    });
+    
     init();
     //  mySvg = loadImage("beer.svg");
     stream = getcanvas().captureStream(0 /*fps*/);
@@ -181,15 +181,15 @@ $(function () {
             window.URL.revokeObjectURL(url);
         }, 100);
     }
-
+    updatescreen();
     _updateUvTransform();
     _updatecolor();
     _updatelight();
     _updatebackground();
     _updatebackgroundpos();
-    updatescreen();
+    
     resetcam();
-
+    });
 });
 
 //========================================================================================================
