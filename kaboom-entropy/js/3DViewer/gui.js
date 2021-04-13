@@ -146,49 +146,49 @@ $(function () {
             }
         }, 'fun2').name('Set camera position 2');
         g4.add(guiData, 'playbackspeed', -100, 100, 1).onChange(_animate);
-    
-    init();
-    //  mySvg = loadImage("beer.svg");
-    stream = getcanvas().captureStream(0 /*fps*/);
-    mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "video/webm; codecs=vp9"
-        //mimeType: "video/webm; codecs=h264"
-    });
-    mediaRecorder.ondataavailable = function (e) {
-        recordedChunks.push(event.data);
-        if (mediaRecorder.state === 'recording') {
-            // after stop data avilable event run one more time
-            mediaRecorder.stop();
-        }
-    }
 
-    mediaRecorder.onstop = function (event) {
-        console.log('stop');
-        var blob = new Blob(recordedChunks, {
-            type: "video/webm"
+        init();
+        //  mySvg = loadImage("beer.svg");
+        stream = getcanvas().captureStream(25/*fps*/);
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm; codecs=vp9"
+            //mimeType: "video/webm; codecs=h264"
         });
-        var url = URL.createObjectURL(blob);
-        //res(url);
-        window.open(url);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'test.webm';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-    }
-    updatescreen();
-    _updateUvTransform();
-    _updatecolor();
-    _updatelight();
-    _updatebackground();
-    _updatebackgroundpos();
-    
-    resetcam();
+        mediaRecorder.ondataavailable = function (e) {
+            recordedChunks.push(e.data);
+            if (mediaRecorder.state === 'recording') {
+                // after stop data avilable event run one more time
+                mediaRecorder.stop();
+            }
+        }
+
+        mediaRecorder.onstop = function (event) {
+            console.log('stop');
+            var blob = new Blob(recordedChunks, {
+                type: "video/webm"
+            });
+            var url = URL.createObjectURL(blob);
+            //res(url);
+            window.open(url);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'test.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+        }
+        updatescreen();
+        _updateUvTransform();
+        _updatecolor();
+        _updatelight();
+        _updatebackground();
+        _updatebackgroundpos();
+
+        resetcam();
     });
 });
 

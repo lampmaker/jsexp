@@ -96,8 +96,8 @@ export function init() {
 
 
     dragControls.addEventListener('dragend', function (event) {
-        //event.object.material[0].emissive.set(0x000000);
-        var p2 = { x: event.object.position.x, y: event.object.position.y, z: event.object.position.z }
+        var p2 = new THREE.Vector3;
+        p2.copy(part.position);
         event.object.userData = { shiftedposition: p2, set: true }
     });
 
@@ -518,6 +518,12 @@ function simplify(curve, points, threshold) {
     result.push(curve[curve.length - 1]);
     return result;
 }
+//=======================================================================================================================================
+//=======================================================================================================================================
+//=======================================================================================================================================
+//=======================================================================================================================================
+//=======================================================================================================================================
+//=======================================================================================================================================
 
 
 export function explodedview(ratio, func, h, f2) {
@@ -550,22 +556,10 @@ export function explodedview(ratio, func, h, f2) {
 
     }
     // ratio =0..100;  0..10: move down, 10..100: xy shift
-    var distance = 0;
-    var z_offset = 10
-    if (ratio > 10) {
-        distance = (ratio - 10) / 90;
-    }
-    else {
-        z_offset = ratio;
-    }
     for (var i = 0; i < Objects[0].children.length; i++) {
-        var part = Objects[0].children[i]
-        if (part.userData.set != null) {
-            part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z_offset);
-            //   part.rotation.set(0, 0, distance);
-            //   part.rotation.set(part.userData.rotation.);
-        }
+        animatepart(i, ratio);
     }
+    if (ratio > 90) animation.partindex = Objects[0].children.length - 1;
 }
 
 
@@ -616,23 +610,32 @@ function touchany(i) {
 export function Explode() {
     for (var i = 0; i < Objects[0].children.length; i++) {
         //for (var i = 0; i < 3; i++) {
-        var angle = Math.random() * Math.PI * 2;
+        var angle = Math.random() * 360;
         var dx = Math.sin(angle) * 500;
         var dy = Math.cos(angle) * 500;
         var part = Objects[0].children[i];
-        var x = dx, y = dx;
+        var x = dx, y = dy;
         var cnt = 1000;
-        while (touchany(i) && (cnt-- > 0)) {
-            var p2 = { x: part.position.x, y: part.position.y, z: part.position.z }
-            part.userData = { shiftedposition: p2, set: true }
-            part.position.set(x, y, part.position.z);
-            x += dx;
-            y += dy;
-        }
+        //while (touchany(i) && (cnt-- > 0)) {
+
+        part.position.set(x, y, 0);
+        var p2 = new THREE.Vector3;
+        p2.copy(part.position);
+        part.userData = { shiftedposition: p2, set: true }
+
+        x += dx;
+        y += dy;
+        //}
     }
     animation.partindex = Objects[0].children.length - 1;
 }
 
+
+//============================================================================================\
+// moves part i between zero position and position in userdata.  ratio = 0 (zero position) to 100  (userdata position)
+// if ratiu< splitratio only z gets changed.   if ratio>splitratio, part moves in x,y
+//
+//============================================================================================
 function animatepart(i, ratio) {
     if (i >= Objects[0].children.length) return;
     if (i < 0) return;
@@ -641,12 +644,12 @@ function animatepart(i, ratio) {
     var z_offset = 20;
     var z = z_offset;
     if (ratio > splitratio) {
-        distance = (ratio - splitratio) / (100 - splitratio);
+        distance = (ratio - splitratio) / (100 - splitratio);  //(distanceratio=0.0 to 1.0)
+        z = (1 - distance) * z_offset;
     }
     else {
         z = z_offset * ratio / splitratio;
     }
-    if (ratio > 95) z = 0;
     var part = Objects[0].children[i]
     if (part.userData.set != null) part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z);
 }
