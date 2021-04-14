@@ -97,7 +97,7 @@ export function init() {
 
     dragControls.addEventListener('dragend', function (event) {
         var p2 = new THREE.Vector3;
-        p2.copy(part.position);
+        p2.copy(event.object.position);
         event.object.userData = { shiftedposition: p2, set: true }
     });
 
@@ -563,7 +563,7 @@ export function explodedview(ratio, func, h, f2) {
 }
 
 
-
+/*
 // simple collision detection
 function rt(a, b) {
     let d = [b];
@@ -572,6 +572,10 @@ function rt(a, b) {
     let g = a.position;
     let h = a.matrix;
     let i = a.geometry.vertices;
+
+
+
+
     for (var vertexIndex = f - 1; vertexIndex >= 0; vertexIndex--) {
         let localVertex = i[vertexIndex].clone();
         let globalVertex = localVertex.applyMatrix4(h);
@@ -585,6 +589,29 @@ function rt(a, b) {
     }
     return false;
 }
+
+*/
+function rt(a, b) {
+    let d = [b];
+    const positionAttribute = a.geometry.getAttribute('position');
+    const localVertex = new THREE.Vector3();
+    const globalVertex = new THREE.Vector3();
+    for (let vertexIndex = 0; vertexIndex < positionAttribute.count; vertexIndex++) {
+        localVertex.fromBufferAttribute(positionAttribute, vertexIndex);
+        globalVertex.copy(localVertex).applyMatrix4(a.matrixWorld);
+        var directionVector = globalVertex.sub(a.position);
+        let ray = new THREE.Raycaster(a, directionVector.clone().normalize());
+        let collisionResults = ray.intersectObjects(d);
+        if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+            return true;
+        }
+    }
+
+
+}
+
+
+
 function ft(a, b) {
     return rt(a, b) || rt(b, a) || (a.position.z == b.position.z && a.position.x == b.position.x && a.position.y == b.position.y)
 }
@@ -594,13 +621,15 @@ function touchany(i) {
     for (var j = 0; j < Objects[0].children.length; j++) {
         if (i != j) {
             var part2 = Objects[0].children[j];
-            var mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius
+            /*
+            v*r mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius
             var p1 = new THREE.Vector3();
             var p2 = new THREE.Vector3();
             p1.addVectors(part1.geometry.boundingSphere.center, part1.position);
             p2.addVectors(part2.geometry.boundingSphere.center, part2.position);
             if (p1.distanceTo(p2) < mindistance) return true;
-            //if (ft(part, Objects[0].children[j])) return true
+            */
+            if (ft(part1, part2)) return true
         }
     }
     return false
@@ -611,21 +640,21 @@ export function Explode() {
     for (var i = 0; i < Objects[0].children.length; i++) {
         //for (var i = 0; i < 3; i++) {
         var angle = Math.random() * 360;
-        var dx = Math.sin(angle) * 500;
-        var dy = Math.cos(angle) * 500;
+        var dx = Math.sin(angle) * 50;
+        var dy = Math.cos(angle) * 50;
         var part = Objects[0].children[i];
         var x = dx, y = dy;
         var cnt = 1000;
-        //while (touchany(i) && (cnt-- > 0)) {
+        while (touchany(i) && (cnt-- > 0)) {
 
-        part.position.set(x, y, 0);
-        var p2 = new THREE.Vector3;
-        p2.copy(part.position);
-        part.userData = { shiftedposition: p2, set: true }
+            part.position.set(x, y, 0);
+            var p2 = new THREE.Vector3;
+            p2.copy(part.position);
+            part.userData = { shiftedposition: p2, set: true }
 
-        x += dx;
-        y += dy;
-        //}
+            x += dx;
+            y += dy;
+        }
     }
     animation.partindex = Objects[0].children.length - 1;
 }
