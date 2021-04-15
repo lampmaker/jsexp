@@ -24,7 +24,7 @@ var filename;
 var csegments, bevel, flat, csimplify, cscale, cflip;
 
 
-var animation;
+var animation, raycaster;
 
 //=======================================================================================================
 //=======================================================================================================
@@ -40,7 +40,7 @@ export function init() {
     canvas = canvasQ.get(0);
     canvasWidth = canvasQ.width();
     canvasHeight = canvasQ.height()
-
+    raycaster = new THREE.Raycaster();
     Renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, precision: 'highp' });
     // Renderer.toneMapping = THREE.LinearToneMapping;
     // Renderer.toneMapingExposure = 1;
@@ -85,7 +85,8 @@ export function init() {
     })
 
     dragControls.addEventListener('dragstart', function (event) {
-        // event.object.material[0].emissive.set(0xaaaaaa);
+        event.object.material = material_selected2;
+
         /*
         if (event.object.userData.set == null) {
             event.object.userData = { position: event.object.position, rotation: event.object.rotation, set: true }
@@ -94,8 +95,34 @@ export function init() {
         */
     });
 
+    dragControls.addEventListener('drag', function (event) {
+
+
+        /*
+        var part1 = event.object;
+        var p1 = new THREE.Vector3;
+        part1.geometry.computeBoundingSphere();
+        p1.copy(part1.geometry.boundingSphere.center);
+        p1.add(part1.position);
+        console.log(p1);
+        for (var j = 0; j < Objects[0].children.length; j++) {
+            var part2 = Objects[0].children[j];
+            part2.geometry.computeBoundingSphere();
+            var p2 = new THREE.Vector3;
+            p2.copy(part2.geometry.boundingSphere.center);
+            p2.add(part2.position);
+            var mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius;
+            var distance = p2.distanceTo(p1);
+            // mindistance = 100;
+            if (distance < mindistance) {
+                part2.material = material_selected2;
+            }
+        }
+        */
+    });
 
     dragControls.addEventListener('dragend', function (event) {
+        event.object.material = material;
         var p2 = new THREE.Vector3;
         p2.copy(event.object.position);
         event.object.userData = { shiftedposition: p2, set: true }
@@ -167,7 +194,12 @@ export function init() {
 
 
     material = [materialtop, materialside, materialside];
-
+    var material_selected = new THREE.MeshStandardMaterial
+    material_selected[0] = [materialtop, materialside, materialside]
+    material_selected.emissive.set(0xaaaaaa);
+    var material_selected2 = new THREE.MeshStandardMaterial
+    material_selected2[0] = [materialtop, materialside, materialside]
+    material_selected.emissive.set(0xBBBBBB);
     // init others  ----------------------------------------------------------------------------------------------------
     //var helper = new THREE.GridHelper(1000, 10);
     //helper.rotation.x = Math.PI / 2;
@@ -526,7 +558,14 @@ function simplify(curve, points, threshold) {
 //=======================================================================================================================================
 
 
-export function explodedview(ratio, func, h, f2) {
+export function explodedview(func, ratio, h, f2) {
+    if (func == 0) {
+        // ratio =0..100;  0..10: move down, 10..100: xy shift
+        for (var i = 0; i < Objects[0].children.length; i++) {
+            animatepart(i, ratio);
+        }
+        if (ratio > 90) animation.partindex = Objects[0].children.length - 1;
+    }
     if (func == 1) {
         Explode();
         return;
@@ -546,6 +585,7 @@ export function explodedview(ratio, func, h, f2) {
         console.log("camera start:", animation.start_campos, animation.start_camrot)
         console.log(orbitControls)
         console.log("Camera:", Camera)
+        return;
     }
     if (func == 4) {
         animation.end_campos.copy(Camera.position);
@@ -553,13 +593,10 @@ export function explodedview(ratio, func, h, f2) {
         vector.applyQuaternion(Camera.quaternion);
         animation.end_camrot.copy(vector);
         console.log("camera end:", animation.end_campos, animation.end_camrot)
+        return;
 
     }
-    // ratio =0..100;  0..10: move down, 10..100: xy shift
-    for (var i = 0; i < Objects[0].children.length; i++) {
-        animatepart(i, ratio);
-    }
-    if (ratio > 90) animation.partindex = Objects[0].children.length - 1;
+
 }
 
 
@@ -603,11 +640,9 @@ function rt(a, b) {
         let ray = new THREE.Raycaster(a, directionVector.clone().normalize());
         let collisionResults = ray.intersectObjects(d);
         if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-            return true;
+            return true; 6
         }
     }
-
-
 }
 
 
@@ -616,23 +651,27 @@ function ft(a, b) {
     return rt(a, b) || rt(b, a) || (a.position.z == b.position.z && a.position.x == b.position.x && a.position.y == b.position.y)
 }
 // detects if object i colides with any other one.  
-function touchany(i) {
-    var part1 = Objects[0].children[i];
+function touchany(part1) {
+    var p1 = new THREE.Vector3;
+    part1.geometry.computeBoundingSphere();
+    p1.copy(part1.geometry.boundingSphere.center);
+    //  p1.add(part1.position);
+    console.log(p1);
     for (var j = 0; j < Objects[0].children.length; j++) {
-        if (i != j) {
-            var part2 = Objects[0].children[j];
-            /*
-            v*r mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius
-            var p1 = new THREE.Vector3();
-            var p2 = new THREE.Vector3();
-            p1.addVectors(part1.geometry.boundingSphere.center, part1.position);
-            p2.addVectors(part2.geometry.boundingSphere.center, part2.position);
-            if (p1.distanceTo(p2) < mindistance) return true;
-            */
-            if (ft(part1, part2)) return true
+        var part2 = Objects[0].children[j];
+        part2.geometry.computeBoundingSphere();
+        var p2 = new THREE.Vector3;
+        p2.copy(part2.geometry.boundingSphere.center);
+        //  p2.add(part2.position);
+        var mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius;
+        var distance = p2.distanceTo(p1);
+        // mindistance = 100;
+        if (distance < mindistance) {
+            part2.material = material_selected2;
+            return truel
         }
     }
-    return false
+    return false;
 }
 
 
@@ -640,21 +679,25 @@ export function Explode() {
     for (var i = 0; i < Objects[0].children.length; i++) {
         //for (var i = 0; i < 3; i++) {
         var angle = Math.random() * 360;
-        var dx = Math.sin(angle) * 50;
-        var dy = Math.cos(angle) * 50;
+        var dx = Math.sin(angle) * (Math.random(100) + 100) * 3;
+        var dy = Math.cos(angle) * (Math.random(100) + 100) * 3;
         var part = Objects[0].children[i];
         var x = dx, y = dy;
-        var cnt = 1000;
-        while (touchany(i) && (cnt-- > 0)) {
-
+        var cnt = 10;
+        part.position.set(x, y, 0);
+        var p2 = new THREE.Vector3;
+        p2.copy(part.position);
+        if (part.userData.set == null) part.userData = { shiftedposition: p2, set: true }
+        /*
+        while (touchany(part) && (cnt-- > 0)) {
             part.position.set(x, y, 0);
             var p2 = new THREE.Vector3;
             p2.copy(part.position);
-            part.userData = { shiftedposition: p2, set: true }
-
+            if (part.userData.set == null) part.userData = { shiftedposition: p2, set: true }
             x += dx;
             y += dy;
         }
+        */
     }
     animation.partindex = Objects[0].children.length - 1;
 }

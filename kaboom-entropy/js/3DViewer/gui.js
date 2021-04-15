@@ -135,14 +135,12 @@ $(function () {
         g4.add(guiData, 'movecam').name('move camera').onChange(_animate);
         g4.add({
             fun1: () => {
-                _explode()
-                explodedview(0, 3, 0, 0);
+                explodedview(3, 0, 0, 0);
             }
         }, 'fun1').name('Set camera position 1');
         g4.add({
             fun2: () => {
-                _explode()
-                explodedview(0, 4, 0, 0);
+                explodedview(4, 0, 0, 0);
             }
         }, 'fun2').name('Set camera position 2');
         g4.add(guiData, 'playbackspeed', -100, 100, 1).onChange(_animate);
@@ -386,16 +384,12 @@ function record_frame() {
 }
 
 function _explodedView() {
-    explodedview(guiData.explode, 0, 0);
+    explodedview(0, guiData.explode, 0);
 }
 
 function _explode() {
-    explodedview(0, 1, 0);
+    explodedview(1, 0, 0);
 }
 function _animate() {
-    explodedview(0, 2, guiData.playbackspeed, guiData.movecam);
-}
-
-function _setcampos() {
-    explodedview(0, 3, 0, 0);
+    explodedview(2, 0, guiData.playbackspeed, guiData.movecam);
 }
