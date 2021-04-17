@@ -30,10 +30,6 @@ var animation, raycaster;
 //=======================================================================================================
 
 
-
-
-
-
 export function init() {
     // init render ----------------------------------------------------------------------------------------------------
     canvasQ = $('#myCanvas');
@@ -63,8 +59,8 @@ export function init() {
 
     animation = {
         speed: 0,
-        partindex: 0,
-        partratio: 0,
+        ratio: 0,
+        numparts: 0,
         end_campos: new THREE.Vector3(0, 0, 700),
         end_camrot: new THREE.Vector3(0, 0, 0),
         start_campos: new THREE.Vector3(0, 0, 700),
@@ -125,7 +121,10 @@ export function init() {
         event.object.material = material;
         var p2 = new THREE.Vector3;
         p2.copy(event.object.position);
-        event.object.userData = { shiftedposition: p2, set: true }
+        if (event.object.userData.set == null) animation.numparts++;
+        event.object.userData = {
+            shiftedposition: p2, set: true
+        }
     });
 
 
@@ -557,12 +556,71 @@ function simplify(curve, points, threshold) {
 //=======================================================================================================================================
 //=======================================================================================================================================
 
+//============================================================================================\
+// moves part i between zero position and position in userdata.  ratio = 0 (zero position) to 1  (userdata position)
+// if ratiu< splitratio only z gets changed.   if ratio>splitratio, part moves in x,y
+//
+//============================================================================================
+function animatepart(i, ratio) {
+    if ((i >= Objects[0].children.length) || (i < 0)) return;
+    var part = Objects[0].children[i];
+    if (part.userData.set == null) return;
+    var splitratio = 0.50;
+    var distance = 0;
+    var z_offset = 20;
+    var z = z_offset;
+    if (ratio > splitratio) {
+        distance = (ratio - splitratio) / (1 - splitratio);  //(distanceratio=0.0 to 1.0)
+        z = (1 - distance) * z_offset;
+    }
+    else {
+        z = z_offset * ratio / splitratio;
+    }
+    var part = Objects[0].children[i]
+    part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z);
+}
 
+
+//============================================================================================
+/// sets partindex, ratio for global animation
+// p=0: everything collapsed; p=1.0: everytihing exploded
+//============================================================================================
+function animate_setpositions(p) {
+    if (p == 1) p = 0.9999999999;
+    var partindex = Math.trunc(p * animation.numparts);
+    var ratio = (p * animation.numparts - partindex);  // ratio =0.0 to 1.0 for each part
+    var pi = 0;
+    for (var i = 0; i < Objects[0].children.length; i++) {
+        if (Objects[0].children[i].userData.set != null) {
+            if (pi < partindex) animatepart(i, 1);
+            else if (pi > partindex) animatepart(i, 0);
+            else animatepart(i, ratio)
+            pi++;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+//============================================================================================\
+// main user control functions
+//============================================================================================\
 export function explodedview(func, ratio, h, f2) {
     if (func == 0) {
+        animate_setpositions(ratio / 100);
+        return;
         // ratio =0..100;  0..10: move down, 10..100: xy shift
         for (var i = 0; i < Objects[0].children.length; i++) {
-            animatepart(i, ratio);
+            animatepart(i, ratio / 100);
         }
         if (ratio > 90) animation.partindex = Objects[0].children.length - 1;
     }
@@ -650,7 +708,10 @@ function rt(a, b) {
 function ft(a, b) {
     return rt(a, b) || rt(b, a) || (a.position.z == b.position.z && a.position.x == b.position.x && a.position.y == b.position.y)
 }
-// detects if object i colides with any other one.  
+
+//============================================================================================\
+// detects if object i colides with any other one.
+//============================================================================================\
 function touchany(part1) {
     var p1 = new THREE.Vector3;
     part1.geometry.computeBoundingSphere();
@@ -674,7 +735,9 @@ function touchany(part1) {
     return false;
 }
 
-
+//============================================================================================\
+// explodes the part. 
+//============================================================================================\
 export function Explode() {
     for (var i = 0; i < Objects[0].children.length; i++) {
         //for (var i = 0; i < 3; i++) {
@@ -687,7 +750,10 @@ export function Explode() {
         part.position.set(x, y, 0);
         var p2 = new THREE.Vector3;
         p2.copy(part.position);
-        if (part.userData.set == null) part.userData = { shiftedposition: p2, set: true }
+        if (part.userData.set == null) {
+            part.userData = { shiftedposition: p2, set: true }
+            animation.numparts++;
+        }
         /*
         while (touchany(part) && (cnt-- > 0)) {
             part.position.set(x, y, 0);
@@ -703,39 +769,14 @@ export function Explode() {
 }
 
 
-//============================================================================================\
-// moves part i between zero position and position in userdata.  ratio = 0 (zero position) to 100  (userdata position)
-// if ratiu< splitratio only z gets changed.   if ratio>splitratio, part moves in x,y
-//
-//============================================================================================
-function animatepart(i, ratio) {
-    if (i >= Objects[0].children.length) return;
-    if (i < 0) return;
-    var splitratio = 50;
-    var distance = 0;
-    var z_offset = 20;
-    var z = z_offset;
-    if (ratio > splitratio) {
-        distance = (ratio - splitratio) / (100 - splitratio);  //(distanceratio=0.0 to 1.0)
-        z = (1 - distance) * z_offset;
-    }
-    else {
-        z = z_offset * ratio / splitratio;
-    }
-    var part = Objects[0].children[i]
-    if (part.userData.set != null) part.position.set(distance * part.userData.shiftedposition.x, distance * part.userData.shiftedposition.y, z);
-}
 
 
 function animateparts() {
     if (animation.speed == 0) {
         return;
     }
-
-
     if (animation.movecam) {
-
-        var totscale = (animation.partindex + animation.partratio / 100) / Objects[0].children.length;
+        var totscale = animation.ratio;
         var cp = new THREE.Vector3();
         cp.copy(animation.start_campos);
         cp.addScaledVector(animation.end_campos, totscale);
@@ -753,43 +794,18 @@ function animateparts() {
         Camera.position.copy(cp); // Set position like this
         Camera.lookAt(cr); // Set position like this
         //Camera.lookAt(new THREE.Vector3(0, 0, 0)); // Set look at coordinate like this
-
-
-
     }
 
-    if (animation.speed < 0) { //collapse
-        animation.partratio += animation.speed / 10;
-        if (animation.partratio <= 0) {
-            animatepart(animation.partindex, 0);
-            animation.partratio = 100  // for 
-            animation.partindex--;
-            if (animation.partindex < 0) animation.partindex = 0;
-            //if (Objects[0].children[animation.partindex].userData.set = null) animation.partindex--;
-            if (animation.partindex <= 0) {
-                animation.partindex = 0;
-                animatepart(animation.partindex, 0);
-                animation.speed = 0; // ready                
-            }
+    if (animation.speed != 0) {
+        animation.ratio += animation.speed * Math.abs(animation.speed) / 5000000;
+        if (animation.ratio < 0) {
+            animation.ratio = 0;
+            animation.speed = 0;
         }
-        else {
-            animatepart(animation.partindex, animation.partratio);
+        if (animation.ratio >= 1) {
+            animation.ratio = 1;
+            animation.speed = 0;
         }
-    }
-    else {
-        animation.partratio += animation.speed / 10;
-        if (animation.partratio >= 100) {
-            animatepart(animation.partindex, 100);
-            animation.partratio = 0;  // for
-            animation.partindex++;
-            if (animation.partindex > Objects[0].children.length) {
-                animation.partindex = Objects[0].children.length - 1;
-                animatepart(animation.partindex, 100);
-                animation.speed = 0; // ready                
-            }
-        }
-        else {
-            animatepart(animation.partindex, animation.partratio);
-        }
+        animate_setpositions(animation.ratio)
     }
 }
