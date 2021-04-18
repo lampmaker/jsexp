@@ -698,7 +698,7 @@ function rt(a, b) {
         let ray = new THREE.Raycaster(a, directionVector.clone().normalize());
         let collisionResults = ray.intersectObjects(d);
         if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-            return true; 6
+            return true;
         }
     }
 }
