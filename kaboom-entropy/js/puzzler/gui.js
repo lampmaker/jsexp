@@ -204,7 +204,7 @@ $(function () {
         gui.add(guiData, 'SVG_filename').name('File name');
         gui.add(guiData, 'SVG_edgedist', .1, 10).name('edge density').onFinishChange(loadImage);;
         gui.add(guiData, 'maskfile').name('load from SVG');
-        gui.add(VData, 'SEED_npieces', 20, 300, 1).name('number of pieces').onFinishChange(startseed);
+        gui.add(VData, 'SEED_npieces', 20, 500, 1).name('number of pieces').onFinishChange(startseed);
         gui.add(VData, 'SEED_autodistribute', true).name('Auto distribute').onFinishChange(vdetails);
         var vmenu = gui.addFolder('Voronoi Details')
         vmenu.add(VData, 'a1', -10, 500, 1).name('cell-force').onFinishChange(vdetails);

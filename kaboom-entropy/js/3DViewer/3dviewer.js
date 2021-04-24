@@ -28,6 +28,22 @@ var animation, raycaster;
 
 //=======================================================================================================
 //=======================================================================================================
+function touchpart(part1) {
+    var p1 = new THREE.Vector2;
+    var p2 = new THREE.Vector2;
+    for (var j = 0; j < 3; j++) {
+        //for (var j = 0; j < Objects[0].children.length; j++) {
+        var part2 = Objects[0].children[j];
+        for (var i = 0; i < part1.geometry.parameters.shapes.curves.length; i++) {
+            p1.copy(part1.geometry.parameters.shapes.curves[i].v1);
+            for (var k = 0; k < part2.geometry.parameters.shapes.curves.length; k++) {
+                p2.copy(part2.geometry.parameters.shapes.curves[k].v1);
+                if (p1.distanceTo(p2) < 10) return true;
+            }
+        }
+    }
+    return false;
+}
 
 
 export function init() {
@@ -92,29 +108,23 @@ export function init() {
     });
 
     dragControls.addEventListener('drag', function (event) {
-
-
-        /*
         var part1 = event.object;
-        var p1 = new THREE.Vector3;
-        part1.geometry.computeBoundingSphere();
-        p1.copy(part1.geometry.boundingSphere.center);
-        p1.add(part1.position);
+
         console.log(p1);
         for (var j = 0; j < Objects[0].children.length; j++) {
             var part2 = Objects[0].children[j];
-            part2.geometry.computeBoundingSphere();
-            var p2 = new THREE.Vector3;
-            p2.copy(part2.geometry.boundingSphere.center);
-            p2.add(part2.position);
-            var mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius;
-            var distance = p2.distanceTo(p1);
-            // mindistance = 100;
-            if (distance < mindistance) {
-                part2.material = material_selected2;
+
+            for (var i = 0; i < part1.geometry.parameters.shapes.curves.length; i++) {
+                var p1 = new THREE.Vector2(part1.position.x, -part1.position.y);
+                p1.add(part1.geometry.parameters.shapes.curves[i].v1);
+                for (var k = 0; k < part2.geometry.parameters.shapes.curves.length; k++) {
+                    var p2 = new THREE.Vector2(part2.position.x, -part2.position.y);
+                    p2.add(part2.geometry.parameters.shapes.curves[k].v1);
+                    if (p1.distanceTo(p2) < 10) part2.material = material_selected2;
+                }
             }
+
         }
-        */
     });
 
     dragControls.addEventListener('dragend', function (event) {
@@ -729,11 +739,23 @@ function touchany(part1) {
         // mindistance = 100;
         if (distance < mindistance) {
             part2.material = material_selected2;
-            return truel
+            return true
         }
     }
     return false;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 //============================================================================================\
 // explodes the part. 
