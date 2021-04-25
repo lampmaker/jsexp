@@ -290,7 +290,8 @@ export function loadSVG(url, fn, whenready) {
     var loader = new SVGLoader();
     var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
-    Objects = [];
+    Objects.pop();  // remove last item (if any)
+    //if (Objects.length > 0) Objects[0] = null;
     console.log('OPENING SVG');
     loader.load(url, function (data) {
         SVGdata = data.paths;
@@ -657,7 +658,7 @@ function touchpart(part1) {
                 for (var k = 0; k < part2.geometry.parameters.shapes.curves.length; k += 10) {
                     var p2 = new THREE.Vector2(part2.position.x, -part2.position.y);
                     p2.add(part2.geometry.parameters.shapes.curves[k].v1);
-                    if (p1.distanceTo(p2) < 10) return true;
+                    if (p1.distanceTo(p2) < 15) return true;
                 }
             }
         }
@@ -673,22 +674,22 @@ function touchpart(part1) {
 //============================================================================================\
 
 export function Explode() { // explodes puzzle
-    // first check - if all parts have been exploded already, explode everything again
-    var explode_all = true;
+    var nullfound = false;
     for (var i = 0; i < Objects[0].children.length; i++) {
-        if (Objects[0].children[i].userData.set != null) {
-            explode_all = false;
-            break;
-        }
+        if (Objects[0].children[i].userData.set == null) nullfound = true;
     }
-    if (explode_all) {
+    if (!nullfound) {  // explode all, all parts were set.
         for (var i = 0; i < Objects[0].children.length; i++) {
             Objects[0].children[i].userData.set = null;
+            Objects[0].children[i].position.set(0, 0, 0);
+            animation.numparts = 0;
         }
     }
+
+    var randdir = Math.random() * 1000;
     for (var i = 0; i < Objects[0].children.length; i++) {
         var part = Objects[0].children[i];
-        var angle = rndfromseed(part.uuid, 360);
+        var angle = rndfromseed(part.uuid, 360) + randdir;
         var dx = 10 * Math.sin(angle);
         var dy = 10 * Math.cos(angle);
         while (part.userData.set == null) {
@@ -702,6 +703,7 @@ export function Explode() { // explodes puzzle
             }
         }
     }
+    animation.ratio = 1;
 }
 
 
