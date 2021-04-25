@@ -26,24 +26,6 @@ var csegments, bevel, flat, csimplify, cscale, cflip;
 
 var animation, raycaster;
 
-//=======================================================================================================
-//=======================================================================================================
-function touchpart(part1) {
-    var p1 = new THREE.Vector2;
-    var p2 = new THREE.Vector2;
-    for (var j = 0; j < 3; j++) {
-        //for (var j = 0; j < Objects[0].children.length; j++) {
-        var part2 = Objects[0].children[j];
-        for (var i = 0; i < part1.geometry.parameters.shapes.curves.length; i++) {
-            p1.copy(part1.geometry.parameters.shapes.curves[i].v1);
-            for (var k = 0; k < part2.geometry.parameters.shapes.curves.length; k++) {
-                p2.copy(part2.geometry.parameters.shapes.curves[k].v1);
-                if (p1.distanceTo(p2) < 10) return true;
-            }
-        }
-    }
-    return false;
-}
 
 
 export function init() {
@@ -108,23 +90,7 @@ export function init() {
     });
 
     dragControls.addEventListener('drag', function (event) {
-        var part1 = event.object;
 
-        console.log(p1);
-        for (var j = 0; j < Objects[0].children.length; j++) {
-            var part2 = Objects[0].children[j];
-
-            for (var i = 0; i < part1.geometry.parameters.shapes.curves.length; i++) {
-                var p1 = new THREE.Vector2(part1.position.x, -part1.position.y);
-                p1.add(part1.geometry.parameters.shapes.curves[i].v1);
-                for (var k = 0; k < part2.geometry.parameters.shapes.curves.length; k++) {
-                    var p2 = new THREE.Vector2(part2.position.x, -part2.position.y);
-                    p2.add(part2.geometry.parameters.shapes.curves[k].v1);
-                    if (p1.distanceTo(p2) < 10) part2.material = material_selected2;
-                }
-            }
-
-        }
     });
 
     dragControls.addEventListener('dragend', function (event) {
@@ -668,91 +634,33 @@ export function explodedview(func, ratio, h, f2) {
 }
 
 
-/*
-// simple collision detection
-function rt(a, b) {
-    let d = [b];
-    let e = a.position.clone();
-    let f = a.geometry.vertices.length;
-    let g = a.position;
-    let h = a.matrix;
-    let i = a.geometry.vertices;
-
-
-
-
-    for (var vertexIndex = f - 1; vertexIndex >= 0; vertexIndex--) {
-        let localVertex = i[vertexIndex].clone();
-        let globalVertex = localVertex.applyMatrix4(h);
-        let directionVector = globalVertex.sub(g);
-
-        let ray = new THREE.Raycaster(e, directionVector.clone().normalize());
-        let collisionResults = ray.intersectObjects(d);
-        if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-            return true;
-        }
+function rndfromseed(a, m) {
+    var r = 0;
+    for (var i = 0; i < a.length; i++) {
+        r = (r + a.charCodeAt(i)) % m;
     }
-    return false;
+    return r;
 }
 
-*/
-function rt(a, b) {
-    let d = [b];
-    const positionAttribute = a.geometry.getAttribute('position');
-    const localVertex = new THREE.Vector3();
-    const globalVertex = new THREE.Vector3();
-    for (let vertexIndex = 0; vertexIndex < positionAttribute.count; vertexIndex++) {
-        localVertex.fromBufferAttribute(positionAttribute, vertexIndex);
-        globalVertex.copy(localVertex).applyMatrix4(a.matrixWorld);
-        var directionVector = globalVertex.sub(a.position);
-        let ray = new THREE.Raycaster(a, directionVector.clone().normalize());
-        let collisionResults = ray.intersectObjects(d);
-        if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-            return true;
-        }
-    }
-}
-
-
-
-function ft(a, b) {
-    return rt(a, b) || rt(b, a) || (a.position.z == b.position.z && a.position.x == b.position.x && a.position.y == b.position.y)
-}
-
-//============================================================================================\
-// detects if object i colides with any other one.
-//============================================================================================\
-function touchany(part1) {
-    var p1 = new THREE.Vector3;
-    part1.geometry.computeBoundingSphere();
-    p1.copy(part1.geometry.boundingSphere.center);
-    //  p1.add(part1.position);
-    console.log(p1);
+//=======================================================================================================
+//=======================================================================================================
+function touchpart(part1) {
     for (var j = 0; j < Objects[0].children.length; j++) {
         var part2 = Objects[0].children[j];
-        part2.geometry.computeBoundingSphere();
-        var p2 = new THREE.Vector3;
-        p2.copy(part2.geometry.boundingSphere.center);
-        //  p2.add(part2.position);
-        var mindistance = part1.geometry.boundingSphere.radius + part2.geometry.boundingSphere.radius;
-        var distance = p2.distanceTo(p1);
-        // mindistance = 100;
-        if (distance < mindistance) {
-            part2.material = material_selected2;
-            return true
+        if (part1.uuid != part2.uuid) {
+            for (var i = 0; i < part1.geometry.parameters.shapes.curves.length; i += 10) {
+                var p1 = new THREE.Vector2(part1.position.x, -part1.position.y);
+                p1.add(part1.geometry.parameters.shapes.curves[i].v1);
+                for (var k = 0; k < part2.geometry.parameters.shapes.curves.length; k += 10) {
+                    var p2 = new THREE.Vector2(part2.position.x, -part2.position.y);
+                    p2.add(part2.geometry.parameters.shapes.curves[k].v1);
+                    if (p1.distanceTo(p2) < 10) return true;
+                }
+            }
         }
     }
     return false;
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -760,36 +668,44 @@ function touchany(part1) {
 //============================================================================================\
 // explodes the part. 
 //============================================================================================\
-export function Explode() {
+
+export function Explode() { // explodes single step, stops when no touch
     for (var i = 0; i < Objects[0].children.length; i++) {
-        //for (var i = 0; i < 3; i++) {
-        var angle = Math.random() * 360;
-        var dx = Math.sin(angle) * (Math.random(100) + 100) * 3;
-        var dy = Math.cos(angle) * (Math.random(100) + 100) * 3;
         var part = Objects[0].children[i];
-        var x = dx, y = dy;
-        var cnt = 10;
-        part.position.set(x, y, 0);
-        var p2 = new THREE.Vector3;
-        p2.copy(part.position);
-        if (part.userData.set == null) {
-            part.userData = { shiftedposition: p2, set: true }
-            animation.numparts++;
+        var angle = rndfromseed(part.uuid, 360);
+        var dx = 10 * Math.sin(angle);
+        var dy = 10 * Math.cos(angle);
+        while (part.userData.set == null) {
+            part.position.set(part.position.x + dx, part.position.y + dy, 0);
+            if (!touchpart(part)) {
+                var p2 = new THREE.Vector3;
+                p2.copy(part.position);
+                part.userData = { shiftedposition: p2, set: true }
+                animation.numparts++;
+                animation.partindex = Objects[0].children.length - 1;
+            }
         }
-        /*
-        while (touchany(part) && (cnt-- > 0)) {
-            part.position.set(x, y, 0);
-            var p2 = new THREE.Vector3;
-            p2.copy(part.position);
-            if (part.userData.set == null) part.userData = { shiftedposition: p2, set: true }
-            x += dx;
-            y += dy;
-        }
-        */
     }
-    animation.partindex = Objects[0].children.length - 1;
 }
 
+export function Explode1() { // explodes single step, stops when no touch
+    for (var i = 0; i < Objects[0].children.length; i++) {
+        var part = Objects[0].children[i];
+        if (part.userData.set == null) {
+            var angle = rndfromseed(part.uuid, 360);
+            var dx = 10 * Math.sin(angle);
+            var dy = 10 * Math.cos(angle);
+            part.position.set(part.position.x + dx, part.position.y + dy, 0);
+            if (!touchpart(part)) {
+                var p2 = new THREE.Vector3;
+                p2.copy(part.position);
+                part.userData = { shiftedposition: p2, set: true }
+                animation.numparts++;
+                animation.partindex = Objects[0].children.length - 1;
+            }
+        }
+    }
+}
 
 
 
