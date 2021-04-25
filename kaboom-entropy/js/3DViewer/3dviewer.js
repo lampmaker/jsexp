@@ -67,13 +67,13 @@ export function init() {
     }
 
     document.addEventListener('keydown', (e) => {
-        if (e.keyCode === 17) {
+        if (e.key == "Control") {
             dragControls.activate();
         }
     })
 
     document.addEventListener('keyup', (e) => {
-        if (e.keyCode === 17) {
+        if (e.key == "Control") {
             dragControls.deactivate();
         }
     })
@@ -88,11 +88,11 @@ export function init() {
         }
         */
     });
-
-    dragControls.addEventListener('drag', function (event) {
-
-    });
-
+    /*
+        dragControls.addEventListener('drag', function (event) {
+            
+        });
+    */
     dragControls.addEventListener('dragend', function (event) {
         event.object.material = material;
         var p2 = new THREE.Vector3;
@@ -290,6 +290,7 @@ export function loadSVG(url, fn, whenready) {
     var loader = new SVGLoader();
     var old = Scene.getObjectByName('SVG');
     Scene.remove(old);
+    Objects = [];
     console.log('OPENING SVG');
     loader.load(url, function (data) {
         SVGdata = data.paths;
@@ -299,10 +300,12 @@ export function loadSVG(url, fn, whenready) {
                 if (csimplify > 0) {
                     var points = SVGdata[i].subPaths[j].getPoints();
                     var spoints = simplify(points, points, csimplify)
-                    if (j == 0) {
-                        console.log(points);
-                        console.log(spoints);
-                    }
+                    /*
+                      if (j == 0) {
+                          console.log(points);
+                          console.log(spoints);
+                      }
+                      */
                     var sb = new THREE.Path(spoints);
                     path.subPaths.push(sb);
                 }
@@ -311,9 +314,9 @@ export function loadSVG(url, fn, whenready) {
                 }
             }
         }
-        console.log('path', path);
+        //  console.log('path', path);
         var shapes = path.toShapes(true, false);
-        console.log('shape', shapes);
+        //  console.log('shape', shapes);
         SVGgroup = new THREE.Group();
         var SVGsubgroup = new THREE.Group();
         SVGgroup.name = 'SVG';
@@ -339,7 +342,7 @@ export function loadSVG(url, fn, whenready) {
                         uvs[1][1].set(w, 0);
                         uvs[1][2].set(w, h);
             */
-            console.log('geometry', SVGgeometry);
+            //console.log('geometry', SVGgeometry);
             SVGmesh = new THREE.Mesh(SVGgeometry, material);
             SVGmesh.scale.y *= -1;
             SVGmesh.castShadow = true;
@@ -347,7 +350,7 @@ export function loadSVG(url, fn, whenready) {
             SVGmesh.castShadow = true;
             SVGmesh.receiveShadow = true;
             //}
-            console.log('shapes loaded');
+            // console.log('shapes loaded');
             //-- repositioning 
             SVGsubgroup.add(SVGmesh);
         }
@@ -669,7 +672,20 @@ function touchpart(part1) {
 // explodes the part. 
 //============================================================================================\
 
-export function Explode() { // explodes single step, stops when no touch
+export function Explode() { // explodes puzzle
+    // first check - if all parts have been exploded already, explode everything again
+    var explode_all = true;
+    for (var i = 0; i < Objects[0].children.length; i++) {
+        if (Objects[0].children[i].userData.set != null) {
+            explode_all = false;
+            break;
+        }
+    }
+    if (explode_all) {
+        for (var i = 0; i < Objects[0].children.length; i++) {
+            Objects[0].children[i].userData.set = null;
+        }
+    }
     for (var i = 0; i < Objects[0].children.length; i++) {
         var part = Objects[0].children[i];
         var angle = rndfromseed(part.uuid, 360);
@@ -688,24 +704,6 @@ export function Explode() { // explodes single step, stops when no touch
     }
 }
 
-export function Explode1() { // explodes single step, stops when no touch
-    for (var i = 0; i < Objects[0].children.length; i++) {
-        var part = Objects[0].children[i];
-        if (part.userData.set == null) {
-            var angle = rndfromseed(part.uuid, 360);
-            var dx = 10 * Math.sin(angle);
-            var dy = 10 * Math.cos(angle);
-            part.position.set(part.position.x + dx, part.position.y + dy, 0);
-            if (!touchpart(part)) {
-                var p2 = new THREE.Vector3;
-                p2.copy(part.position);
-                part.userData = { shiftedposition: p2, set: true }
-                animation.numparts++;
-                animation.partindex = Objects[0].children.length - 1;
-            }
-        }
-    }
-}
 
 
 
