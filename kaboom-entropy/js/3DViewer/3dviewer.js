@@ -58,7 +58,11 @@ export function init() {
     animation = {
         speed: 0,
         ratio: 0,
+
         numparts: 0,
+        start_camMatrix: new THREE.Matrix4(),
+        end_camMatrix: new THREE.Matrix4(),
+
         end_campos: new THREE.Vector3(0, 0, 700),
         end_camrot: new THREE.Vector3(0, 0, 0),
         start_campos: new THREE.Vector3(0, 0, 700),
@@ -616,6 +620,7 @@ export function explodedview(func, ratio, h, f2) {
     }
     if (func == 3) {
         console.log(orbitControls)
+        animation.start_camMatrix.copy(Camera.matrix)
         animation.start_campos.copy(Camera.position);
         var vector = new THREE.Vector3(0, 0, -1);
         vector.applyQuaternion(Camera.quaternion);
@@ -626,6 +631,7 @@ export function explodedview(func, ratio, h, f2) {
         return;
     }
     if (func == 4) {
+        animation.end_camMatrix.copy(Camera.matrix)
         animation.end_campos.copy(Camera.position);
         var vector = new THREE.Vector3(0, 0, -1);
         vector.applyQuaternion(Camera.quaternion);
@@ -715,23 +721,53 @@ function animateparts() {
     }
     if (animation.movecam) {
         var totscale = animation.ratio;
-        var cp = new THREE.Vector3();
-        cp.copy(animation.start_campos);
-        cp.addScaledVector(animation.end_campos, totscale);
-        cp.addScaledVector(animation.start_campos, -totscale);
-        //console.log("totscale, cam position:", totscale, cp);
-        var cr = new THREE.Vector3();
-        cr.copy(animation.start_camrot);
-        cr.addScaledVector(animation.end_camrot, totscale);
-        cr.addScaledVector(animation.start_camrot, -totscale);
-        //cr.copy(Camera.position);
-        //Camera.position.set(cr);
-        //  Camera.rotation.set(cr);
-        console.log("camera:", totscale, cp, cr)
-        //orbitControls.update();
-        Camera.position.copy(cp); // Set position like this
-        Camera.lookAt(cr); // Set position like this
-        //Camera.lookAt(new THREE.Vector3(0, 0, 0)); // Set look at coordinate like this
+
+        var startP = new THREE.Vector3();
+        var startQ = new THREE.Quaternion();
+        var startS = new THREE.Vector3();
+
+        animation.start_camMatrix.decompose(startP, startQ, startS);
+
+        var endP = new THREE.Vector3();
+        var endQ = new THREE.Quaternion();
+        var endS = new THREE.Vector3();;
+        animation.end_camMatrix.decompose(endP, endQ, endS);
+
+        var mP = new THREE.Vector3();
+        var mQ = new THREE.Quaternion();
+        var mS = new THREE.Vector3();
+        mP.lerpVectors(startP, endP, totscale);
+        mQ.slerpQuaternions(startQ, endQ, totscale);
+        mS.lerpVectors(startS, endS, totscale);
+
+        //        var m = new THREE.Matrix4();
+        //       m.compose(mP, mQ, mS);
+
+        //Camera.applyMatrix4(m);
+        Camera.position.copy(mP);
+        Camera.setRotationFromQuaternion(mQ);
+        Camera.scale.copy(mS);
+
+        /*
+                var cp = new THREE.Vector3();
+                cp.copy(animation.start_campos);
+                cp.addScaledVector(animation.end_campos, totscale);
+                cp.addScaledVector(animation.start_campos, -totscale);
+                //console.log("totscale, cam position:", totscale, cp);
+                var cr = new THREE.Vector3();
+                cr.copy(animation.start_camrot);
+                cr.addScaledVector(animation.end_camrot, totscale);
+                cr.addScaledVector(animation.start_camrot, -totscale);
+                //cr.copy(Camera.position);
+                //Camera.position.set(cr);
+                //  Camera.rotation.set(cr);
+                console.log("camera:", totscale, cp, cr)
+                //orbitControls.update();
+                Camera.position.copy(cp); // Set position like this
+                Camera.lookAt(cr); // Set position like this
+                //Camera.lookAt(new THREE.Vector3(0, 0, 0)); // Set look at coordinate like this
+                console.log(Camera.matrix, m);
+                */
     }
 
     if (animation.speed != 0) {
