@@ -86,7 +86,7 @@ $(function () {
         gui = new GUI({ width: 350, load: json, preset: 'Default' });
         gui.remember(guiData);
         gui.add(guiData, 'cwidth', 0, 4096, 128).name('width').onFinishChange(updatescreen);
-        gui.add(guiData, 'cheight', 0, 4096, 128).name('height').onFinishChange(updatescreen);;
+        gui.add(guiData, 'cheight', 0, 4096, 4).name('height').onFinishChange(updatescreen);;
         gui.add(guiData, 'maskfilename').name('File name');
         gui.add(guiData, 'maskfile').name('load from SVG');
         var g0 = gui.addFolder('texture');
@@ -372,7 +372,7 @@ function record() {
         recbtn.name('RECORD');
         return;
     }
-    var recordedChunks = [];
+    recordedChunks = [];
     mediaRecorder.start();
     console.log('start');
     recbtn.name('STOP');

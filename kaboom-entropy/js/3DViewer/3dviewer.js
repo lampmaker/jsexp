@@ -125,7 +125,7 @@ export function init() {
         //	bump: tbump,
         depthWrite: false,
     });
-    var table = new THREE.PlaneGeometry(1024, 1024);
+    var table = new THREE.PlaneGeometry(1600, 1600);
     var tablemesh = new THREE.Mesh(table, tablematerial);
     tablemesh.name = "background";
     tablemesh.position.z = -2;

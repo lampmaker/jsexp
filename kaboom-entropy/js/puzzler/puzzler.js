@@ -3,14 +3,14 @@ import { SVGLoader } from '/js/three/SVGLoader.js';
 
 var csimplify, cfilename, svgDocument;
 var _filename;
-var canvasWidth = 1000;
-var canvasHeight = 1000;
+var canvasWidth = 1024;
+var canvasHeight = 1024;
 var busy = false;
 
 const gpu = new GPU();
 var GPUmatrix = []
-const MAXLINES = 1000;
-const MAXPOINTS = 1000 // points per line
+const MAXLINES = 1600;
+const MAXPOINTS = 1024 // points per line
 const GPUMATRIXLENGTH = 2 + MAXPOINTS * 2;
 
 var seeds;
@@ -906,7 +906,6 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     // move to point in-between neighborhood points.   attraction force: dist^3
     Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
     Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
-
 
     // repulsion force to all other points
     for (var i = 0; i < mxl + 1; i++) {
