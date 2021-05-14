@@ -3,7 +3,8 @@ import { OrbitControls } from '/js/three/OrbitControls.js';
 import { DragControls } from '/js/3DViewer/DragControls.js';
 import { SVGLoader } from '/js/three/SVGLoader.new.js';
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
-import { SimplifyModifier } from '/js/three/SimplifyModifier.js';
+//import { ThreeCSG } from '/js/3DViewer/CSG.js'
+
 
 var canvas;
 var canvasQ;
@@ -30,6 +31,7 @@ var animation, raycaster;
 
 export function init() {
     // init render ----------------------------------------------------------------------------------------------------
+    //hreeCSG();
     canvasQ = $('#myCanvas');
     canvas = canvasQ.get(0);
     canvasWidth = canvasQ.width();
@@ -288,6 +290,32 @@ function getsizeandpos(geo) {
     console.log('size:', res);
     return res;
 }
+
+
+function pathtogroup(p, t, b) {
+    var shapes = p.toShapes(true, false);
+    var S = new THREE.Group();
+    for (var i = 0; i < shapes.length; i++) {
+        SVGgeometry = new THREE.ExtrudeGeometry(shapes[i], {
+            depth: t,
+            bevelEnabled: b,
+            bevelThickness: 0.4,
+            bevelSize: 0.2,
+            steps: 2,
+            BevelSegments: 2,
+            curveSegments: csegments
+        });
+        SVGmesh = new THREE.Mesh(SVGgeometry, material);
+        SVGmesh.scale.y *= -1;
+        SVGmesh.castShadow = true;
+        SVGmesh.receiveShadow = true
+        SVGmesh.castShadow = true;
+        SVGmesh.receiveShadow = true;
+        S.add(SVGmesh);
+    }
+    return S;
+}
+///https://github.com/oathihs/ThreeCSG
 //=======================================================================================================
 export function loadSVG(url, fn, whenready) {
     filename = fn;
@@ -300,65 +328,39 @@ export function loadSVG(url, fn, whenready) {
     loader.load(url, function (data) {
         SVGdata = data.paths;
         var path = new THREE.ShapePath();
+        var path2 = new THREE.ShapePath();
         for (var i = 0; i < SVGdata.length; i++) {
+            console.log(i, SVGdata[i].userData.style.stroke)
             for (var j = 0; j < SVGdata[i].subPaths.length; j++) {
+                var sb = new THREE.Path();
                 if (csimplify > 0) {
                     var points = SVGdata[i].subPaths[j].getPoints();
                     var spoints = simplify(points, points, csimplify)
-                    /*
-                      if (j == 0) {
-                          console.log(points);
-                          console.log(spoints);
-                      }
-                      */
-                    var sb = new THREE.Path(spoints);
+                    sb = new THREE.Path(spoints);
+                }
+                else {
+                    sb = SVGdata[i].subPaths[j];
+                }
+                if (SVGdata[i].userData.style.stroke == "rgb(0, 0, 0)") {
                     path.subPaths.push(sb);
                 }
                 else {
-                    path.subPaths.push(SVGdata[i].subPaths[j]);
+                    path2.subPaths.push(sb);
                 }
             }
         }
-        //  console.log('path', path);
-        var shapes = path.toShapes(true, false);
-        //  console.log('shape', shapes);
-        SVGgroup = new THREE.Group();
-        var SVGsubgroup = new THREE.Group();
-        SVGgroup.name = 'SVG';
-        //for (var j = 0; j < shapes.length; j++) {
 
-        for (var i = 0; i < shapes.length; i++) {
-            SVGgeometry = new THREE.ExtrudeGeometry(shapes[i], {
-                depth: 4,
-                bevelEnabled: bevel,
-                bevelThickness: 0.4,
-                bevelSize: 0.2,
-                steps: 2,
-                BevelSegments: 2,
-                curveSegments: csegments
-            });
-            var h = 1; var w = 1;
-            /*
-                        var uvs = SVGgeometry.faceVertexUvs[0];
-                        uvs[0][0].set(0, h);
-                        uvs[0][1].set(0, 0);
-                        uvs[0][2].set(w, h);
-                        uvs[1][0].set(0, 0);
-                        uvs[1][1].set(w, 0);
-                        uvs[1][2].set(w, h);
-            */
-            //console.log('geometry', SVGgeometry);
-            SVGmesh = new THREE.Mesh(SVGgeometry, material);
-            SVGmesh.scale.y *= -1;
-            SVGmesh.castShadow = true;
-            SVGmesh.receiveShadow = true
-            SVGmesh.castShadow = true;
-            SVGmesh.receiveShadow = true;
-            //}
-            // console.log('shapes loaded');
-            //-- repositioning 
-            SVGsubgroup.add(SVGmesh);
-        }
+        SVGgroup = new THREE.Group();
+        var SVGsubgroup = new THREE.Group()
+        SVGsubgroup = pathtogroup(path, 4, bevel);
+        SVGgroup.name = 'SVG';
+
+        var SVGgroup2 = new THREE.Group()
+        SVGgroup2 = pathtogroup(path2, 4, false);
+
+        // var csg1 = THREE.CSG.fromMesh(SVGgroup);
+        //  var csg2 = THREE.CSG.fromMesh(SVGgroup2);
+        ;
         var dims = getsizeandpos(SVGsubgroup);
         if (cscale != 0) {
             var l = cscale / Math.max(dims[0], dims[1]);

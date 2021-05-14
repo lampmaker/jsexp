@@ -1,5 +1,5 @@
 {
-    "preset": "Default",
+    "preset": "maze",
     "closed": false,
     "remembered": {
         "Default": {
@@ -26,6 +26,34 @@
                 "speed": 0.1271266540642722,
                 "fmax": 1,
                 "edgeforce": 1000
+            }
+        },
+        "maze": {
+            "0": {
+                "cwidth": 1024,
+                "cheight": 1024,
+                "SVG_filename": "beer",
+                "SVG_edgedist": 0.1
+            },
+            "1": {
+                "SEED_npieces": 91,
+                "SEED_autodistribute": true,
+                "a1": 435,
+                "a2": 3,
+                "f": 1000,
+                "a": 0
+            },
+            "2": {
+                "d1": 20,
+                "d2": 4,
+                "forcetonext": 124.05482041587902,
+                "power1": 3.9000000000000004,
+                "forcetopoints": 328.2136105860113,
+                "fc": 1,
+                "power2": 5,
+                "speed": 0.3993383742911153,
+                "fmax": 1,
+                "edgeforce": 214.79206049149337
             }
         }
     },

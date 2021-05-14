@@ -147,7 +147,7 @@ $(function () {
 
         init();
         //  mySvg = loadImage("beer.svg");
-        stream = getcanvas().captureStream(25/*fps*/);
+        stream = getcanvas().captureStream(30/*fps*/);
         mediaRecorder = new MediaRecorder(stream, {
             mimeType: "video/webm; codecs=vp9"
             //mimeType: "video/webm; codecs=h264"

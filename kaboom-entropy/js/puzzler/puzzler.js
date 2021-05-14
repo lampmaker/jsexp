@@ -834,6 +834,7 @@ function showpath(P, l) {
 }
 
 function drawlines(P, l) {
+    //noFill();
     for (var i = 0; i < P.length; i++) {
         if (l >= 1) {
             beginShape();
@@ -923,6 +924,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
                         Fb[0] += p2[0] * w * strength * fb;
                         Fb[1] += p2[1] * w * strength * fb;
                     }
+                    /*
                     if (Dist < d1 * 2) {  // less than repulsion radius                        
                         p2 = [p2[0] / Dist, p2[1] / Dist];   // scale vector t0 length 1
                         Dist = Dist - d1;
@@ -932,6 +934,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
                             Fb[1] += p2[1] * w * strength * fc;
                         }
                     }
+                    */
                 }
 
 
@@ -1081,6 +1084,7 @@ export function draw() {
             // fall through
             case stageEnum.voronoi_show: {
                 stroke('#00FF00');
+                noFill();
                 vlines = voronoi_render(borderpoints);
                 drawlines(vlines, 1);
                 for (var i = 0; i < seeds.length; i++) {
@@ -1116,7 +1120,7 @@ export function draw() {
                     lines[i] = subdivpath(lines[i], VData.d2, 2, MAXPOINTS);
                 }
                 //   readlinelengthcheck();
-
+                noFill();
                 drawlines(lines, 1);;
             }
                 break;
