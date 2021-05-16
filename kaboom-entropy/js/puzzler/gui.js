@@ -214,7 +214,7 @@ $(function () {
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);
-        Dmenu.add(DiffData, 'd2', 1, 100, 1).name('splitdistance').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd2', 1, 20, .1).name('splitdistance').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('contraction force').onChange(diffdetails);
         Dmenu.add(DiffData, 'power1', 0.5, 5, 0.1).name('contraction power').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force1').onChange(diffdetails);
