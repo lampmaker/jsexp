@@ -867,6 +867,19 @@ len      wei        x         y       x       y       x        y       x        
 4        2          1         0        2       1       3       1       4        3     \\
 
 
+0    \    1    \    2    \    3   \    4   \    5   \   6   \   7   \   8   \   9    \   10    \   11   \
+len      wei        si       ei        x         y       x       y       x        y       x        y    
+4        2          0        0         1         0        2       1       3       1       4        3     \\
+
+ei = end index of lines with similar coordinates.
+si = start index
+
+si=-1 : don't move start point
+si=-2:  move this point as if it were a normal point. there can be only one si<0 for all poitns that have same x,y coordinates.
+si>=0: index of point that drives the move (that has si<0)
+
+
+
 
 */
 //======================================================================================================
@@ -875,11 +888,30 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     var row = this.thread.y;
     if (this.thread.x == 0) return CP;  // x=: length     - no calculation required
     if (this.thread.x == 1) return CP;  // x=1: weight     - no calculation required
-    if (this.thread.x == 2) return CP;  // x=2: dont change first point x
-    if (this.thread.x == 3) return CP;  // x=3: dont change first point  y
+    if (this.thread.x == 2) return CP;  // x=2: dont change si
+    if (this.thread.x == 3) return CP;  // x=3: dont change ei
+    var si = _matrix[row][2];  // start index
+    var ei = _matrix[row][3];  // end index
+
+    if (si == -1) {
+        if (this.thread.x == 4) return CP;  // x=3: dont change first point  x
+        if (this.thread.x == 5) return CP;  // x=3: dont change first point  y
+    }
+
     var line_numpoints = _matrix[row][0];
     var weight = _matrix[row][1];
-    if (this.thread.x >= line_numpoints * 2) return CP;  // x=3: dont change last point  y
+    if (ei == -1) {
+        if (this.thread.x >= line_numpoints * 2 + 2) return CP;  // x=3: dont change last point  y
+    }
+
+    if (si > 0) {
+        return _matrix[si][this.thread.x]   // return same point as
+    }
+
+    if (ei > 0) {
+        return _matrix[ei][this.thread.x]   // return same point as
+    }
+
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
 
@@ -972,7 +1004,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
 }).setOutput([GPUMATRIXLENGTH, MAXLINES])
 
 // adds a single line to the GPU matrix
-function add_line_to_gpumatrix(line, offset, w) {
+function add_line_to_gpumatrix(line, offset, w, si, ei) {
     var mx = line.length;
     if (line.length > MAXPOINTS) {
         console.log("maxpoints TOO SMALL", line.length, MAXPOINTS);
@@ -980,9 +1012,11 @@ function add_line_to_gpumatrix(line, offset, w) {
     }
     GPUmatrix[offset][0] = mx;
     GPUmatrix[offset][1] = w;
+    GPUmatrix[offset][2] = si;   // start index; used to move start points of lines.  if 0: don't move start point.
+    GPUmatrix[offset][3] = ei;  // if 0, dont' move end point
     for (var j = 0; j < mx; j++) {
-        GPUmatrix[offset][j * 2 + 2] = line[j].x;
-        GPUmatrix[offset][j * 2 + 3] = line[j].y;
+        GPUmatrix[offset][j * 2 + 4] = line[j].x;
+        GPUmatrix[offset][j * 2 + 5] = line[j].y;
     }
     return mx;
 }
@@ -997,7 +1031,7 @@ function add_lines_to_gpumatrix(lines, offset, w) {
     if (count > 0) {
         for (var i = 0; i < count; i++) {
             var io = i + offset;
-            np += add_line_to_gpumatrix(lines[i], io, w);
+            np += add_line_to_gpumatrix(lines[i], io, w, -1, -1);
         }
     }
     return np;
@@ -1010,7 +1044,7 @@ function get_lines_from_gpumatrix(offset) {
         if (linelength == 0) return lines;
         lines[i] = new Array();
         for (var j = 0; j < linelength; j++) {
-            lines[i][j] = new Vertex(GPUmatrix[i + offset][j * 2 + 2], GPUmatrix[i + offset][j * 2 + 3]);
+            lines[i][j] = new Vertex(GPUmatrix[i + offset][j * 2 + 4], GPUmatrix[i + offset][j * 2 + 5]);
         }
     }
     return lines;
