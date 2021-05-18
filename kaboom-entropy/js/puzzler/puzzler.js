@@ -566,6 +566,7 @@ function subdivpath(P, maxd, r, mxp) {
 
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
+            numinserts = 1;
             if (numinserts + P.length + 2 > mxp) numinserts = mxp - P.length - 2;
             var dx = (P2.x - P1.x) / (numinserts + 1);
             var dy = (P2.y - P1.y) / (numinserts + 1);
@@ -905,8 +906,15 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
     var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance
     // move to point in-between neighborhood points.   attraction force: dist^3
-    Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
-    Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
+    /*    
+        Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
+        Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
+    */
+    Fa[0] = pa[0] * max(Math.pow(pad, 2), pwr1) * fa;
+    Fa[1] = pa[1] * max(Math.pow(pad, 2), pwr1) * fa;
+
+
+
 
     // repulsion force to all other points
     for (var i = 0; i < mxl + 1; i++) {
