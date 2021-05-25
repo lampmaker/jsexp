@@ -948,6 +948,8 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
 
 
 
+
+
     // repulsion force to all other points
     for (var i = 0; i < mxl + 1; i++) {
         if (_matrix[i][0] > 0) {
@@ -963,6 +965,9 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
                         var strength = Math.pow((d1 - Dist) / d1, pwr2);
                         Fb[0] += p2[0] * w * strength * fb;
                         Fb[1] += p2[1] * w * strength * fb;
+
+                        //Fb[0] *= 1000;
+                        //Fb[1] *= 1000;
                     }
                     /*
                     if (Dist < d1 * 2) {  // less than repulsion radius                        
@@ -990,7 +995,6 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     var fm = Math.sqrt(Ftot[0] * Ftot[0] + Ftot[1] * Ftot[1]);
     if (fm > fmax)
         scale = fmax / fm;
-
 
     p1[0] += Ftot[0] * sp * scale;
     p1[1] += Ftot[1] * sp * scale;
@@ -1029,9 +1033,26 @@ function add_lines_to_gpumatrix(lines, offset, w) {
         count = MAXLINES - offset;
     }
     if (count > 0) {
+        var si = [];
+        var ei = [];
+        for (var i = 0; i < count; i++) {
+            si[i] = -1;
+            ei[i] = -1;
+            for (var j = i + 1; j < count; j++) {
+                if ((lines[j][0].x == lines[i][0].x) && (lines[j][0].y == lines[i][0].y)) {  // line with same start points
+                    si[j] = 0;
+                    si[i] = 0;
+                }
+                if ((lines[j][lines[j].length - 1].x == lines[i][lines[i].length - 1].x) && (lines[j][lines[j].length - 1].y == lines[i][lines[i].length - 1].y)) {  // line with same start points
+                    ei[j] = 0;
+                    ei[i] = 0;
+                }
+            }
+        }
+
         for (var i = 0; i < count; i++) {
             var io = i + offset;
-            np += add_line_to_gpumatrix(lines[i], io, w, -1, -1);
+            np += add_line_to_gpumatrix(lines[i], io, w, si[i], ei[i]);
         }
     }
     return np;
