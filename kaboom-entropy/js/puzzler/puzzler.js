@@ -915,6 +915,13 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
 
+    if (si > 0) {
+        return _matrix[si][this.thread.x]   // return same point as
+    }
+
+    if (ei > 0) {
+        return _matrix[ei][this.thread.x]   // return same point as
+    }
 
     var p2 = [0.0, 0.0];
     var Dist = 0.0;
@@ -942,8 +949,8 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
         Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
         Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
     */
-    Fa[0] = pa[0] * max(Math.pow(pad, 2), pwr1) * fa;
-    Fa[1] = pa[1] * max(Math.pow(pad, 2), pwr1) * fa;
+    Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
+    Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
 
 
 
@@ -1037,25 +1044,31 @@ function add_lines_to_gpumatrix(lines, offset, w) {
         var ei = [];
         for (var i = 0; i < count; i++) {
             var ie = lines[i].length - 1;
-            si[i] = -1;
-            ei[i] = -1;
-            for (var j = i + 1; j < count; j++) {
-                var je = lines[j].length - 1;
-                if ((lines[j][0].x == lines[i][0].x) && (lines[j][0].y == lines[i][0].y)) {  // line with same start points
-                    si[j] = 0;
-                    si[i] = 0;
-                }
-                if ((lines[j][je].x == lines[i][ie].x) && (lines[j][je].y == lines[i][ie].y)) {  // line with same end  points
-                    ei[j] = 0;
-                    ei[i] = 0;
-                }
-                if ((lines[j][je].x == lines[i][0].x) && (lines[j][je].y == lines[i][0].y)) {  // line with same start points
-                    ei[j] = 0;
-                    si[i] = 0;
-                }
-                if ((lines[j][0].x == lines[i][ie].x) && (lines[j][0].y == lines[i][ie].y)) {  // line with same start points
-                    si[j] = 0;
-                    ei[i] = 0;
+            si[i] = -1;;
+            ei[i] = -1;;
+            var psi = new Vertex(lines[i][0].x, lines[i][0].y);
+            var pei = new Vertex(lines[i][ie].x, lines[i][ie].y);
+            for (var j = 0; j < count; j++) {
+                if (j != i) {
+                    var je = lines[j].length - 1;
+                    var psj = new Vertex(lines[j][0].x, lines[j][0].y);
+                    var pej = new Vertex(lines[j][je].x, lines[j][je].y);
+                    if (issame(psi, psj)) {
+                        si[j] = 0;
+                        si[i] = 0;
+                    }
+                    if (issame(pei, pej)) {
+                        ei[j] = 0;
+                        ei[i] = 0;
+                    }
+                    if (issame(psi, pej)) {  // line with same start points
+                        ei[j] = 0;
+                        si[i] = 0;
+                    }
+                    if (issame(pei, psj)) {  // line with same start points
+                        si[j] = 0;
+                        ei[i] = 0;
+                    }
                 }
             }
         }
