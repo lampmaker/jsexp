@@ -57,7 +57,8 @@ DiffData = {
     power2: 2,
     speed: .07,
     fmax: 1,
-    edgeforce: 100
+    edgeforce: 100,
+    showcircles: false
 }
 
 //========================================================================================================
@@ -269,6 +270,7 @@ export function voronoi_updateparams(v, restart) {
 
 export function diffgrowth_updateparams(v, restart) {
     VData = v;
+    if (VData.d2 == 0) VData.d2 = 10000;
     if (STAGE == stageEnum.idle) return;
     if (restart || STAGE != stageEnum.diffgrowth) {
         lines = vlines;
@@ -848,7 +850,7 @@ function drawlines(P, l) {
                 point(P[i][j].x, P[i][j].y);
             }
             if (l > 1) {
-                circle(P[i][j].x, P[i][j].y, 3)
+                circle(P[i][j].x, P[i][j].y, l)
             }
         }
         if (l >= 1) {
@@ -878,10 +880,8 @@ si=-1 : don't move start point
 si=-2:  move this point as if it were a normal point. there can be only one si<0 for all poitns that have same x,y coordinates.
 si>=0: index of point that drives the move (that has si<0)
 
-
-
-
 */
+
 //======================================================================================================
 const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, fc, d1, sp, fmax, mxl, numpoints) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point
@@ -1036,15 +1036,25 @@ function add_lines_to_gpumatrix(lines, offset, w) {
         var si = [];
         var ei = [];
         for (var i = 0; i < count; i++) {
+            var ie = lines[i].length - 1;
             si[i] = -1;
             ei[i] = -1;
             for (var j = i + 1; j < count; j++) {
+                var je = lines[j].length - 1;
                 if ((lines[j][0].x == lines[i][0].x) && (lines[j][0].y == lines[i][0].y)) {  // line with same start points
                     si[j] = 0;
                     si[i] = 0;
                 }
-                if ((lines[j][lines[j].length - 1].x == lines[i][lines[i].length - 1].x) && (lines[j][lines[j].length - 1].y == lines[i][lines[i].length - 1].y)) {  // line with same start points
+                if ((lines[j][je].x == lines[i][ie].x) && (lines[j][je].y == lines[i][ie].y)) {  // line with same end  points
                     ei[j] = 0;
+                    ei[i] = 0;
+                }
+                if ((lines[j][je].x == lines[i][0].x) && (lines[j][je].y == lines[i][0].y)) {  // line with same start points
+                    ei[j] = 0;
+                    si[i] = 0;
+                }
+                if ((lines[j][0].x == lines[i][ie].x) && (lines[j][0].y == lines[i][ie].y)) {  // line with same start points
+                    si[j] = 0;
                     ei[i] = 0;
                 }
             }
@@ -1184,7 +1194,12 @@ export function draw() {
                 }
                 //   readlinelengthcheck();
                 noFill();
-                drawlines(lines, 1);;
+                if (VData.showcircles) {
+                    drawlines(lines, VData.d1);;
+                }
+                else {
+                    drawlines(lines, 1);;
+                }
             }
                 break;
             //-----------------------------------------------------------------------------------------
