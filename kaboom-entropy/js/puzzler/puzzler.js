@@ -893,11 +893,10 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     var si = _matrix[row][2];  // start index
     var ei = _matrix[row][3];  // end index
 
-
-    var isfirstpoint= ((this.thread.x == 4) || (this.thread.x == 5));   
-    if (isfirstpoint && (si ==-1)) return CP;  // x=3: dont change first point  x    
+    var isfirstpoint = ((this.thread.x == 4) || (this.thread.x == 5));
+    if (isfirstpoint && (si == -1)) return CP;  // x=3: dont change first point  x    
     var line_numpoints = _matrix[row][0];
-    var islastpoint = (this.thread.x  >= (line_numpoints * 2 + 2))
+    var islastpoint = (this.thread.x > (line_numpoints * 2 + 1))
 
     var weight = _matrix[row][1];
     if (islastpoint && (ei == -1)) return CP;  // x=3: dont change last point  y
@@ -938,24 +937,24 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
 
 
     // contraction
- 
+
     // current point
     var p1 = [_matrix[row][xindex], _matrix[row][yindex]]
 
-    if (!isfirstpoint && !islastpoint){
+    if (!(isfirstpoint || islastpoint)) {
 
-    // average between neighbors
-    var pa = [0.0, 0.0]; //: difference vector towards average of neighbor points
-    pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
-    pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
-    var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance
-    // move to point in-between neighborhood points.   attraction force: dist^3
-    /*    
+        // average between neighbors
+        var pa = [0.0, 0.0]; //: difference vector towards average of neighbor points
+        pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
+        pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
+        var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance
+        // move to point in-between neighborhood points.   attraction force: dist^3
+        /*    
+            Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
+            Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
+        */
         Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
         Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
-    */
-    Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
-    Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
     }
 
 
@@ -1051,28 +1050,30 @@ function add_lines_to_gpumatrix(lines, offset, w) {
             var ie = lines[i].length - 1;
             si[i] = -1;;
             ei[i] = -1;;
-            var psi = new Vertex(lines[i][0].x, lines[i][0].y);
-            var pei = new Vertex(lines[i][ie].x, lines[i][ie].y);
-            for (var j = 0; j < count; j++) {
-                if (j != i) {
-                    var je = lines[j].length - 1;
-                    var psj = new Vertex(lines[j][0].x, lines[j][0].y);
-                    var pej = new Vertex(lines[j][je].x, lines[j][je].y);
-                    if (issame(psi, psj)) {
-                        si[j] = 0;
-                        si[i] = 0;
-                    }
-                    if (issame(pei, pej)) {
-                        ei[j] = 0;
-                        ei[i] = 0;
-                    }
-                    if (issame(psi, pej)) {  // line with same start points
-                        ei[j] = 0;
-                        si[i] = 0;
-                    }
-                    if (issame(pei, psj)) {  // line with same start points
-                        si[j] = 0;
-                        ei[i] = 0;
+            if (VData.movejoints) {
+                var psi = new Vertex(lines[i][0].x, lines[i][0].y);
+                var pei = new Vertex(lines[i][ie].x, lines[i][ie].y);
+                for (var j = 0; j < count; j++) {
+                    if (j != i) {
+                        var je = lines[j].length - 1;
+                        var psj = new Vertex(lines[j][0].x, lines[j][0].y);
+                        var pej = new Vertex(lines[j][je].x, lines[j][je].y);
+                        if (issame(psi, psj)) {
+                            si[j] = 0;
+                            si[i] = 0;
+                        }
+                        if (issame(pei, pej)) {
+                            ei[j] = 0;
+                            ei[i] = 0;
+                        }
+                        if (issame(psi, pej)) {  // line with same start points
+                            ei[j] = 0;
+                            si[i] = 0;
+                        }
+                        if (issame(pei, psj)) {  // line with same start points
+                            si[j] = 0;
+                            ei[i] = 0;
+                        }
                     }
                 }
             }
