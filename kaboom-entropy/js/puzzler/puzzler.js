@@ -893,16 +893,15 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     var si = _matrix[row][2];  // start index
     var ei = _matrix[row][3];  // end index
 
-    if (si == -1) {
-        if (this.thread.x == 4) return CP;  // x=3: dont change first point  x
-        if (this.thread.x == 5) return CP;  // x=3: dont change first point  y
-    }
 
+    var isfirstpoint= ((this.thread.x == 4) || (this.thread.x == 5));   
+    if (isfirstpoint && (si ==-1)) return CP;  // x=3: dont change first point  x    
     var line_numpoints = _matrix[row][0];
+    var islastpoint = (this.thread.x  >= (line_numpoints * 2 + 2))
+
     var weight = _matrix[row][1];
-    if (ei == -1) {
-        if (this.thread.x >= line_numpoints * 2 + 2) return CP;  // x=3: dont change last point  y
-    }
+    if (islastpoint && (ei == -1)) return CP;  // x=3: dont change last point  y
+
 
     if (si > 0) {
         return _matrix[si][this.thread.x]   // return same point as
@@ -936,8 +935,14 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
         yindex = this.thread.x;
         even = false;
     }
+
+
+    // contraction
+ 
     // current point
     var p1 = [_matrix[row][xindex], _matrix[row][yindex]]
+
+    if (!isfirstpoint && !islastpoint){
 
     // average between neighbors
     var pa = [0.0, 0.0]; //: difference vector towards average of neighbor points
@@ -951,7 +956,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     */
     Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
     Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
-
+    }
 
 
 
