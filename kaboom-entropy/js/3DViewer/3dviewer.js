@@ -245,7 +245,7 @@ export function updateGeometry(c, b, f, s, sc) {
 }
 
 
-export function updatebackgroundpos(x, y, r, f) {
+export function updatebackgroundpos(x, y, r, f, z) {
     var S = Scene.getObjectByName('SVG');
     if (S != undefined) {
         S.position.set(x, y, S.position.z);
@@ -255,16 +255,16 @@ export function updatebackgroundpos(x, y, r, f) {
             S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
         }
     }
-    var S = Scene.getObjectByName('SVGline');
-    if (S != undefined) {
-        S.position.set(x, y, S.position.z);
-        S.rotation.z = r * 3.141592 / 180;
+    /*
+    var S2 = Scene.getObjectByName('SVGline');
+    if (S2 != undefined) {
+        S2.position.set(x, y, z);
         if (f != cflip) {
             cflip = f;
-            S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+            S2.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
         }
     }
-
+    */
 }
 
 export function updatebackground(bgfile) {
@@ -381,46 +381,45 @@ export function loadSVG(url, fn, whenready) {
         }
 
         SVGgroup = new THREE.Group();
-        var SVGsubgroup = new THREE.Group()
-        SVGsubgroup = pathtogroup(path, 4, bevel);
         SVGgroup.name = 'SVG';
-        var dims = getsizeandpos(SVGsubgroup);
+
+        var SVGsubgroup = new THREE.Group()
+        var thickness = 4.0
+        SVGsubgroup = pathtogroup(path, thickness, bevel);
 
         var linegroup = new THREE.Group();
-        linegroup.name = 'SVGline';
+        linegroup.name = 'SVGline'
         for (var j = 0; j < path2.subPaths.length; j++) {
             var points2 = path2.subPaths[j].getPoints();
             var geometry = new THREE.BufferGeometry().setFromPoints(points2);
-            var material = new THREE.LineBasicMaterial({ color: 0x000000 });
+            var material = new THREE.LineBasicMaterial({ color: 0x0A0A0A });
             var li = new THREE.Line(geometry, material);
             linegroup.add(li);
         }
 
-
+        var dims = getsizeandpos(SVGsubgroup);
         if (cscale != 0) {
             var l = cscale / Math.max(dims[0], dims[1]);
             SVGsubgroup.scale.set(l, l, 1);
+            linegroup.scale.set(l, -l, 1);
         }
         if (flat) {
             SVGsubgroup.rotateX(-90 * Math.PI / 180);
+            linegroup.rotateX(-90 * Math.PI / 180);
         }
-        dims = getsizeandpos(SVGsubgroup);
 
+        dims = getsizeandpos(SVGsubgroup);
         SVGsubgroup.translateX(-dims[3]);
         SVGsubgroup.translateY(-dims[4]);
         SVGsubgroup.translateZ(-dims[5] + 1);
-        SVGgroup.add(SVGsubgroup);
-        Scene.add(SVGgroup);
+        linegroup.translateX(-dims[3]);
+        linegroup.translateY(-dims[4]);
+        linegroup.translateZ(-dims[5] + 1 + thickness + 0.01);
         Objects.push(SVGsubgroup);
-
-
-
-        //linegroup.translateX(-dims[3]);
-        //linegroup.translateY(-dims[4]);
-        // linegroup.translateZ(-dims[5] + 1);
-        linegroup.scale.set(-l, -l, 1);
-
-        Scene.add(linegroup)
+        SVGgroup.add(SVGsubgroup);
+        SVGgroup.add(linegroup);
+        Scene.add(SVGgroup);
+        // Scene.add(linegroup)
 
         whenready();
     });

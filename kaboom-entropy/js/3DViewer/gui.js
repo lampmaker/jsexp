@@ -46,7 +46,8 @@ guiData = {
     Frame: record_frame,
     explode: 0,
     playbackspeed: 0,
-    movecam: false
+    movecam: false,
+    zpos: 4.01
 
 };
 //=================================================================================================================
@@ -70,7 +71,7 @@ function _updateUvTransform() {
     updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify, guiData.scale);
 }
 function _updatebackgroundpos() {
-    updatebackgroundpos(guiData.objectposx, guiData.objectposy, guiData.objectrot, guiData.flip);
+    updatebackgroundpos(guiData.objectposx, guiData.objectposy, guiData.objectrot, guiData.flip, guiData.zpos);
 }
 function _updatebackground() {
     updatebackground(guiData.bgfilename)
@@ -95,6 +96,7 @@ $(function () {
         g0.add(guiData, 'repeatX', 1, 10, 0.01).name('repeat.x').onChange(_updateUvTransform);
         g0.add(guiData, 'repeatY', 1, 10, 0.01).name('repeat.y').onChange(_updateUvTransform);
         g0.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
+        g0.add(guiData, 'zpos', - 2.0, 4.01).name('zpos').onChange(_updatebackgroundpos);
         g0.addColor(guiData, 'color',).name('color').onFinishChange(_updatecolor);
         g0.add({ ren: () => { rendertotexture() } }, 'ren').name('Render to texture');
 
