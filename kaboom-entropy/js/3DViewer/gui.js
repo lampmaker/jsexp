@@ -1,5 +1,5 @@
 
-import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry, updatebackgroundpos, updatebackground, updatelight, getcanvas, explodedview } from './3dviewer.js';
+import { init, resize, loadSVG, resetview, freezeview, export3D, updateUvTransform, updatecolor, updateGeometry, updatebackgroundpos, updatebackground, updatelight, getcanvas, explodedview, rendertotexture } from './3dviewer.js';
 import { GUI } from '/js/three/dat.gui.module.js'
 import { GLTFExporter } from '/js/three/GLTFExporter.js'
 
@@ -66,7 +66,7 @@ function resetcam() {
 }
 //=================================================================================================================
 function _updateUvTransform() {
-    updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX, guiData.repeatY, guiData.rotation); // rotation is around [ 0.5, 0.5 ] 
+    updateUvTransform(guiData.offsetX, guiData.offsetY, guiData.repeatX / 1000, guiData.repeatY / 1000, guiData.rotation); // rotation is around [ 0.5, 0.5 ] 
     updateGeometry(guiData.curvesegments, guiData.bevel, guiData.flat, guiData.simplify, guiData.scale);
 }
 function _updatebackgroundpos() {
@@ -90,12 +90,13 @@ $(function () {
         gui.add(guiData, 'maskfilename').name('File name');
         gui.add(guiData, 'maskfile').name('load from SVG');
         var g0 = gui.addFolder('texture');
-        g0.add(guiData, 'offsetX', 0.0, 1.0).name('offset.x').onChange(_updateUvTransform);
-        g0.add(guiData, 'offsetY', 0.0, 1.0).name('offset.y').onChange(_updateUvTransform);
-        g0.add(guiData, 'repeatX', 0.001, 0.01).name('repeat.x').onChange(_updateUvTransform);
-        g0.add(guiData, 'repeatY', 0.001, 0.01).name('repeat.y').onChange(_updateUvTransform);
+        g0.add(guiData, 'offsetX', 0.0, 1.0, 0.001).name('offset.x').onChange(_updateUvTransform);
+        g0.add(guiData, 'offsetY', 0.0, 1.0, 0.001).name('offset.y').onChange(_updateUvTransform);
+        g0.add(guiData, 'repeatX', 1, 10, 0.01).name('repeat.x').onChange(_updateUvTransform);
+        g0.add(guiData, 'repeatY', 1, 10, 0.01).name('repeat.y').onChange(_updateUvTransform);
         g0.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
         g0.addColor(guiData, 'color',).name('color').onFinishChange(_updatecolor);
+        g0.add({ ren: () => { rendertotexture() } }, 'ren').name('Render to texture');
 
         var g1 = gui.addFolder('Geometry')
         g1.add(guiData, 'curvesegments', 1, 20, 1).name('curve segments').onChange(_updateUvTransform);

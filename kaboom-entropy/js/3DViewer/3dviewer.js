@@ -20,13 +20,14 @@ var Scene;
 var Camera, orbitControls, dragControls, light0, light1;
 var Objects = [];
 var SVGdata, SVGgeometry, SVGmesh, SVGgroup, material, texture, tablematerial;
+
 var filename;
 // geometry through gui
 var csegments, bevel, flat, csimplify, cscale, cflip;
 
 
 var animation, raycaster;
-
+var texture2
 
 
 export function init() {
@@ -165,6 +166,7 @@ export function init() {
     texture.repeat.set(0.0025, 0.005);
     texture.center.x = 40;
     texture.center.y = 0;
+
     //texture.mapping
     //texture.offset=(0,0);
     //var material= new THREE.MeshNormalMaterial();
@@ -181,12 +183,29 @@ export function init() {
     var material_selected2 = new THREE.MeshStandardMaterial
     material_selected2[0] = [materialtop, materialside, materialside]
     material_selected.emissive.set(0xBBBBBB);
+
+    texture2 = new newtarget(canvasWidth * 4, canvasHeight * 4);
+    texture2.repeat.set(1 / canvasWidth * 4, 1 / canvasHeight * 4);
+    texture2.repeat.set(0.00125, 0.00125);
     // init others  ----------------------------------------------------------------------------------------------------
     //var helper = new THREE.GridHelper(1000, 10);
     //helper.rotation.x = Math.PI / 2;
     //scene.add(helper);
     animate();
 
+}
+
+function newtarget(w, h) {
+    var X = new THREE.WebGLRenderTarget(w, h,
+        {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType
+        })
+    X.texture.wrapS = THREE.RepeatWrapping;
+    X.texture.wrapT = THREE.RepeatWrapping;
+    return X;
 }
 //=======================================================================================================
 //=======================================================================================================
@@ -211,8 +230,9 @@ export function getcanvas() {
 export function updateUvTransform(ox, oy, rx, ry, rot) {
     texture.offset.set(ox, oy);
     texture.repeat.set(rx, ry);
-    texture.rotation = rot; // rotation is around [ 0.5, 0.5 ]    
-
+    texture.rotation = rot; // rotation is around [ 0.5, 0.5 ]      
+    texture2.repeat.set(-rx, -ry);
+    texture2.offset.set(ox, oy);
 }
 //=======================================================================================================
 //=======================================================================================================
@@ -405,6 +425,18 @@ export function updatecolor(c) {
 }
 //=======================================================================================================
 //=======================================================================================================
+export function rendertotexture() {
+    Renderer.setRenderTarget(texture2);
+    Renderer.render(Scene, Camera);
+    Renderer.setRenderTarget(null);
+    texture2.flipY = false;
+    texture2.repeat.set(1 / canvasWidth, -1 / canvasHeight);
+    material[0].map = texture2;
+
+
+}
+
+
 
 
 function savetoFile(data, filename, type) {
