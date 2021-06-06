@@ -47,7 +47,8 @@ guiData = {
     explode: 0,
     playbackspeed: 0,
     movecam: false,
-    zpos: 4.01
+    zpos: 4.01,
+    viewlines: 1
 
 };
 //=================================================================================================================
@@ -96,7 +97,7 @@ $(function () {
         g0.add(guiData, 'repeatX', 1, 10, 0.01).name('repeat.x').onChange(_updateUvTransform);
         g0.add(guiData, 'repeatY', 1, 10, 0.01).name('repeat.y').onChange(_updateUvTransform);
         g0.add(guiData, 'rotation', - 2.0, 2.0).name('rotation').onChange(_updateUvTransform);
-        g0.add(guiData, 'zpos', - 2.0, 4.01).name('zpos').onChange(_updatebackgroundpos);
+        g0.add(guiData, 'zpos', 4.01, 10000).name('zpos').onChange(_updatebackgroundpos);
         g0.addColor(guiData, 'color',).name('color').onFinishChange(_updatecolor);
         g0.add({ ren: () => { rendertotexture() } }, 'ren').name('Render to texture');
 

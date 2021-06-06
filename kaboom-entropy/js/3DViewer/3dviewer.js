@@ -255,16 +255,16 @@ export function updatebackgroundpos(x, y, r, f, z) {
             S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
         }
     }
-    /*
+
     var S2 = Scene.getObjectByName('SVGline');
     if (S2 != undefined) {
-        S2.position.set(x, y, z);
-        if (f != cflip) {
-            cflip = f;
-            S2.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
-        }
+        S2.position.z = z;
+        //  if (f != cflip) {
+        //       cflip = f;
+        //      S2.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+        //}
     }
-    */
+
 }
 
 export function updatebackground(bgfile) {
