@@ -255,6 +255,16 @@ export function updatebackgroundpos(x, y, r, f) {
             S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
         }
     }
+    var S = Scene.getObjectByName('SVGline');
+    if (S != undefined) {
+        S.position.set(x, y, S.position.z);
+        S.rotation.z = r * 3.141592 / 180;
+        if (f != cflip) {
+            cflip = f;
+            S.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
+        }
+    }
+
 }
 
 export function updatebackground(bgfile) {
@@ -374,12 +384,19 @@ export function loadSVG(url, fn, whenready) {
         var SVGsubgroup = new THREE.Group()
         SVGsubgroup = pathtogroup(path, 4, bevel);
         SVGgroup.name = 'SVG';
-
-
-        // var csg1 = THREE.CSG.fromMesh(SVGgroup);
-        //  var csg2 = THREE.CSG.fromMesh(SVGgroup2);
-        ;
         var dims = getsizeandpos(SVGsubgroup);
+
+        var linegroup = new THREE.Group();
+        linegroup.name = 'SVGline';
+        for (var j = 0; j < path2.subPaths.length; j++) {
+            var points2 = path2.subPaths[j].getPoints();
+            var geometry = new THREE.BufferGeometry().setFromPoints(points2);
+            var material = new THREE.LineBasicMaterial({ color: 0x000000 });
+            var li = new THREE.Line(geometry, material);
+            linegroup.add(li);
+        }
+
+
         if (cscale != 0) {
             var l = cscale / Math.max(dims[0], dims[1]);
             SVGsubgroup.scale.set(l, l, 1);
@@ -388,6 +405,7 @@ export function loadSVG(url, fn, whenready) {
             SVGsubgroup.rotateX(-90 * Math.PI / 180);
         }
         dims = getsizeandpos(SVGsubgroup);
+
         SVGsubgroup.translateX(-dims[3]);
         SVGsubgroup.translateY(-dims[4]);
         SVGsubgroup.translateZ(-dims[5] + 1);
@@ -396,17 +414,13 @@ export function loadSVG(url, fn, whenready) {
         Objects.push(SVGsubgroup);
 
 
-        const points2 = path2.getPoints();
-        const geometry = new THREE.BufferGeometry().setFromPoints(points2);
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff });
-        const line = new THREE.Line(geometry, material);
-        Line.translateX(-dims[3]);
-        Line.translateY(-dims[4]);
-        Line.translateZ(-dims[5] + 1);
-        Scene.add(line);
 
+        //linegroup.translateX(-dims[3]);
+        //linegroup.translateY(-dims[4]);
+        // linegroup.translateZ(-dims[5] + 1);
+        linegroup.scale.set(-l, -l, 1);
 
-
+        Scene.add(linegroup)
 
         whenready();
     });
