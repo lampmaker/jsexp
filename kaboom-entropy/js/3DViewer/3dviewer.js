@@ -375,8 +375,6 @@ export function loadSVG(url, fn, whenready) {
         SVGsubgroup = pathtogroup(path, 4, bevel);
         SVGgroup.name = 'SVG';
 
-        var SVGgroup2 = new THREE.Group()
-        SVGgroup2 = pathtogroup(path2, 4, false);
 
         // var csg1 = THREE.CSG.fromMesh(SVGgroup);
         //  var csg2 = THREE.CSG.fromMesh(SVGgroup2);
@@ -398,7 +396,14 @@ export function loadSVG(url, fn, whenready) {
         Objects.push(SVGsubgroup);
 
 
-
+        const points2 = path2.getPoints();
+        const geometry = new THREE.BufferGeometry().setFromPoints(points2);
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const line = new THREE.Line(geometry, material);
+        Line.translateX(-dims[3]);
+        Line.translateY(-dims[4]);
+        Line.translateZ(-dims[5] + 1);
+        Scene.add(line);
 
 
 
