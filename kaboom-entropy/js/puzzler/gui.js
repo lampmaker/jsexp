@@ -60,7 +60,9 @@ DiffData = {
     fmax: 1,
     edgeforce: 100,
     showcircles: false,
-    movejoints: false
+    movejoints: false,
+    drawmode: "line"
+
 }
 
 
@@ -226,7 +228,8 @@ $(function () {
         Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 10).name('fmax').onChange(diffdetails);
         Dmenu.add(DiffData, 'edgeforce', 0, 1000).name('edge repulsion').onChange(diffdetails);
-        Dmenu.add(DiffData, 'showcircles').onChange(diffdetails)
+        Dmenu.add(DiffData, 'showcircles').onChange(diffdetails);
+        Dmenu.add(DiffData, 'drawmode', ['point', 'line', 'circles', 'thickline']).name('drawmode').onChange(diffdetails);;
         gui.add(guiData, 'save').name('save to SVG');
     });
     updatescreen();

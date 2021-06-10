@@ -176,11 +176,11 @@ export function loadSVG(url, fn, density) {
         //for (var j = 0; j < SVGdata[0].subPaths.length; j++) {
         var points = SVGdata[0].subPaths[0].getPoints(12);
 
-        points = subdivpath(points, 100, 0, MAXPOINTS * 10);
-        points = subdivpath(points, 50, 0, MAXPOINTS * 10);
-        points = subdivpath(points, 20, 0, MAXPOINTS * 10);
-        points = subdivpath(points, 10, 0, MAXPOINTS * 10);
-        points = subdivpath(points, density, 0, MAXPOINTS * 10);
+        points = subdivpath(points, 100, 0, MAXPOINTS * 10, false);
+        points = subdivpath(points, 50, 0, MAXPOINTS * 10, false);
+        points = subdivpath(points, 20, 0, MAXPOINTS * 10, false);
+        points = subdivpath(points, 10, 0, MAXPOINTS * 10, false);
+        points = subdivpath(points, density, 0, MAXPOINTS * 10, false);
 
         var circum = 0;
         for (var k = 0; k < points.length - 1; k++) {
@@ -280,7 +280,7 @@ export function diffgrowth_updateparams(v, restart) {
         //    console.log(lines[i][0].x, lines[i][0].y, lines[i][1].x, lines[i][1].y)
         // }        
         for (var i = 0; i < lines.length; i++) {
-            lines[i] = subdivpath(lines[i], VData.d2, 0, MAXPOINTS);
+            lines[i] = subdivpath(lines[i], VData.d2, 0, MAXPOINTS, true);
         }
     }
 
@@ -557,7 +557,7 @@ function trimlines(l, b) {
 //subdivides a path by inserting points between two adjacent points that are more than 2*maxd apart
 // maxd=minimum Vdistance between points.  Actual will vary between maxd and 2*maxd.
 //================================================================================================
-function subdivpath(P, maxd, r, mxp) {
+function subdivpath(P, maxd, r, mxp, oneonly) {
     var i = 0;
     var ready = false;
     if (P.length > mxp) return P;
@@ -575,8 +575,7 @@ function subdivpath(P, maxd, r, mxp) {
                 P1.y + dy + r * (Math.random() - 0.5)
             );
             P.splice(i + 1, 0, newpoint);  // insert point
-
-            //return P;  // exit immediately after inserted 1 point per line... !
+            if (oneonly) return P;
         }
         i++;
         ready = (i >= (P.length - 1));// || i > 20000);
@@ -934,6 +933,20 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     var seg = 1;
     if (d2 > 0) seg = min(1, d1 / d2);   // number of segments on the line that will be within d1
 
+    /*
+mogelijke alternatieve aanpak:
+- target lengte tussen twee punten.   kracht hangt af van afsztand. te dichtbij: afstoten - te ver weg: aantrekken.  grote krachten.
+ - elke stap target lengte langzaam iets vergroten. 
+ - een  opsplits stap:  zet targetlengte/2 en subdivpath.
+
+
+
+
+
+*/
+
+
+
     // contraction   
     if (!(isfirstpoint || islastpoint)) {
         // average between neighbors
@@ -963,10 +976,10 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
                 Dist = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]) / d1;  // distance between points                                
                 if (Dist < 1) {  // less than repulsion radius
                     // n = n + 1;
-                    var strength = Math.pow((1 - Dist), pwr2);
+                    var strength = Math.pow((1 - Dist) * fb, pwr2);
                     //var strength = (d1 - Dist)
-                    Fb[0] += p2[0] * w * strength * fb;
-                    Fb[1] += p2[1] * w * strength * fb;
+                    Fb[0] += p2[0] * w * strength;
+                    Fb[1] += p2[1] * w * strength;
                 }
             };
         }
@@ -1100,7 +1113,7 @@ function readlinelengthcheck() {
 
 
 function processGPU() {
-    var numpoints = add_line_to_gpumatrix(borderpoints, 0, -VData.edgeforce);
+    var numpoints = add_line_to_gpumatrix(borderpoints, 0, -VData.edgeforce * 100);
 
     numpoints += add_lines_to_gpumatrix(lines, 1, 1);
     GPUmatrix = GPU_movepoints(
@@ -1184,15 +1197,27 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
                 //   readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d2, 1, MAXPOINTS);
+                    lines[i] = subdivpath(lines[i], VData.d2, 1, MAXPOINTS, false);
                 }
                 //   readlinelengthcheck();
                 noFill();
-                if (VData.showcircles) {
-                    drawlines(lines, VData.d1);;
-                }
-                else {
-                    drawlines(lines, 1);;
+                switch (VData.drawmode) {
+                    case 'point':
+                        drawlines(lines, 0);;
+                        break;
+                    case 'line':
+                        drawlines(lines, 1);;
+                        break;
+                    case 'circles':
+                        drawlines(lines, VData.d1);;
+                        break;
+                    case 'thickline':
+                        strokeWeight(VData.d1);
+                        drawlines(lines, 1);;
+                        strokeWeight(1);
+                        break;
+                    default:
+                        break;
                 }
             }
                 break;
