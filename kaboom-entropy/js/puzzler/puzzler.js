@@ -568,17 +568,15 @@ function subdivpath(P, maxd, r, mxp) {
 
         if (D > 2 * maxd) {  //.. Vdistance is too large, need to insert point(s)
             var numinserts = Math.floor((D - maxd) / maxd); // number of points to be inserted
-            numinserts = 1;
-            if (numinserts + P.length + 2 > mxp) numinserts = mxp - P.length - 2;
-            var dx = (P2.x - P1.x) / (numinserts + 1);
-            var dy = (P2.y - P1.y) / (numinserts + 1);
-            for (var j = 1; j <= numinserts; j++) {
-                var newpoint = new Vertex(
-                    P1.x + dx * j + r * (Math.random() - 0.5),
-                    P1.y + dy * j + r * (Math.random() - 0.5)
-                );
-                P.splice(i + j, 0, newpoint);  // insert point
-            }
+            var dx = (P2.x - P1.x) / 2;
+            var dy = (P2.y - P1.y) / 2;
+            var newpoint = new Vertex(
+                P1.x + dx + r * (Math.random() - 0.5),
+                P1.y + dy + r * (Math.random() - 0.5)
+            );
+            P.splice(i + 1, 0, newpoint);  // insert point
+
+            //return P;  // exit immediately after inserted 1 point per line... !
         }
         i++;
         ready = (i >= (P.length - 1));// || i > 20000);
@@ -883,7 +881,7 @@ si>=0: index of point that drives the move (that has si<0)
 */
 
 //======================================================================================================
-const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, fc, d1, sp, fmax, mxl, numpoints) {
+const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, fc, d1, d2, sp, fmax, mxl, numpoints) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point
     var row = this.thread.y;
     if (this.thread.x == 0) return CP;  // x=: length     - no calculation required
@@ -892,34 +890,18 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     if (this.thread.x == 3) return CP;  // x=3: dont change ei
     var si = _matrix[row][2];  // start index
     var ei = _matrix[row][3];  // end index
-
     var isfirstpoint = ((this.thread.x == 4) || (this.thread.x == 5));
     if (isfirstpoint && (si == -1)) return CP;  // x=3: dont change first point  x    
     var line_numpoints = _matrix[row][0];
     var islastpoint = (this.thread.x > (line_numpoints * 2 + 1))
-
     var weight = _matrix[row][1];
     if (islastpoint && (ei == -1)) return CP;  // x=3: dont change last point  y
-
-
-    if (si > 0) {
-        return _matrix[si][this.thread.x]   // return same point as
-    }
-
-    if (ei > 0) {
-        return _matrix[ei][this.thread.x]   // return same point as
-    }
-
+    if (si > 0) return _matrix[si][this.thread.x]   // return same point as    
+    if (ei > 0) return _matrix[ei][this.thread.x]   // return same point as
     if (line_numpoints == 0) return CP;;  // empty row
     if (weight <= 0) return CP;  // weight=0, dont move point
-
-    if (si > 0) {
-        return _matrix[si][this.thread.x]   // return same point as
-    }
-
-    if (ei > 0) {
-        return _matrix[ei][this.thread.x]   // return same point as
-    }
+    if (si > 0) return _matrix[si][this.thread.x]   // return same point as
+    if (ei > 0) return _matrix[ei][this.thread.x]   // return same point as
 
     var p2 = [0.0, 0.0];
     var Dist = 0.0;
@@ -935,65 +917,57 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
         even = false;
     }
 
+    var p1 = [_matrix[row][xindex], _matrix[row][yindex]]   // current point
 
-    // contraction
+    /*
+    d1 = repulsion distance
+    d2 = split distance
+    fa = contraction force
+    fb = repulsion force
+    fc=
+    pwr1= smoothing force.
+    pwr2=repulsion power
+    sp=speed
+    fmax=max force
+    */
 
-    // current point
-    var p1 = [_matrix[row][xindex], _matrix[row][yindex]]
+    var seg = 1;
+    if (d2 > 0) seg = min(1, d1 / d2);   // number of segments on the line that will be within d1
 
+    // contraction   
     if (!(isfirstpoint || islastpoint)) {
-
         // average between neighbors
         var pa = [0.0, 0.0]; //: difference vector towards average of neighbor points
         pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
         pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
-        var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance
-        // move to point in-between neighborhood points.   attraction force: dist^3
-        /*    
-            Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
-            Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
-        */
-        Fa[0] = pa[0] * Math.pow(pad, pwr1) * fa;
-        Fa[1] = pa[1] * Math.pow(pad, pwr1) * fa;
+        var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]) / d2;  // distance
+        // move to point in-between neighborhood points.          
+        Fa[0] = pa[0] * max(Math.pow(pad, 2), pwr1) * fa;
+        Fa[1] = pa[1] * max(Math.pow(pad, 2), pwr1) * fa;
+        //Fa[0] = pa[0] * max(pad, pwr1) * fa;
+        //Fa[1] = pa[1] * max(pad, pwr1) * fa;
     }
 
-
-
-
+    //    Fa[0] = Fa[0] * seg;
+    // Fa[1] = Fa[1] * seg;
 
     // repulsion force to all other points
+    // var n = 1;
     for (var i = 0; i < mxl + 1; i++) {
         if (_matrix[i][0] > 0) {
             var w = Math.abs(_matrix[i][1]);// weight factor of that row
             w = 1;  // override for debugging purposes
             for (var j = 0; j < _matrix[i][0]; j++) {
-
                 p2[0] = p1[0] - _matrix[i][j * 2 + 2];   // vector to point 
                 p2[1] = p1[1] - _matrix[i][j * 2 + 3];   // vector to point point to review
-                Dist = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]);  // distance between points                                
-                if (Dist > 0) {
-                    if (Dist < d1) {  // less than repulsion radius
-                        var strength = Math.pow((d1 - Dist) / d1, pwr2);
-                        Fb[0] += p2[0] * w * strength * fb;
-                        Fb[1] += p2[1] * w * strength * fb;
-
-                        //Fb[0] *= 1000;
-                        //Fb[1] *= 1000;
-                    }
-                    /*
-                    if (Dist < d1 * 2) {  // less than repulsion radius                        
-                        p2 = [p2[0] / Dist, p2[1] / Dist];   // scale vector t0 length 1
-                        Dist = Dist - d1;
-                        if (Dist > 0) {
-                            var strength = 1 / Math.pow(Math.abs(Dist), pwr2);
-                            Fb[0] += p2[0] * w * strength * fc;
-                            Fb[1] += p2[1] * w * strength * fc;
-                        }
-                    }
-                    */
+                Dist = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]) / d1;  // distance between points                                
+                if (Dist < 1) {  // less than repulsion radius
+                    // n = n + 1;
+                    var strength = Math.pow((1 - Dist), pwr2);
+                    //var strength = (d1 - Dist)
+                    Fb[0] += p2[0] * w * strength * fb;
+                    Fb[1] += p2[1] * w * strength * fb;
                 }
-
-
             };
         }
     }
@@ -1137,6 +1111,7 @@ function processGPU() {
         VData.power2,
         VData.fc,
         VData.d1,
+        VData.d2,
         VData.speed,
         VData.fmax,
         min(lines.length + 1, MAXLINES),
@@ -1209,7 +1184,7 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
                 //   readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d2, 2, MAXPOINTS);
+                    lines[i] = subdivpath(lines[i], VData.d2, 1, MAXPOINTS);
                 }
                 //   readlinelengthcheck();
                 noFill();
