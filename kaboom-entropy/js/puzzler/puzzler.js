@@ -904,9 +904,7 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
 
     var p2 = [0.0, 0.0];
     var Dist = 0.0;
-    var V = [0.0, 0.0]; // direction vector    
-    var Fa = [0.0, 0.0]; //force to neightbor points: attract
-    var Fb = [0.0, 0.0]; //force to other point: repulse
+
     var even = true;
     var xindex = this.thread.x;
     var yindex = this.thread.x + 1;
@@ -921,17 +919,16 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     /*
     d1 = repulsion distance
     d2 = split distance
-    fa = contraction force
-    fb = repulsion force
-    fc=
+    fa = contraction force: lengte tussen twee punten. 
+    fb = repulsion force: afstoting tot andere punten
+    fc= bending force:
+
     pwr1= smoothing force.
     pwr2=repulsion power
     sp=speed
     fmax=max force
     */
 
-    var seg = 1;
-    if (d2 > 0) seg = min(1, d1 / d2);   // number of segments on the line that will be within d1
 
     /*
 mogelijke alternatieve aanpak:
@@ -939,33 +936,64 @@ mogelijke alternatieve aanpak:
  - elke stap target lengte langzaam iets vergroten. 
  - een  opsplits stap:  zet targetlengte/2 en subdivpath.
 
-
-
-
-
 */
 
+    /// - atrtaction to neighborhood points, target length = d2.  forces normalized. distances normalized
+    var Fa = [0.0, 0.0];
 
-
-    // contraction   
     if (!(isfirstpoint || islastpoint)) {
-        // average between neighbors
-        var pa = [0.0, 0.0]; //: difference vector towards average of neighbor points
-        pa[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
-        pa[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
-        var pad = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]) / d2;  // distance
-        // move to point in-between neighborhood points.          
-        Fa[0] = pa[0] * max(Math.pow(pad, 2), pwr1) * fa;
-        Fa[1] = pa[1] * max(Math.pow(pad, 2), pwr1) * fa;
-        //Fa[0] = pa[0] * max(pad, pwr1) * fa;
-        //Fa[1] = pa[1] * max(pad, pwr1) * fa;
+        var pa = [_matrix[row][xindex - 2] - p1[0], _matrix[row][yindex - 2] - p1[1]];; //: vector to neighbor 1
+        var da = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance to neighbor 1
+        pa[0] = pa[0] / da; pa[1] = pa[1] / da; da = da / d2;//normalize
+        if (da > 0 && d2 > 0) {
+            var ffa = fa * (da - 1) * 1000;  // force
+            Fa[0] += pa[0] * ffa;
+            Fa[1] += pa[1] * ffa;
+        }
+        var pb = [_matrix[row][xindex + 2] - p1[0], _matrix[row][yindex + 2] - p1[1]];; //: vector yo neighbor 2
+        var db = Math.sqrt(pb[0] * pb[0] + pb[1] * pb[1]);  // distance to neighbor 2
+        pb[0] = pb[0] / db; pb[1] = pb[1] / db; db = db / d2;//normalize
+        if (db > 0 && d2 > 0) {
+            var ffb = fa * (db - 1) * 1000;
+            Fa[0] += pb[0] * ffb;
+            Fa[1] += pb[1] * ffb;
+        }
     }
 
-    //    Fa[0] = Fa[0] * seg;
-    // Fa[1] = Fa[1] * seg;
 
+
+    /*
+
+    verbeteringen nodig: bending/straigthenign force moet 5 punten meenemen.  beter algoritme zoeken of zelf iets maken. 
+
+    */
+    var Fc = [0.0, 0.0]; //bending force
+    if (!(isfirstpoint || islastpoint)) {
+        var pc = [0.0, 0.0]; //: difference vector towards average of neighbor points
+        pc[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
+        pc[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
+
+        var pcd = Math.sqrt(pc[0] * pc[0] + pc[1] * pc[1]);  // distance
+
+        // normalize
+        pc[0] = pc[0] / pcd;
+        pc[1] = pc[1] / pcd;
+        pcd = pcd / d2;
+
+        var force = Math.pow(pcd, 4) * 1000000;
+        // move to point in-between neighborhood points.          
+        if (pcd > 0) {
+            Fc[0] = pc[0] * fc * force;
+            Fc[1] = pc[1] * fc * force;
+        }
+    }
+
+
+
+
+    var Fb = [0.0, 0.0]; //force to other point: repulse
     // repulsion force to all other points
-    // var n = 1;
+    var n = 1;
     for (var i = 0; i < mxl + 1; i++) {
         if (_matrix[i][0] > 0) {
             var w = Math.abs(_matrix[i][1]);// weight factor of that row
@@ -973,20 +1001,20 @@ mogelijke alternatieve aanpak:
             for (var j = 0; j < _matrix[i][0]; j++) {
                 p2[0] = p1[0] - _matrix[i][j * 2 + 2];   // vector to point 
                 p2[1] = p1[1] - _matrix[i][j * 2 + 3];   // vector to point point to review
-                Dist = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]) / d1;  // distance between points                                
-                if (Dist < 1) {  // less than repulsion radius
-                    // n = n + 1;
-                    var strength = Math.pow((1 - Dist) * fb, pwr2);
+                Dist = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]);  // distance between points                                
+                if (Dist < d1 && Dist > 0) {  // less than repulsion radius
+                    n = n + 1;
+                    var strength = Math.pow((d1 - Dist) / d1 * fb, pwr2);
                     //var strength = (d1 - Dist)
-                    Fb[0] += p2[0] * w * strength;
-                    Fb[1] += p2[1] * w * strength;
+                    Fb[0] += p2[0] / Dist * w * strength;
+                    Fb[1] += p2[1] / Dist * w * strength;
                 }
             };
         }
     }
 
     // limit force if > fmax
-    var Ftot = [Fa[0] + Fb[0], Fa[1] + Fb[1]];
+    var Ftot = [Fa[0] + Fb[0] + Fc[0] / n, Fa[1] + Fb[1] + Fc[1] / n];
 
 
     var scale = 1;
@@ -1197,7 +1225,7 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
                 //   readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d2, 1, MAXPOINTS, false);
+                    lines[i] = subdivpath(lines[i], VData.d3, 1, MAXPOINTS, true);
                 }
                 //   readlinelengthcheck();
                 noFill();
@@ -1208,8 +1236,11 @@ export function draw() {
                     case 'line':
                         drawlines(lines, 1);;
                         break;
-                    case 'circles':
+                    case 'circles-d1':
                         drawlines(lines, VData.d1);;
+                        break;
+                    case 'circles-d2':
+                        drawlines(lines, VData.d2);;
                         break;
                     case 'thickline':
                         strokeWeight(VData.d1);

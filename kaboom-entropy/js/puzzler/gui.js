@@ -51,6 +51,7 @@ VData = {
 DiffData = {
     d1: 5,
     d2: 3,
+    d3: 10,
     fc: 3,
     power1: 2,
     power2: 2,
@@ -218,18 +219,19 @@ $(function () {
         gui.add(guiData, 'start').name('Diffgrowth start');
         var Dmenu = gui.addFolder('Diff Details')
         Dmenu.add(DiffData, 'movejoints').onChange(diffdetails)
-        Dmenu.add(DiffData, 'd1', 5, 100, 1).name('repulsionradius').onChange(diffdetails);
-        Dmenu.add(DiffData, 'd2', 0, 20, .1).name('splitdistance').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('contraction force').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd1', 5, 100, 1).name('d1-repulsionradius').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd2', 0, 20, .1).name('d2-segment length').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd3', 0, 20, .1).name('d3-plitdistance').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('fa-contraction force').onChange(diffdetails);
+        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('fb-repulsion force1').onChange(diffdetails);
+        Dmenu.add(DiffData, 'fc', -5, 1000, 1).name('fc-bending force').onChange(diffdetails);
         Dmenu.add(DiffData, 'power1', 0, 200, 0.1).name('straighten').onChange(diffdetails);
-        Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('repulsion force1').onChange(diffdetails);
-        Dmenu.add(DiffData, 'fc', -5, 100, 1).name('repulsion force2').onChange(diffdetails);
         Dmenu.add(DiffData, 'power2', 0.5, 5, 0.1).name('repulsion power').onChange(diffdetails);
         Dmenu.add(DiffData, 'speed', 0, 2).name('speed').onChange(diffdetails);
         Dmenu.add(DiffData, 'fmax', 0, 10).name('fmax').onChange(diffdetails);
         Dmenu.add(DiffData, 'edgeforce', 0, 1000).name('edge repulsion').onChange(diffdetails);
         Dmenu.add(DiffData, 'showcircles').onChange(diffdetails);
-        Dmenu.add(DiffData, 'drawmode', ['point', 'line', 'circles', 'thickline']).name('drawmode').onChange(diffdetails);;
+        Dmenu.add(DiffData, 'drawmode', ['point', 'line', 'circles-d1', 'circles-d2', 'thickline']).name('drawmode').onChange(diffdetails);;
         gui.add(guiData, 'save').name('save to SVG');
     });
     updatescreen();
