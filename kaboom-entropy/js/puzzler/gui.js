@@ -221,7 +221,7 @@ $(function () {
         Dmenu.add(DiffData, 'movejoints').onChange(diffdetails)
         Dmenu.add(DiffData, 'd1', 5, 100, 1).name('d1-repulsionradius').onChange(diffdetails);
         Dmenu.add(DiffData, 'd2', 0, 20, .1).name('d2-segment length').onChange(diffdetails);
-        Dmenu.add(DiffData, 'd3', 0, 20, .1).name('d3-plitdistance').onChange(diffdetails);
+        Dmenu.add(DiffData, 'd3', 0.4, 2, .025).name('d3-plitdistance ratio').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetonext', 0, 1000).name('fa-contraction force').onChange(diffdetails);
         Dmenu.add(DiffData, 'forcetopoints', 0, 1000).name('fb-repulsion force1').onChange(diffdetails);
         Dmenu.add(DiffData, 'fc', -5, 1000, 1).name('fc-bending force').onChange(diffdetails);

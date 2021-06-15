@@ -879,6 +879,36 @@ si>=0: index of point that drives the move (that has si<0)
 
 */
 
+function vecleng(p) {
+    return Math.sqrt(p[0] * p[0] + p[1] * p[1]);
+}
+
+
+/*
+force vector between points p1 and p2
+offset = distance at which force=0
+fa< force when distance<offsety
+fb force when distance > offset
+*/
+function forcevector(p1, p2, offset, fa, fb, pow) {
+    var pd = [p2[0] - p1[0], p2[1] - p1[1]];; //: vector 
+    var dist = vecleng(pd);  // distance to neighbor 1
+    if (dist > 0 && offset > 0) {
+        var force = (dist - offset) / dist;
+        if (force > 0) force = Math.pow(force, pow);
+        else force = -Math.pow(Math.abs(force), pow);
+        if (dist < offset) force = fa * force;
+        else force = fb * force;
+        pd[0] += pd[0] / dist * force;
+        pd[1] += pd[1] / dist * force;;
+        return pd;
+    }
+    return [0.0, 0.0];
+}
+
+function addvector(a, b) {
+    return [a[0] + b[0], a[1] + b[1]];
+}
 //======================================================================================================
 const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, fc, d1, d2, sp, fmax, mxl, numpoints) {
     var CP = _matrix[this.thread.y][this.thread.x] // current point
@@ -914,7 +944,11 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
         even = false;
     }
 
-    var p1 = [_matrix[row][xindex], _matrix[row][yindex]]   // current point
+
+    var pa = [_matrix[row][xindex - 2], _matrix[row][yindex - 2]]   // neighborhood points
+    var p1 = [_matrix[row][xindex], _matrix[row][yindex]]   // current point    
+    var pb = [_matrix[row][xindex + 2], _matrix[row][yindex + 2]]   // neighborhood point
+
 
     /*
     d1 = repulsion distance
@@ -929,47 +963,19 @@ const GPU_movepoints = gpu.createKernel(function (_matrix, fa, fb, pwr1, pwr2, f
     fmax=max force
     */
 
-
-    /*
-mogelijke alternatieve aanpak:
-- target lengte tussen twee punten.   kracht hangt af van afsztand. te dichtbij: afstoten - te ver weg: aantrekken.  grote krachten.
- - elke stap target lengte langzaam iets vergroten. 
- - een  opsplits stap:  zet targetlengte/2 en subdivpath.
-
-*/
-
     /// - atrtaction to neighborhood points, target length = d2.  forces normalized. distances normalized
     var Fa = [0.0, 0.0];
 
     if (!(isfirstpoint || islastpoint)) {
-        var pa = [_matrix[row][xindex - 2] - p1[0], _matrix[row][yindex - 2] - p1[1]];; //: vector to neighbor 1
-        var da = Math.sqrt(pa[0] * pa[0] + pa[1] * pa[1]);  // distance to neighbor 1
-        pa[0] = pa[0] / da; pa[1] = pa[1] / da; da = da / d2;//normalize
-        if (da > 0 && d2 > 0) {
-            var ffa = fa * (da - 1) * 1000;  // force
-            Fa[0] += pa[0] * ffa;
-            Fa[1] += pa[1] * ffa;
-        }
-        var pb = [_matrix[row][xindex + 2] - p1[0], _matrix[row][yindex + 2] - p1[1]];; //: vector yo neighbor 2
-        var db = Math.sqrt(pb[0] * pb[0] + pb[1] * pb[1]);  // distance to neighbor 2
-        pb[0] = pb[0] / db; pb[1] = pb[1] / db; db = db / d2;//normalize
-        if (db > 0 && d2 > 0) {
-            var ffb = fa * (db - 1) * 1000;
-            Fa[0] += pb[0] * ffb;
-            Fa[1] += pb[1] * ffb;
-        }
+        Fa = addvector(Fa, forcevector(p1, pa, d2, fa, fa * 10000, 1));
+        Fa = addvector(Fa, forcevector(p1, pb, d2, fa, fa * 10000, 1));
     }
 
-
-
-    /*
-
-    verbeteringen nodig: bending/straigthenign force moet 5 punten meenemen.  beter algoritme zoeken of zelf iets maken. 
-
-    */
-    var Fc = [0.0, 0.0]; //bending force
-    if (!(isfirstpoint || islastpoint)) {
-        var pc = [0.0, 0.0]; //: difference vector towards average of neighbor points
+    var Fc = [0.0, 0.0];
+    if (!(isfirstpoint || islastpoint)) {  // 2- point bending
+        //var pc = [(pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2]; //:average of neighbor points
+        //    Fc = addvector(Fc, forcevector(pc, p1, 0, fc, fc * 1000000, 4))
+        var pc = [0, 0];
         pc[0] = (_matrix[row][xindex - 2] + _matrix[row][xindex + 2]) / 2 - p1[0];
         pc[1] = (_matrix[row][yindex - 2] + _matrix[row][yindex + 2]) / 2 - p1[1];
 
@@ -986,6 +992,7 @@ mogelijke alternatieve aanpak:
             Fc[0] = pc[0] * fc * force;
             Fc[1] = pc[1] * fc * force;
         }
+
     }
 
 
@@ -1031,7 +1038,7 @@ mogelijke alternatieve aanpak:
         return p1[1]
     }
 
-}).setOutput([GPUMATRIXLENGTH, MAXLINES])
+}).setOutput([GPUMATRIXLENGTH, MAXLINES]).setFunctions([vecleng, forcevector, addvector]);
 
 // adds a single line to the GPU matrix
 function add_line_to_gpumatrix(line, offset, w, si, ei) {
@@ -1225,7 +1232,7 @@ export function draw() {
                 //  lines = diffgrowth(lines, 100, 100, 10000, borderpoints, 1);
                 //   readlinelengths();
                 for (var i = 0; i < lines.length; i++) {
-                    lines[i] = subdivpath(lines[i], VData.d3, 1, MAXPOINTS, true);
+                    lines[i] = subdivpath(lines[i], VData.d3 * VData.d2, 1, MAXPOINTS, true);
                 }
                 //   readlinelengthcheck();
                 noFill();
