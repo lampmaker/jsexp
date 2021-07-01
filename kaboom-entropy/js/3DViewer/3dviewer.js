@@ -29,6 +29,22 @@ var csegments, bevel, flat, csimplify, cscale, cflip;
 var animation, raycaster;
 var texture2
 
+function shuffle(array) {
+    var currentIndex = array.length,  randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) { 
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+  
+    return array;
+  }
 
 export function init() {
     // init render ----------------------------------------------------------------------------------------------------
@@ -420,6 +436,8 @@ export function loadSVG(url, fn, whenready) {
         SVGgroup.add(linegroup);
         Scene.add(SVGgroup);
         // Scene.add(linegroup)
+        var f=shuffle(Objects[0].children);
+        Objects[0].children=f;
 
         whenready();
     });
